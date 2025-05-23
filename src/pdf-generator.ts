@@ -129,7 +129,7 @@ export const generateCardsPDF = async (
                 // Add a border around each card to help with cutting
                 // Use a slightly thinner line for more precise cutting guides
                 doc.rect(x, y, CARD_WIDTH_PT, CARD_HEIGHT_PT)
-                   .lineWidth(0.5)
+                   .lineWidth(0.8)
                    .stroke('#666666');
                                 
                 currentPageIndex++;
