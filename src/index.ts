@@ -36,6 +36,9 @@ export const downloadDeckImages = async (deckId: string): Promise<string> => {
 		const sanitizedDeckName = deckName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 		const imagesFolder = await createFolder(path.join('decks', sanitizedDeckName));
 
+		// Keep track of card names across all tables to ensure global uniqueness
+		const cardNameCount: Record<string, number> = {};
+		
 		let totalImagesDownloaded = 0;
 		const websiteUrl = `https://altered.ajordat.com/en/decks/${deckId}/`;
 
@@ -61,9 +64,22 @@ export const downloadDeckImages = async (deckId: string): Promise<string> => {
 						.replace(/[^a-z0-9]/gi, '_')
 						.toLowerCase()
 						.substring(0, 40);
-
+					
+					// Create a unique identifier for this card
+					// Include tableId in the key to avoid collisions across different tables
+					const baseCardName = sanitizedName.replace(/_\d+$/, ''); // Remove any trailing _n
+					const cardKey = `${tableId}_${baseCardName}`;
+					
+					if (!cardNameCount[cardKey]) {
+						cardNameCount[cardKey] = 0;
+					}
+					cardNameCount[cardKey]++;
+					
+					// Include the table name in the filename to ensure uniqueness
+					const uniqueSanitizedName = `${baseCardName}_${tableId}_${cardNameCount[cardKey]}`;
+					
 					const extension = path.extname(image.imageSrc) || '.jpg';
-					const fileName = `${sanitizedName}${extension}`;
+					const fileName = `${uniqueSanitizedName}${extension}`;
 					const filePath = path.join(tableFolderPath, fileName);
 
 					console.log(`Downloading image ${i + 1}/${images.length} from ${tableId}...`);
