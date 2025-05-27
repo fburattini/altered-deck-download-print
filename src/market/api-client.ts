@@ -142,6 +142,7 @@ export class AlteredApiClient {
     summary: any 
   } | null> {
     const checkpointPath = path.join(process.cwd(), 'data', 'scrape-checkpoint.json');
+    const cardsDataPath = path.join(process.cwd(), 'data', 'altered-cards-latest.jsonl');
     
     try {
       if (await fs.pathExists(checkpointPath)) {
@@ -149,8 +150,20 @@ export class AlteredApiClient {
         const processedCombinations = new Set<string>(data.processedCombinations);
         const allCards = new Map<string, CardDetail>();
         
-        // Load existing cards
-        data.cards.forEach((card: CardDetail) => allCards.set(card.id, card));
+        // Load existing cards from the dedicated cards file
+        if (await fs.pathExists(cardsDataPath)) {
+          const cardsContent = await fs.readFile(cardsDataPath, 'utf8');
+          const lines = cardsContent.trim().split('\n').filter(line => line.length > 0);
+          
+          lines.forEach(line => {
+            try {
+              const card: CardDetail = JSON.parse(line);
+              allCards.set(card.id, card);
+            } catch (error) {
+              console.warn(`Failed to parse card line: ${error}`);
+            }
+          });
+        }
         
         console.log(`Loaded checkpoint: ${processedCombinations.size} combinations processed, ${allCards.size} cards collected`);
         
@@ -180,7 +193,6 @@ export class AlteredApiClient {
     const checkpointData = {
       timestamp: new Date().toISOString(),
       processedCombinations: Array.from(processedCombinations),
-      cards: Array.from(allCards.values()),
       summary
     };
     
@@ -188,6 +200,12 @@ export class AlteredApiClient {
       await fs.ensureDir(path.dirname(checkpointPath));
       await fs.writeJson(checkpointPath, checkpointData, { spaces: 2 });
       console.log(`Checkpoint saved: ${processedCombinations.size} combinations, ${allCards.size} cards`);
+      
+      // Save the current cards data to a dedicated file for easy access
+      const cardsDataPath = path.join(process.cwd(), 'data', 'altered-cards-latest.jsonl');
+      const cardsArray = Array.from(allCards.values());
+      await this.saveToFile(cardsArray, cardsDataPath);
+      
     } catch (error) {
       console.error(`Failed to save checkpoint: ${error}`);
     }
