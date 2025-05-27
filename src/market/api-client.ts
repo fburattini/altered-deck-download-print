@@ -202,7 +202,7 @@ export class AlteredApiClient {
       console.log(`Checkpoint saved: ${processedCombinations.size} combinations, ${allCards.size} cards`);
       
       // Save the current cards data to a dedicated file for easy access
-      const cardsDataPath = path.join(process.cwd(), 'data', 'altered-cards-latest.jsonl');
+      const cardsDataPath = 'altered-cards-latest.jsonl';
       const cardsArray = Array.from(allCards.values());
       await this.saveToFile(cardsArray, cardsDataPath);
       
