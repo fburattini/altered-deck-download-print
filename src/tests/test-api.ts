@@ -1,4 +1,4 @@
-import { AlteredApiClient } from './market/api-client';
+import { AlteredApiClient } from '../market/api-client';
 
 const testApi = async () => {
   console.log('Testing Altered API...');

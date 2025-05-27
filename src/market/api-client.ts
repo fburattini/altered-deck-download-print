@@ -134,23 +134,112 @@ export class AlteredApiClient {
   }
 
   /**
-   * Comprehensive scrape using all filter combinations
+   * Load checkpoint data from file
    */
-  async scrapeAllCards(): Promise<{ cards: CardDetail[], summary: any }> {
+  private async loadCheckpoint(): Promise<{ 
+    processedCombinations: Set<string>, 
+    allCards: Map<string, CardDetail>,
+    summary: any 
+  } | null> {
+    const checkpointPath = path.join(process.cwd(), 'data', 'scrape-checkpoint.json');
+    
+    try {
+      if (await fs.pathExists(checkpointPath)) {
+        const data = await fs.readJson(checkpointPath);
+        const processedCombinations = new Set<string>(data.processedCombinations);
+        const allCards = new Map<string, CardDetail>();
+        
+        // Load existing cards
+        data.cards.forEach((card: CardDetail) => allCards.set(card.id, card));
+        
+        console.log(`Loaded checkpoint: ${processedCombinations.size} combinations processed, ${allCards.size} cards collected`);
+        
+        return {
+          processedCombinations,
+          allCards,
+          summary: data.summary
+        };
+      }
+    } catch (error) {
+      console.warn(`Failed to load checkpoint: ${error}`);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Save checkpoint data to file
+   */
+  private async saveCheckpoint(
+    processedCombinations: Set<string>, 
+    allCards: Map<string, CardDetail>,
+    summary: any
+  ): Promise<void> {
+    const checkpointPath = path.join(process.cwd(), 'data', 'scrape-checkpoint.json');
+    
+    const checkpointData = {
+      timestamp: new Date().toISOString(),
+      processedCombinations: Array.from(processedCombinations),
+      cards: Array.from(allCards.values()),
+      summary
+    };
+    
+    try {
+      await fs.ensureDir(path.dirname(checkpointPath));
+      await fs.writeJson(checkpointPath, checkpointData, { spaces: 2 });
+      console.log(`Checkpoint saved: ${processedCombinations.size} combinations, ${allCards.size} cards`);
+    } catch (error) {
+      console.error(`Failed to save checkpoint: ${error}`);
+    }
+  }
+
+  /**
+   * Generate a unique key for a filter combination
+   */
+  private getCombinationKey(combination: FilterOptions): string {
+    return `${combination.cardSet?.[0] || 'none'}-${combination.factions?.[0] || 'none'}-${combination.mainCost?.[0] || 'none'}-${combination.recallCost?.[0] || 'none'}`;
+  }
+
+  /**
+   * Comprehensive scrape using all filter combinations with checkpoint support
+   */
+  async scrapeAllCards(resumeFromCheckpoint: boolean = true): Promise<{ cards: CardDetail[], summary: any }> {
     const combinations = this.getAllFilterCombinations();
-    const allCards = new Map<string, CardDetail>(); // Use Map to avoid duplicates
-    const summary = {
+    let allCards = new Map<string, CardDetail>();
+    let processedCombinations = new Set<string>();
+    let summary = {
       totalCombinations: combinations.length,
       processedCombinations: 0,
       uniqueCards: 0,
-      errors: [] as string[]
+      errors: [] as string[],
+      startTime: new Date().toISOString(),
+      endTime: '',
+      resumedFromCheckpoint: false
     };
 
-    console.log(`Starting comprehensive scrape with ${combinations.length} filter combinations...`);
+    // Try to load checkpoint
+    if (resumeFromCheckpoint) {
+      const checkpoint = await this.loadCheckpoint();
+      if (checkpoint) {
+        allCards = checkpoint.allCards;
+        processedCombinations = checkpoint.processedCombinations;
+        summary = { ...summary, ...checkpoint.summary, resumedFromCheckpoint: true };
+        console.log(`Resuming from checkpoint with ${allCards.size} cards already collected`);
+      }
+    }
 
-    const toIndex = combinations.length
-    for (let i = 0; i < toIndex; i++) {
+    console.log(`Starting comprehensive scrape with ${combinations.length} filter combinations...`);
+    console.log(`Already processed: ${processedCombinations.size} combinations`);
+    console.log(`Remaining: ${combinations.length - processedCombinations.size} combinations`);
+
+    for (let i = 0; i < combinations.length; i++) {
       const combination = combinations[i];
+      const combinationKey = this.getCombinationKey(combination);
+      
+      // Skip if already processed
+      if (processedCombinations.has(combinationKey)) {
+        continue;
+      }
       
       try {
         console.log(`Processing combination ${i + 1}/${combinations.length}: ${JSON.stringify(combination)}`);
@@ -162,7 +251,7 @@ export class AlteredApiClient {
         for (const card of collection['hydra:member']) {
           if (!allCards.has(card.id)) {
             try {
-              const detail = await this.getCardDetail(card['@id']); // Use @id field which contains the path
+              const detail = await this.getCardDetail(card['@id']);
               allCards.set(card.id, detail);
               console.log(`    Added card: ${detail.name} (${detail.id})`);
             } catch (error) {
@@ -173,8 +262,15 @@ export class AlteredApiClient {
           }
         }
 
-        summary.processedCombinations++;
+        // Mark this combination as processed
+        processedCombinations.add(combinationKey);
+        summary.processedCombinations = processedCombinations.size;
         summary.uniqueCards = allCards.size;
+
+        // Save checkpoint every 10 combinations
+        if (processedCombinations.size % 10 === 0) {
+          await this.saveCheckpoint(processedCombinations, allCards, summary);
+        }
 
         // Add small delay to be respectful to the API
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -183,8 +279,15 @@ export class AlteredApiClient {
         const errorMsg = `Failed to process combination ${i + 1}: ${error}`;
         console.error(errorMsg);
         summary.errors.push(errorMsg);
+        
+        // Save checkpoint on error
+        await this.saveCheckpoint(processedCombinations, allCards, summary);
       }
     }
+
+    // Final checkpoint save
+    summary.endTime = new Date().toISOString();
+    await this.saveCheckpoint(processedCombinations, allCards, summary);
 
     console.log(`Scraping completed. Found ${allCards.size} unique cards.`);
     

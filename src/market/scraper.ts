@@ -13,12 +13,18 @@ export class AlteredScraper {
   /**
    * Run a full scrape of all unique cards
    */
-  async runFullScrape(): Promise<void> {
+  async runFullScrape(resumeFromCheckpoint: boolean = true): Promise<void> {
     console.log('Starting full scrape of Altered cards...');
     console.log('This will use narrow filters to stay within API limits.');
     
+    if (resumeFromCheckpoint) {
+      console.log('Will attempt to resume from checkpoint if available...');
+    } else {
+      console.log('Starting fresh scrape (ignoring any existing checkpoint)...');
+    }
+    
     try {
-      const result = await this.apiClient.scrapeAllCards();
+      const result = await this.apiClient.scrapeAllCards(resumeFromCheckpoint);
       
       // Create data directory if it doesn't exist
       const dataDir = path.join(process.cwd(), this.cardDb);

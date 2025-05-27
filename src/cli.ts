@@ -138,16 +138,40 @@ const analyzeFilters = async (): Promise<void> => {
 
 const runFullCardScrape = async (): Promise<void> => {
     console.log('\n--- Run Full Card Scrape ---');
-    const confirm = prompt('This will scrape ALL unique cards from the API. This may take a while. Continue? (y/N): ');
+    console.log('This will scrape ALL unique cards from the API. This may take a while.');
     
+    const confirm = prompt('Continue? (y/N): ');
     if (confirm?.toLowerCase() !== 'y') {
         console.log('Full scrape cancelled.');
         return;
     }
     
+    // Ask about checkpoint resume
+    console.log('\nCheckpoint options:');
+    console.log('1. Resume from checkpoint (if available)');
+    console.log('2. Start fresh (ignore checkpoint)');
+    
+    const checkpointChoice = prompt('Choose option (1/2): ');
+    let resumeFromCheckpoint = true;
+    
+    switch (checkpointChoice) {
+        case '1':
+            resumeFromCheckpoint = true;
+            console.log('Will resume from checkpoint if available...');
+            break;
+        case '2':
+            resumeFromCheckpoint = false;
+            console.log('Starting fresh scrape...');
+            break;
+        default:
+            console.log('Invalid choice, defaulting to resume from checkpoint...');
+            resumeFromCheckpoint = true;
+            break;
+    }
+    
     try {
         const scraper = createScraper();
-        await scraper.runFullScrape();
+        await scraper.runFullScrape(resumeFromCheckpoint);
     } catch (error) {
         console.error('Full scrape failed:', error);
     }
