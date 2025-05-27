@@ -58,11 +58,9 @@ export class AlteredApiClient {
   };
 
   /**
-   * Fetch cards with filtering options and retry logic for rate limiting
+   * Fetch a single page with retry logic for rate limiting
    */
-  async getCards(options: FilterOptions = {}, retryCount: number = 0): Promise<CardCollection> {
-    const params = this.buildQueryParams(options);
-    const url = `${this.baseUrl}/cards?${params.toString()}`;
+  private async fetchPage(url: string, retryCount: number = 0): Promise<CardCollection> {
     const maxRetries = 3;
     
     try {
@@ -72,13 +70,54 @@ export class AlteredApiClient {
       // Handle rate limiting (429) with exponential backoff
       if (error.response?.status === 429 && retryCount < maxRetries) {
         const waitTime = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
-        console.warn(`Rate limited for cards request, retrying in ${Math.round(waitTime)}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        console.warn(`Rate limited for page request, retrying in ${Math.round(waitTime)}ms (attempt ${retryCount + 1}/${maxRetries})`);
         
         await new Promise(resolve => setTimeout(resolve, waitTime));
-        return this.getCards(options, retryCount + 1);
+        return this.fetchPage(url, retryCount + 1);
       }
       
-      console.error(`Error fetching cards from ${url}:`, error);
+      console.error(`Error fetching page from ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch cards with filtering options and retry logic for rate limiting
+   * Automatically handles pagination to get ALL cards for the given filter
+   */
+  async getCards(options: FilterOptions = {}, retryCount: number = 0): Promise<CardCollection> {
+    const params = this.buildQueryParams(options);
+    const url = `${this.baseUrl}/cards?${params.toString()}`;
+    
+    try {
+      const firstPage = await this.fetchPage(url);
+      let allCards = [...firstPage['hydra:member']];
+      let currentCollection = firstPage;
+      
+      // Check if there are more pages to fetch
+      while (currentCollection['hydra:view'] && currentCollection['hydra:view']['hydra:next']) {
+        const nextPageUrl = `${this.baseUrl}${currentCollection['hydra:view']['hydra:next']}`;
+        console.log(`  Fetching next page: ${nextPageUrl}`);
+        
+        // Add small delay between page requests
+        await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); // 100-200ms
+        
+        const nextPage = await this.fetchPage(nextPageUrl);
+        allCards.push(...nextPage['hydra:member']);
+        currentCollection = nextPage;
+      }
+      
+      console.log(`  Total cards fetched across all pages: ${allCards.length}`);
+      
+      // Return the combined collection with all cards
+      return {
+        ...firstPage,
+        'hydra:member': allCards,
+        'hydra:totalItems': allCards.length
+      };
+      
+    } catch (error: any) {
+      console.error(`Error in getCards for ${url}:`, error);
       throw error;
     }
   }
@@ -140,8 +179,8 @@ export class AlteredApiClient {
           for (const recallCost of costs) {
             for (const forestPower of powers) {
               for (const mountainPower of powers) {
-                for (const oceanPower of powers) {
-                  combinations.push({
+                // we don't cycle for ocean power cause the previous filters are already narrow enoughs
+                combinations.push({
                     rarity: ['UNIQUE'],
                     cardSet: [cardSet],
                     factions: [faction],
@@ -149,11 +188,9 @@ export class AlteredApiClient {
                     recallCost: [recallCost],
                     forestPower: [forestPower],
                     mountainPower: [mountainPower],
-                    // oceanPower: [oceanPower], // we can omit this since it's already a narrow enough combination
                     inSale: true,
                     itemsPerPage: 999
                   });
-                }
               }
             }
           }
@@ -161,7 +198,7 @@ export class AlteredApiClient {
       }
     }
 
-    const totalCombinations = 2 * 6 * 11 * 11 * 11 * 11 * 11; // 2 cardSets × 6 factions × 11^5 costs/powers
+    const totalCombinations = 2 * 6 * 11 * 11 * 11 * 11; // 2 cardSets × 6 factions × 11^4 costs/powers
     console.log(`Generated ${combinations.length} comprehensive filter combinations`);
     console.log(`Total: ${totalCombinations.toLocaleString()} combinations (cardSet × faction × mainCost × recallCost × forestPower × mountainPower × oceanPower)`);
     console.log(`This ensures complete coverage of all unique cards with all possible stat combinations`);
@@ -305,7 +342,7 @@ export class AlteredApiClient {
       }
       
       try {
-        console.log(`Processing combination ${i + 1}/${combinations.length}: ${JSON.stringify(combination)}`);
+        console.log(`- Processing combination ${i + 1}/${combinations.length}: ${JSON.stringify(combination)}`);
         
         const collection = await this.getCards(combination);
         console.log(`  Found ${collection['hydra:member'].length} cards in this combination`);

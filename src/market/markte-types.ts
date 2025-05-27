@@ -67,10 +67,10 @@ export type Faction = {
 export type HydraView = {
   "@id": string;
   "@type": string;
-  "hydra:first": string;
-  "hydra:last": string;
-  "hydra:previous": string;
-  "hydra:next": string;
+  "hydra:first"?: string;
+  "hydra:last"?: string;
+  "hydra:previous"?: string;
+  "hydra:next"?: string;
 };
 
 export type HydraSearch = {
