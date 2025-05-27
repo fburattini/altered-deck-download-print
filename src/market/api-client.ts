@@ -123,7 +123,7 @@ export class AlteredApiClient {
               mainCost: [mainCost],
               recallCost: [recallCost],
               inSale: true,
-              itemsPerPage: 36
+              itemsPerPage: 999
             });
           }
         }
@@ -148,7 +148,8 @@ export class AlteredApiClient {
 
     console.log(`Starting comprehensive scrape with ${combinations.length} filter combinations...`);
 
-    for (let i = 0; i < combinations.length; i++) {
+    const toIndex = combinations.length
+    for (let i = 0; i < toIndex; i++) {
       const combination = combinations[i];
       
       try {

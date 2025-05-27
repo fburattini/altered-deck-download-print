@@ -21,7 +21,7 @@ export class AlteredScraper {
       const result = await this.apiClient.scrapeAllCards();
       
       // Create data directory if it doesn't exist
-      const dataDir = path.join(process.cwd(), 'data');
+      const dataDir = path.join(process.cwd(), this.cardDb);
       await fs.ensureDir(dataDir);
 
       // Save all cards data
