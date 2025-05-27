@@ -1,6 +1,7 @@
 import promptSync from 'prompt-sync';
 import { downloadDeckImages } from './index';
 import { listAvailableDecks, generatePDFForDeck } from './pdf-generator';
+import { createScraper } from './market/scraper';
 
 const prompt = promptSync({ sigint: true });
 
@@ -10,6 +11,9 @@ const printMenu = (): void => {
     console.log('2. List downloaded decks');
     console.log('3. Generate PDF for a deck');
     console.log('4. Download and generate PDF in one step');
+    console.log('5. Test API scraper');
+    console.log('6. Analyze API filters');
+    console.log('7. Run full card scrape');
     console.log('0. Exit');
     console.log('========================================');
 };
@@ -112,6 +116,43 @@ const downloadAndGeneratePDF = async (): Promise<void> => {
     }
 };
 
+const testScraper = async (): Promise<void> => {
+    console.log('\n--- Test API Scraper ---');
+    try {
+        const scraper = createScraper();
+        await scraper.runTestScrape();
+    } catch (error) {
+        console.error('Test scraper failed:', error);
+    }
+};
+
+const analyzeFilters = async (): Promise<void> => {
+    console.log('\n--- Analyze API Filters ---');
+    try {
+        const scraper = createScraper();
+        await scraper.analyzeFilters();
+    } catch (error) {
+        console.error('Filter analysis failed:', error);
+    }
+};
+
+const runFullCardScrape = async (): Promise<void> => {
+    console.log('\n--- Run Full Card Scrape ---');
+    const confirm = prompt('This will scrape ALL unique cards from the API. This may take a while. Continue? (y/N): ');
+    
+    if (confirm?.toLowerCase() !== 'y') {
+        console.log('Full scrape cancelled.');
+        return;
+    }
+    
+    try {
+        const scraper = createScraper();
+        await scraper.runFullScrape();
+    } catch (error) {
+        console.error('Full scrape failed:', error);
+    }
+};
+
 const main = async (): Promise<void> => {
     while (true) {
         printMenu();
@@ -136,6 +177,18 @@ const main = async (): Promise<void> => {
                 
             case '4':
                 await downloadAndGeneratePDF();
+                break;
+                
+            case '5':
+                await testScraper();
+                break;
+                
+            case '6':
+                await analyzeFilters();
+                break;
+                
+            case '7':
+                await runFullCardScrape();
                 break;
                 
             default:
