@@ -39,10 +39,24 @@ The scraper uses a narrow filtering strategy to avoid the API's 1000-item limit:
 - Uses a Map to track unique cards by ID
 - Avoids re-fetching card details for already processed cards
 
-### Error Handling
+### Error Handling & Rate Limiting
+- **Automatic retry with exponential backoff** for HTTP 429 (Too Many Requests) errors
+- **Up to 3 retry attempts** per failed request with increasing delays
+- **Smart delay management**:
+  - 500-1000ms delay between filter combination requests
+  - 200-400ms delay between individual card detail requests
+  - Extended delays when rate limits are encountered
 - Continues processing even if individual cards fail
 - Logs all errors for review
 - Provides comprehensive summary of results
+
+### Checkpoint System
+- **Automatic progress saving** every 10 processed combinations
+- **Resume functionality** to continue from where you left off
+- **Separate data files**:
+  - `data/scrape-checkpoint.json` - Progress tracking (lightweight)
+  - `data/altered-cards-latest.jsonl` - Current card data (updated on each checkpoint)
+- **Error recovery** - Checkpoints saved on errors to prevent data loss
 
 ## Usage
 

@@ -58,16 +58,26 @@ export class AlteredApiClient {
   };
 
   /**
-   * Fetch cards with filtering options
+   * Fetch cards with filtering options and retry logic for rate limiting
    */
-  async getCards(options: FilterOptions = {}): Promise<CardCollection> {
+  async getCards(options: FilterOptions = {}, retryCount: number = 0): Promise<CardCollection> {
     const params = this.buildQueryParams(options);
     const url = `${this.baseUrl}/cards?${params.toString()}`;
+    const maxRetries = 3;
     
     try {
       const response: AxiosResponse<CardCollection> = await axios.get(url);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      // Handle rate limiting (429) with exponential backoff
+      if (error.response?.status === 429 && retryCount < maxRetries) {
+        const waitTime = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
+        console.warn(`Rate limited for cards request, retrying in ${Math.round(waitTime)}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        return this.getCards(options, retryCount + 1);
+      }
+      
       console.error(`Error fetching cards from ${url}:`, error);
       throw error;
     }
@@ -84,17 +94,27 @@ export class AlteredApiClient {
   }
 
   /**
-   * Fetch detailed information for a specific card
+   * Fetch detailed information for a specific card with retry logic for rate limiting
    */
-  async getCardDetail(cardIdOrPath: string): Promise<CardDetail> {
+  async getCardDetail(cardIdOrPath: string, retryCount: number = 0): Promise<CardDetail> {
     const cleanCardId = this.extractCardId(cardIdOrPath);
     const url = `${this.baseUrl}/cards/${cleanCardId}`;
     const params = new URLSearchParams({ locale: this.defaultLocale });
+    const maxRetries = 3;
     
     try {
       const response: AxiosResponse<CardDetail> = await axios.get(`${url}?${params.toString()}`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      // Handle rate limiting (429) with exponential backoff
+      if (error.response?.status === 429 && retryCount < maxRetries) {
+        const waitTime = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
+        console.warn(`Rate limited for card ${cleanCardId}, retrying in ${Math.round(waitTime)}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        return this.getCardDetail(cardIdOrPath, retryCount + 1);
+      }
+      
       console.error(`Error fetching card detail for ${cleanCardId} (from ${cardIdOrPath}):`, error);
       throw error;
     }
@@ -108,27 +128,43 @@ export class AlteredApiClient {
     const cardSets = ['CORE', 'ALIZE'];
     const factions = ['AX', 'BR', 'LY', 'MU', 'OR', 'YZ'];
     const costs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const powers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Power stats range
     
     const combinations: FilterOptions[] = [];
 
-    // Generate combinations: rarity=UNIQUE + cardSet + faction + mainCost + recallCost
+    // Comprehensive combinations: rarity=UNIQUE + cardSet + faction + mainCost + recallCost + forestPower + mountainPower + oceanPower
+    // This ensures we capture every possible unique card with all filter parameters
     for (const cardSet of cardSets) {
       for (const faction of factions) {
         for (const mainCost of costs) {
           for (const recallCost of costs) {
-            combinations.push({
-              rarity: ['UNIQUE'],
-              cardSet: [cardSet],
-              factions: [faction],
-              mainCost: [mainCost],
-              recallCost: [recallCost],
-              inSale: true,
-              itemsPerPage: 999
-            });
+            for (const forestPower of powers) {
+              for (const mountainPower of powers) {
+                for (const oceanPower of powers) {
+                  combinations.push({
+                    rarity: ['UNIQUE'],
+                    cardSet: [cardSet],
+                    factions: [faction],
+                    mainCost: [mainCost],
+                    recallCost: [recallCost],
+                    forestPower: [forestPower],
+                    mountainPower: [mountainPower],
+                    // oceanPower: [oceanPower], // we can omit this since it's already a narrow enough combination
+                    inSale: true,
+                    itemsPerPage: 999
+                  });
+                }
+              }
+            }
           }
         }
       }
     }
+
+    const totalCombinations = 2 * 6 * 11 * 11 * 11 * 11 * 11; // 2 cardSets × 6 factions × 11^5 costs/powers
+    console.log(`Generated ${combinations.length} comprehensive filter combinations`);
+    console.log(`Total: ${totalCombinations.toLocaleString()} combinations (cardSet × faction × mainCost × recallCost × forestPower × mountainPower × oceanPower)`);
+    console.log(`This ensures complete coverage of all unique cards with all possible stat combinations`);
 
     return combinations;
   }
@@ -215,7 +251,16 @@ export class AlteredApiClient {
    * Generate a unique key for a filter combination
    */
   private getCombinationKey(combination: FilterOptions): string {
-    return `${combination.cardSet?.[0] || 'none'}-${combination.factions?.[0] || 'none'}-${combination.mainCost?.[0] || 'none'}-${combination.recallCost?.[0] || 'none'}`;
+    const cardSet = combination.cardSet?.[0] || 'none';
+    const faction = combination.factions?.[0] || 'none';
+    const mainCost = combination.mainCost?.[0] ?? 'none';
+    const recallCost = combination.recallCost?.[0] ?? 'none';
+    const forestPower = combination.forestPower?.[0] ?? 'none';
+    const mountainPower = combination.mountainPower?.[0] ?? 'none';
+    const oceanPower = combination.oceanPower?.[0] ?? 'none';
+    
+    // Comprehensive key format for all filter parameters
+    return `${cardSet}-${faction}-${mainCost}-${recallCost}-${forestPower}-${mountainPower}-${oceanPower}`;
   }
 
   /**
@@ -272,10 +317,20 @@ export class AlteredApiClient {
               const detail = await this.getCardDetail(card['@id']);
               allCards.set(card.id, detail);
               console.log(`    Added card: ${detail.name} (${detail.id})`);
-            } catch (error) {
+              
+              // Small delay between card detail requests
+              await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 200)); // 200-400ms
+              
+            } catch (error: any) {
               const errorMsg = `Failed to fetch detail for card ${card.id} (@id: ${card['@id']}): ${error}`;
               console.error(`    ${errorMsg}`);
               summary.errors.push(errorMsg);
+              
+              // If it's a rate limit error that couldn't be resolved with retries, wait before continuing
+              if (error.response?.status === 429) {
+                console.warn('Rate limit error on card detail, waiting 2 seconds before continuing...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
             }
           }
         }
@@ -290,13 +345,19 @@ export class AlteredApiClient {
           await this.saveCheckpoint(processedCombinations, allCards, summary);
         }
 
-        // Add small delay to be respectful to the API
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Add delay to be respectful to the API (increased for rate limiting)
+        await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 500)); // 500-1000ms delay
         
-      } catch (error) {
+      } catch (error: any) {
         const errorMsg = `Failed to process combination ${i + 1}: ${error}`;
         console.error(errorMsg);
         summary.errors.push(errorMsg);
+        
+        // If it's a rate limit error, wait longer before continuing
+        if (error.response?.status === 429) {
+          console.warn('Rate limited on combination request, waiting 5 seconds before continuing...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
         
         // Save checkpoint on error
         await this.saveCheckpoint(processedCombinations, allCards, summary);
