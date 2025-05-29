@@ -58,6 +58,101 @@ The scraper uses a narrow filtering strategy to avoid the API's 1000-item limit:
   - `data/altered-cards-latest.jsonl` - Current card data (updated on each checkpoint)
 - **Error recovery** - Checkpoints saved on errors to prevent data loss
 
+## New Feature: Filtered Scraping
+
+The scraper now supports focused, filtered scraping to allow users to query specific subsets of cards instead of always running the comprehensive full scrape. This is much faster for targeted searches.
+
+### Benefits of Filtered Scraping
+
+- **Much faster execution** - Only scrapes cards matching your criteria
+- **Reduced API calls** - Stays well within rate limits
+- **Targeted results** - Get exactly the cards you're interested in
+- **Custom file naming** - Results saved with filter-specific filenames
+- **Checkpoint support** - Resume filtered scrapes from where you left off
+
+### Usage Options
+
+#### Via CLI (Interactive)
+```bash
+npm run cli
+# Select option 8: "Run filtered card scrape"
+# Follow the interactive prompts to configure your filters
+```
+
+#### Via Direct Script (Command Line)
+```bash
+# Examples of filtered scraping
+npm run scrape filter --rarity UNIQUE --factions AX,BR --mainCost 1,2,3
+
+npm run scrape filter --cardSet CORE --rarity UNIQUE,RARE --inSale true
+
+npm run scrape filter --factions LY --forestPower 2,3,4 --mountainPower 0,1
+```
+
+#### Programmatic Usage
+```typescript
+import { createScraper } from './market/scraper';
+
+const scraper = createScraper();
+
+// Example: Get all unique AX faction cards with main cost 1-3
+await scraper.runFilteredScrape({
+    rarity: ['UNIQUE'],
+    factions: ['AX'],
+    mainCost: [1, 2, 3],
+    inSale: true
+});
+```
+
+### Available Filters
+
+- **rarity**: COMMON, RARE, UNIQUE
+- **cardSet**: CORE, ALIZE
+- **factions**: AX, BR, LY, MU, OR, YZ
+- **mainCost**: 0-10 (card's main cost)
+- **recallCost**: 0-10 (card's recall cost)
+- **forestPower**: 0-10 (forest power stat)
+- **mountainPower**: 0-10 (mountain power stat)
+- **oceanPower**: 0-10 (ocean power stat)
+- **inSale**: true/false (only cards currently for sale)
+
+### Output Files
+
+Filtered scrapes create uniquely named files based on your filters:
+- `card_db/altered-cards-filtered-{filter-description}-{timestamp}.json` - Card data
+- `card_db/scrape-summary-filtered-{filter-description}-{timestamp}.json` - Scrape summary
+- `data/filtered-cards-latest-{filter-key}.jsonl` - Latest cards (for checkpoints)
+- `data/filtered-scrape-checkpoint-{filter-key}.json` - Checkpoint data
+
+### Performance Comparison
+
+| Scrape Type | API Calls | Estimated Time | Use Case |
+|-------------|-----------|----------------|-----------|
+| Full Scrape | ~1,452 | 2-3 minutes | Complete card database |
+| Filtered Scrape | 1-10 | 5-30 seconds | Specific card queries |
+
+### Example Use Cases
+
+1. **Get all unique cards from a specific faction**:
+   ```bash
+   npm run scrape filter --rarity UNIQUE --factions AX
+   ```
+
+2. **Find low-cost cards for budget builds**:
+   ```bash
+   npm run scrape filter --mainCost 1,2 --recallCost 0,1
+   ```
+
+3. **Search for high-power forest cards**:
+   ```bash
+   npm run scrape filter --forestPower 4,5,6,7,8,9,10
+   ```
+
+4. **Get all cards from the latest set**:
+   ```bash
+   npm run scrape filter --cardSet ALIZE
+   ```
+
 ## Usage
 
 ### Via CLI

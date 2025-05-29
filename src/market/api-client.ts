@@ -414,6 +414,205 @@ export class AlteredApiClient {
   }
 
   /**
+   * Run a focused scrape with specific filters
+   * This allows users to scrape only cards matching specific criteria
+   */
+  async scrapeWithFilters(
+    filters: FilterOptions, 
+    resumeFromCheckpoint: boolean = true,
+    checkpointPrefix: string = 'filtered'
+  ): Promise<{ cards: CardDetail[], summary: any }> {
+    let allCards = new Map<string, CardDetail>();
+    let processedCombinations = new Set<string>();
+    let summary = {
+      totalCombinations: 1,
+      processedCombinations: 0,
+      uniqueCards: 0,
+      errors: [] as string[],
+      startTime: new Date().toISOString(),
+      endTime: '',
+      resumedFromCheckpoint: false,
+      filters: filters
+    };
+
+    // Create a unique checkpoint name based on the filters
+    const filterKey = this.getFilterKey(filters);
+    const checkpointPath = path.join(process.cwd(), 'data', `${checkpointPrefix}-scrape-checkpoint-${filterKey}.json`);
+    const cardsDataPath = path.join(process.cwd(), 'data', `${checkpointPrefix}-cards-latest-${filterKey}.jsonl`);
+
+    // Try to load checkpoint
+    if (resumeFromCheckpoint) {
+      const checkpoint = await this.loadFilteredCheckpoint(checkpointPath, cardsDataPath);
+      if (checkpoint) {
+        allCards = checkpoint.allCards;
+        processedCombinations = checkpoint.processedCombinations;
+        summary = { ...summary, ...checkpoint.summary, resumedFromCheckpoint: true };
+        console.log(`Resuming from checkpoint with ${allCards.size} cards already collected`);
+      }
+    }
+
+    console.log(`Starting filtered scrape with filters: ${JSON.stringify(filters)}`);
+    
+    try {
+      console.log(`- Processing filter combination: ${JSON.stringify(filters)}`);
+      
+      const collection = await this.getCards(filters);
+      console.log(`  Found ${collection['hydra:member'].length} cards matching filters`);
+
+      // Fetch detailed information for each card
+      for (const card of collection['hydra:member']) {
+        if (!allCards.has(card.id)) {
+          try {
+            const detail = await this.getCardDetail(card['@id']);
+            allCards.set(card.id, detail);
+            console.log(`    Added card: ${detail.name} (${detail.id})`);
+            
+            // Small delay between card detail requests
+            await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 200)); // 200-400ms
+            
+          } catch (error: any) {
+            const errorMsg = `Failed to fetch detail for card ${card.id} (@id: ${card['@id']}): ${error}`;
+            console.error(`    ${errorMsg}`);
+            summary.errors.push(errorMsg);
+            
+            // If it's a rate limit error that couldn't be resolved with retries, wait before continuing
+            if (error.response?.status === 429) {
+              console.warn('Rate limit error on card detail, waiting 2 seconds before continuing...');
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+        }
+      }
+
+      // Mark as processed
+      processedCombinations.add(filterKey);
+      summary.processedCombinations = 1;
+      summary.uniqueCards = allCards.size;
+
+      // Save checkpoint
+      await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
+        
+    } catch (error: any) {
+      const errorMsg = `Failed to process filtered scrape: ${error}`;
+      console.error(errorMsg);
+      summary.errors.push(errorMsg);
+      
+      // If it's a rate limit error, wait longer before continuing
+      if (error.response?.status === 429) {
+        console.warn('Rate limited on filter request, waiting 5 seconds before continuing...');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+      
+      // Save checkpoint on error
+      await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
+    }
+
+    // Final checkpoint save
+    summary.endTime = new Date().toISOString();
+    await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
+
+    console.log(`Filtered scraping completed. Found ${allCards.size} unique cards.`);
+    
+    return {
+      cards: Array.from(allCards.values()),
+      summary
+    };
+  }
+
+  /**
+   * Generate a unique key for a set of filters
+   */
+  private getFilterKey(filters: FilterOptions): string {
+    const parts: string[] = [];
+    
+    if (filters.rarity) parts.push(`rarity-${filters.rarity.join(',')}`);
+    if (filters.cardSet) parts.push(`set-${filters.cardSet.join(',')}`);
+    if (filters.factions) parts.push(`faction-${filters.factions.join(',')}`);
+    if (filters.mainCost) parts.push(`main-${filters.mainCost.join(',')}`);
+    if (filters.recallCost) parts.push(`recall-${filters.recallCost.join(',')}`);
+    if (filters.forestPower) parts.push(`forest-${filters.forestPower.join(',')}`);
+    if (filters.mountainPower) parts.push(`mountain-${filters.mountainPower.join(',')}`);
+    if (filters.oceanPower) parts.push(`ocean-${filters.oceanPower.join(',')}`);
+    if (filters.inSale !== undefined) parts.push(`sale-${filters.inSale}`);
+    
+    return parts.length > 0 ? parts.join('_') : 'no-filters';
+  }
+
+  /**
+   * Load checkpoint data from file for filtered scrapes
+   */
+  private async loadFilteredCheckpoint(checkpointPath: string, cardsDataPath: string): Promise<{ 
+    processedCombinations: Set<string>, 
+    allCards: Map<string, CardDetail>,
+    summary: any 
+  } | null> {
+    try {
+      if (await fs.pathExists(checkpointPath)) {
+        const data = await fs.readJson(checkpointPath);
+        const processedCombinations = new Set<string>(data.processedCombinations);
+        const allCards = new Map<string, CardDetail>();
+        
+        // Load existing cards from the dedicated cards file
+        if (await fs.pathExists(cardsDataPath)) {
+          const cardsContent = await fs.readFile(cardsDataPath, 'utf8');
+          const lines = cardsContent.trim().split('\n').filter(line => line.length > 0);
+          
+          lines.forEach(line => {
+            try {
+              const card: CardDetail = JSON.parse(line);
+              allCards.set(card.id, card);
+            } catch (error) {
+              console.warn(`Failed to parse card line: ${error}`);
+            }
+          });
+        }
+        
+        console.log(`Loaded filtered checkpoint: ${processedCombinations.size} combinations processed, ${allCards.size} cards collected`);
+        
+        return {
+          processedCombinations,
+          allCards,
+          summary: data.summary
+        };
+      }
+    } catch (error) {
+      console.warn(`Failed to load filtered checkpoint: ${error}`);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Save checkpoint data to file for filtered scrapes
+   */
+  private async saveFilteredCheckpoint(
+    processedCombinations: Set<string>, 
+    allCards: Map<string, CardDetail>,
+    summary: any,
+    checkpointPath: string,
+    cardsDataPath: string
+  ): Promise<void> {
+    const checkpointData = {
+      timestamp: new Date().toISOString(),
+      processedCombinations: Array.from(processedCombinations),
+      summary
+    };
+    
+    try {
+      await fs.ensureDir(path.dirname(checkpointPath));
+      await fs.writeJson(checkpointPath, checkpointData, { spaces: 2 });
+      console.log(`Filtered checkpoint saved: ${processedCombinations.size} combinations, ${allCards.size} cards`);
+      
+      // Save the current cards data to a dedicated file for easy access
+      const cardsArray = Array.from(allCards.values());
+      await this.saveToFile(cardsArray, cardsDataPath);
+      
+    } catch (error) {
+      console.error(`Failed to save filtered checkpoint: ${error}`);
+    }
+  }
+
+  /**
    * Save scraped data to JSON file or JSONL file if data is an array
    */
   async saveToFile(data: any, filename: string): Promise<void> {

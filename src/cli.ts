@@ -14,6 +14,7 @@ const printMenu = (): void => {
     console.log('5. Test API scraper');
     console.log('6. Analyze API filters');
     console.log('7. Run full card scrape');
+    console.log('8. Run filtered card scrape');
     console.log('0. Exit');
     console.log('========================================');
 };
@@ -177,6 +178,110 @@ const runFullCardScrape = async (): Promise<void> => {
     }
 };
 
+const runFilteredCardScrape = async (): Promise<void> => {
+    console.log('\n--- Run Filtered Card Scrape ---');
+    console.log('Configure your custom filters to scrape specific cards.');
+    console.log('Leave fields empty to skip that filter.\n');
+
+    const filters: any = {};
+
+    // Rarity filter
+    console.log('Available rarities: COMMON, RARE, UNIQUE');
+    const rarityInput = prompt('Rarity (comma-separated, e.g., UNIQUE,RARE): ');
+    if (rarityInput && rarityInput.trim()) {
+        filters.rarity = rarityInput.split(',').map(r => r.trim().toUpperCase());
+    }
+
+    // Card Set filter
+    console.log('\nAvailable card sets: CORE, ALIZE');
+    const cardSetInput = prompt('Card Set (comma-separated, e.g., CORE,ALIZE): ');
+    if (cardSetInput && cardSetInput.trim()) {
+        filters.cardSet = cardSetInput.split(',').map(cs => cs.trim().toUpperCase());
+    }
+
+    // Faction filter
+    console.log('\nAvailable factions: AX, BR, LY, MU, OR, YZ');
+    const factionInput = prompt('Factions (comma-separated, e.g., AX,BR): ');
+    if (factionInput && factionInput.trim()) {
+        filters.factions = factionInput.split(',').map(f => f.trim().toUpperCase());
+    }
+
+    // Cost filters
+    console.log('\nCost range: 0-10');
+    const mainCostInput = prompt('Main Cost (comma-separated, e.g., 1,2,3): ');
+    if (mainCostInput && mainCostInput.trim()) {
+        filters.mainCost = mainCostInput.split(',').map(c => parseInt(c.trim(), 10)).filter(c => !isNaN(c));
+    }
+
+    const recallCostInput = prompt('Recall Cost (comma-separated, e.g., 1,2): ');
+    if (recallCostInput && recallCostInput.trim()) {
+        filters.recallCost = recallCostInput.split(',').map(c => parseInt(c.trim(), 10)).filter(c => !isNaN(c));
+    }
+
+    // Power filters
+    console.log('\nPower range: 0-10');
+    const forestPowerInput = prompt('Forest Power (comma-separated, e.g., 0,1,2): ');
+    if (forestPowerInput && forestPowerInput.trim()) {
+        filters.forestPower = forestPowerInput.split(',').map(p => parseInt(p.trim(), 10)).filter(p => !isNaN(p));
+    }
+
+    const mountainPowerInput = prompt('Mountain Power (comma-separated, e.g., 2,3): ');
+    if (mountainPowerInput && mountainPowerInput.trim()) {
+        filters.mountainPower = mountainPowerInput.split(',').map(p => parseInt(p.trim(), 10)).filter(p => !isNaN(p));
+    }
+
+    const oceanPowerInput = prompt('Ocean Power (comma-separated, e.g., 1,2,3): ');
+    if (oceanPowerInput && oceanPowerInput.trim()) {
+        filters.oceanPower = oceanPowerInput.split(',').map(p => parseInt(p.trim(), 10)).filter(p => !isNaN(p));
+    }
+    
+    filters.inSale = true;
+
+    // Show configured filters
+    console.log('\n--- Configured Filters ---');
+    console.log(JSON.stringify(filters, null, 2));
+    
+    if (Object.keys(filters).length === 0) {
+        console.log('No filters configured. This will scrape ALL cards (equivalent to full scrape).');
+    }
+
+    const confirm = prompt('\nProceed with these filters? (y/N): ');
+    if (confirm?.toLowerCase() !== 'y') {
+        console.log('Filtered scrape cancelled.');
+        return;
+    }
+
+    // Ask about checkpoint resume
+    console.log('\nCheckpoint options:');
+    console.log('1. Resume from checkpoint (if available)');
+    console.log('2. Start fresh (ignore checkpoint)');
+    
+    const checkpointChoice = prompt('Choose option (1/2): ');
+    let resumeFromCheckpoint = true;
+    
+    switch (checkpointChoice) {
+        case '1':
+            resumeFromCheckpoint = true;
+            console.log('Will resume from checkpoint if available...');
+            break;
+        case '2':
+            resumeFromCheckpoint = false;
+            console.log('Starting fresh scrape...');
+            break;
+        default:
+            console.log('Invalid choice, defaulting to resume from checkpoint...');
+            resumeFromCheckpoint = true;
+            break;
+    }
+    
+    try {
+        const scraper = createScraper();
+        await scraper.runFilteredScrape(filters, resumeFromCheckpoint);
+    } catch (error) {
+        console.error('Filtered scrape failed:', error);
+    }
+};
+
 const main = async (): Promise<void> => {
     while (true) {
         printMenu();
@@ -213,6 +318,10 @@ const main = async (): Promise<void> => {
                 
             case '7':
                 await runFullCardScrape();
+                break;
+                
+            case '8':
+                await runFilteredCardScrape();
                 break;
                 
             default:

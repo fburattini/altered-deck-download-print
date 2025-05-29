@@ -1,4 +1,4 @@
-import { AlteredApiClient } from './api-client';
+import { AlteredApiClient, FilterOptions } from './api-client';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -131,6 +131,79 @@ export class AlteredScraper {
       console.error('Filter analysis failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Run a filtered scrape with specific criteria
+   */
+  async runFilteredScrape(filters: FilterOptions, resumeFromCheckpoint: boolean = true): Promise<void> {
+    console.log('Starting filtered scrape of Altered cards...');
+    console.log(`Applied filters: ${JSON.stringify(filters, null, 2)}`);
+    
+    if (resumeFromCheckpoint) {
+      console.log('Will attempt to resume from checkpoint if available...');
+    } else {
+      console.log('Starting fresh scrape (ignoring any existing checkpoint)...');
+    }
+    
+    try {
+      const result = await this.apiClient.scrapeWithFilters(filters, resumeFromCheckpoint);
+      
+      // Create data directory if it doesn't exist
+      const dataDir = path.join(process.cwd(), this.cardDb);
+      await fs.ensureDir(dataDir);
+
+      // Save all cards data with filter-specific filename
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filterKey = this.getFilterKeyForFilename(filters);
+      const cardsFile = `${this.cardDb}/altered-cards-filtered-${filterKey}-${timestamp}.json`;
+      await this.apiClient.saveToFile(result.cards, cardsFile);
+
+      // Save summary
+      const summaryFile = `${this.cardDb}/scrape-summary-filtered-${filterKey}-${timestamp}.json`;
+      await this.apiClient.saveToFile(result.summary, summaryFile);
+
+      // Log summary
+      console.log('\n=== Filtered Scrape Summary ===');
+      console.log(`Applied filters: ${JSON.stringify(result.summary.filters, null, 2)}`);
+      console.log(`Unique cards found: ${result.summary.uniqueCards}`);
+      console.log(`Errors encountered: ${result.summary.errors.length}`);
+      
+      if (result.summary.errors.length > 0) {
+        console.log('\nErrors:');
+        result.summary.errors.slice(0, 5).forEach((error: string) => console.log(`  - ${error}`));
+        if (result.summary.errors.length > 5) {
+          console.log(`  ... and ${result.summary.errors.length - 5} more errors`);
+        }
+      }
+
+      console.log(`\nData saved to:`);
+      console.log(`  Cards: ${cardsFile}`);
+      console.log(`  Summary: ${summaryFile}`);
+
+    } catch (error) {
+      console.error('Filtered scrape failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a filename-safe filter key
+   */
+  private getFilterKeyForFilename(filters: FilterOptions): string {
+    const parts: string[] = [];
+    
+    if (filters.rarity) parts.push(`rarity-${filters.rarity.join('-')}`);
+    if (filters.cardSet) parts.push(`set-${filters.cardSet.join('-')}`);
+    if (filters.factions) parts.push(`faction-${filters.factions.join('-')}`);
+    if (filters.mainCost) parts.push(`main-${filters.mainCost.join('-')}`);
+    if (filters.recallCost) parts.push(`recall-${filters.recallCost.join('-')}`);
+    if (filters.forestPower) parts.push(`forest-${filters.forestPower.join('-')}`);
+    if (filters.mountainPower) parts.push(`mountain-${filters.mountainPower.join('-')}`);
+    if (filters.oceanPower) parts.push(`ocean-${filters.oceanPower.join('-')}`);
+    if (filters.inSale !== undefined) parts.push(`sale-${filters.inSale}`);
+    
+    return parts.length > 0 ? parts.join('_') : 'no-filters';
   }
 }
 
