@@ -1,10 +1,11 @@
 import { AlteredApiClient } from '../market/api-client';
+import { getBearerToken } from '../config/auth';
 
 const testApi = async () => {
   console.log('Testing Altered API...');
   
   try {
-    const client = new AlteredApiClient();
+    const client = new AlteredApiClient('en-us', getBearerToken());
     
     // Test basic API call
     console.log('Making test API call...');

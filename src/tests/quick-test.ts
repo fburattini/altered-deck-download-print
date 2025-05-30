@@ -1,9 +1,10 @@
 import { AlteredApiClient } from '../market/api-client';
+import { getBearerToken } from '../config/auth';
 
 const quickTest = async () => {
   console.log('Quick API test...');
   
-  const client = new AlteredApiClient();
+  const client = new AlteredApiClient('en-us', getBearerToken());
   
   // Get a small batch
   const result = await client.getCards({

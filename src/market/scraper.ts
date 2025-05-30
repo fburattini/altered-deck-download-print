@@ -1,4 +1,4 @@
-import { AlteredApiClient, FilterOptions } from './api-client';
+import { AlteredApiClient, CardStatItem, FilterOptions } from './api-client';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -171,9 +171,9 @@ export class AlteredScraper {
       
       if (result.summary.errors.length > 0) {
         console.log('\nErrors:');
-        result.summary.errors.slice(0, 5).forEach((error: string) => console.log(`  - ${error}`));
-        if (result.summary.errors.length > 5) {
-          console.log(`  ... and ${result.summary.errors.length - 5} more errors`);
+        result.summary.errors.slice(0, 10).forEach((error: string) => console.log(`  - ${error}`));
+        if (result.summary.errors.length > 10) {
+          console.log(`  ... and ${result.summary.errors.length - 10} more errors`);
         }
       }
 
@@ -185,6 +185,220 @@ export class AlteredScraper {
       console.error('Filtered scrape failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Run a filtered scrape with pricing data integrated into card details
+   */
+  async runFilteredScrapeWithPricing(filters: FilterOptions, resumeFromCheckpoint: boolean = true): Promise<void> {
+    console.log('Starting filtered scrape with pricing data integration...');
+    console.log(`Applied filters: ${JSON.stringify(filters, null, 2)}`);
+    
+    if (resumeFromCheckpoint) {
+      console.log('Will attempt to resume from checkpoint if available...');
+    } else {
+      console.log('Starting fresh scrape (ignoring any existing checkpoint)...');
+    }
+    
+    try {
+      // First get the card data
+      console.log('📋 Fetching card details...');
+      const cardResult = await this.apiClient.scrapeWithFilters(filters, resumeFromCheckpoint);
+      
+      // Then get the pricing data
+      console.log('💰 Fetching pricing data...');
+      const statsResult = await this.apiClient.getCardStats(filters);
+      
+      // Create a map of card ID to pricing data
+      const pricingMap = new Map();
+      if (statsResult && statsResult['hydra:member']) {
+        statsResult['hydra:member'].forEach((stat: CardStatItem) => {
+          // Extract card ID from @id field (removes "/cards/" prefix)
+          const cardId = stat["@id"].replace('/cards/', '');
+          pricingMap.set(cardId, {
+            lowerPrice: stat.lowerPrice || 0,
+            lastSale: stat.lastSale || 0,
+            inSale: stat.inSale || 0,
+            numberCopyAvailable: stat.numberCopyAvailable || 0,
+            inMyTradelist: stat.inMyTradelist || 0,
+            inMyCollection: stat.inMyCollection || 0,
+            inMyWantlist: stat.inMyWantlist || false,
+            foiled: stat.foiled || false,
+            isExclusive: stat.isExclusive || false
+          });
+        });
+      }
+      
+      // Merge pricing data into card details
+      console.log('🔗 Merging pricing data with card details...');
+      const enrichedCards = cardResult.cards.map(card => {
+        const pricing = pricingMap.get(card.id) || {
+          lowerPrice: 0,
+          lastSale: 0,
+          inSale: 0,
+          numberCopyAvailable: 0,
+          inMyTradelist: 0,
+          inMyCollection: 0,
+          inMyWantlist: false,
+          foiled: false,
+          isExclusive: false
+        };
+        
+        return {
+          ...card,
+          pricing: pricing
+        };
+      });
+      
+      // Create data directory if it doesn't exist
+      const dataDir = path.join(process.cwd(), this.cardDb);
+      await fs.ensureDir(dataDir);
+
+      // Save enriched cards data with filter-specific filename
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filterKey = this.getFilterKeyForFilename(filters);
+      const cardsFile = `${this.cardDb}/altered-cards-with-pricing-filtered-${filterKey}-${timestamp}.json`;
+      await this.apiClient.saveToFile(enrichedCards, cardsFile);
+
+      // Save summary with pricing stats
+      const pricingStats = this.calculatePricingStats(enrichedCards);
+      const enhancedSummary = {
+        ...cardResult.summary,
+        pricingStats,
+        cardsWithPricing: enrichedCards.filter(card => card.pricing.lowerPrice > 0).length
+      };
+      
+      const summaryFile = `${this.cardDb}/scrape-summary-with-pricing-filtered-${filterKey}-${timestamp}.json`;
+      await this.apiClient.saveToFile(enhancedSummary, summaryFile);
+
+      // Log summary
+      console.log('\n=== Filtered Scrape with Pricing Summary ===');
+      console.log(`Applied filters: ${JSON.stringify(enhancedSummary.filters, null, 2)}`);
+      console.log(`Unique cards found: ${enhancedSummary.uniqueCards}`);
+      console.log(`Cards with pricing data: ${enhancedSummary.cardsWithPricing}`);
+      console.log(`Price range: €${pricingStats.minPrice.toFixed(2)} - €${pricingStats.maxPrice.toFixed(2)}`);
+      console.log(`Average price: €${pricingStats.avgPrice.toFixed(2)}`);
+      console.log(`Errors encountered: ${enhancedSummary.errors.length}`);
+      
+      if (enhancedSummary.errors.length > 0) {
+        console.log('\nErrors:');
+        enhancedSummary.errors.slice(0, 10).forEach((error: string) => console.log(`  - ${error}`));
+        if (enhancedSummary.errors.length > 10) {
+          console.log(`  ... and ${enhancedSummary.errors.length - 10} more errors`);
+        }
+      }
+
+      console.log(`\nEnriched data saved to:`);
+      console.log(`  Cards with pricing: ${cardsFile}`);
+      console.log(`  Summary: ${summaryFile}`);
+
+    } catch (error) {
+      console.error('Filtered scrape with pricing failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get card statistics (pricing data) for specific filters
+   */
+  async getCardStatsForFilters(filters: FilterOptions): Promise<any> {
+    console.log('📊 Fetching card statistics for filters...');
+    console.log(`Applied filters: ${JSON.stringify(filters, null, 2)}`);
+    
+    try {
+      const statsResult = await this.apiClient.getCardStats(filters);
+      
+      if (!statsResult || !statsResult['hydra:member']) {
+        console.log('No pricing data found for the given filters');
+        return {
+          stats: [],
+          summary: {
+            totalItems: 0,
+            cardsWithPricing: 0,
+            avgLowerPrice: 0,
+            avgLastSale: 0
+          }
+        };
+      }
+      
+      const stats = statsResult['hydra:member'];
+      const cardsWithPricing = stats.filter(stat => stat.lowerPrice > 0);
+      const cardsWithLastSale = stats.filter(stat => stat.lastSale > 0);
+      
+      const avgLowerPrice = cardsWithPricing.length > 0 
+        ? cardsWithPricing.reduce((sum, stat) => sum + stat.lowerPrice, 0) / cardsWithPricing.length 
+        : 0;
+        
+      const avgLastSale = cardsWithLastSale.length > 0 
+        ? cardsWithLastSale.reduce((sum, stat) => sum + stat.lastSale, 0) / cardsWithLastSale.length 
+        : 0;
+      
+      const summary = {
+        totalItems: statsResult['hydra:totalItems'],
+        cardsWithPricing: cardsWithPricing.length,
+        cardsWithLastSale: cardsWithLastSale.length,
+        avgLowerPrice,
+        avgLastSale,
+        priceRange: cardsWithPricing.length > 0 ? {
+          min: Math.min(...cardsWithPricing.map(s => s.lowerPrice)),
+          max: Math.max(...cardsWithPricing.map(s => s.lowerPrice))
+        } : { min: 0, max: 0 }
+      };
+      
+      console.log('\n=== Pricing Summary ===');
+      console.log(`Total cards: ${summary.totalItems}`);
+      console.log(`Cards with pricing: ${summary.cardsWithPricing}`);
+      console.log(`Cards with last sale data: ${summary.cardsWithLastSale}`);
+      console.log(`Average lower price: €${summary.avgLowerPrice.toFixed(2)}`);
+      console.log(`Average last sale: €${summary.avgLastSale.toFixed(2)}`);
+      console.log(`Price range: €${summary.priceRange.min.toFixed(2)} - €${summary.priceRange.max.toFixed(2)}`);
+      
+      return {
+        stats,
+        summary
+      };
+      
+    } catch (error) {
+      console.error('Failed to fetch card statistics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calculate pricing statistics from enriched cards
+   */
+  private calculatePricingStats(enrichedCards: any[]): any {
+    const cardsWithPricing = enrichedCards.filter(card => card.pricing.lowerPrice > 0);
+    
+    if (cardsWithPricing.length === 0) {
+      return {
+        minPrice: 0,
+        maxPrice: 0,
+        avgPrice: 0,
+        totalCardsWithPricing: 0
+      };
+    }
+    
+    const lowerPrices = cardsWithPricing.map(card => card.pricing.lowerPrice);
+    const lastSales = cardsWithPricing.filter(card => card.pricing.lastSale > 0).map(card => card.pricing.lastSale);
+    
+    const minPrice = Math.min(...lowerPrices);
+    const maxPrice = Math.max(...lowerPrices);
+    const avgPrice = lowerPrices.reduce((sum, price) => sum + price, 0) / lowerPrices.length;
+    
+    // Calculate average last sale price if available
+    const avgLastSale = lastSales.length > 0 
+      ? lastSales.reduce((sum, price) => sum + price, 0) / lastSales.length 
+      : 0;
+    
+    return {
+      minPrice,
+      maxPrice,
+      avgPrice,
+      avgLastSale,
+      totalCardsWithPricing: cardsWithPricing.length,
+      totalCardsWithLastSale: lastSales.length
+    };
   }
 
   /**

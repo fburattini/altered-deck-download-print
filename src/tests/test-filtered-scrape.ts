@@ -1,11 +1,12 @@
 #!/usr/bin/env npx tsx
 
 import { AlteredApiClient } from '../market/api-client';
+import { getBearerToken } from '../config/auth';
 
 const testFilteredScrape = async () => {
     console.log('=== Testing Filtered Scrape Functionality ===');
     
-    const apiClient = new AlteredApiClient();
+    const apiClient = new AlteredApiClient('en-us', getBearerToken());
     
     console.log('\n1. Testing filtered scrape with specific criteria...');
     

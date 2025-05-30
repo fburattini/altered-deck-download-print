@@ -149,4 +149,15 @@ export type CardDetail = {
     MAIN_EFFECT: string;
     ECHO_EFFECT: string;
   };
+  pricing?: {
+    lowerPrice: number;
+    lastSale: number;
+    inSale: number;
+    numberCopyAvailable: number;
+    inMyTradelist: number;
+    inMyCollection: number;
+    inMyWantlist: boolean;
+    foiled: boolean;
+    isExclusive: boolean;
+  };
 };

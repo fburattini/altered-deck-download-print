@@ -1,13 +1,14 @@
 #!/usr/bin/env npx tsx
 
 import { AlteredApiClient } from '../market/api-client';
+import { getBearerToken } from '../config/auth';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
 const testCheckpoint = async () => {
     console.log('=== Testing Checkpoint System ===');
     
-    const apiClient = new AlteredApiClient();
+    const apiClient = new AlteredApiClient('en-us', getBearerToken());
     
     console.log('\n1. Running initial test scrape (will create checkpoint)...');
     const result1 = await apiClient.scrapeAllCards(true); // Start fresh

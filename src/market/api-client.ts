@@ -19,6 +19,31 @@ export interface FilterOptions {
   cardName?: string;
 }
 
+export interface CardStats {
+  "@context": string;
+  "@id": string;
+  "@type": string;
+  "hydra:totalItems": number;
+  "hydra:member": CardStatItem[];
+  "hydra:view": any;
+  "hydra:search": any;
+}
+
+export interface CardStatItem {
+  inMyTradelist: number;
+  inMyCollection: number;
+  inMyWantlist: boolean;
+  lowerPrice: number;
+  lowerOfferId: string;
+  inSale: number;
+  inMySale: number;
+  numberCopyAvailable: number;
+  foiled: boolean;
+  lastSale: number;
+  isExclusive: boolean;
+  "@id": string; // Card ID reference like "/cards/ALT_ALIZE_B_OR_39_C"
+}
+
 export class AlteredApiClient {
   private baseUrl = 'https://api.altered.gg';
   private defaultLocale = 'en-us';
@@ -143,6 +168,35 @@ export class AlteredApiClient {
       
     } catch (error: any) {
       console.error(`Error in getCards for ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch card statistics (pricing data) for cards matching the filters
+   * Uses the same parameters as getCards but hits the /cards/stats endpoint
+   */
+  async getCardStats(options: FilterOptions = {}, retryCount: number = 0): Promise<CardStats> {
+    const params = this.buildQueryParams(options);
+    const url = `${this.baseUrl}/cards/stats?${params.toString()}`;
+    const maxRetries = 3;
+    
+    try {
+      const response: AxiosResponse<CardStats> = await axios.get(url, {
+        headers: this.getHeaders()
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle rate limiting (429) with exponential backoff
+      if (error.response?.status === 429 && retryCount < maxRetries) {
+        const waitTime = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
+        console.warn(`Rate limited for stats request, retrying in ${Math.round(waitTime)}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        return this.getCardStats(options, retryCount + 1);
+      }
+      
+      console.error(`Error fetching card stats from ${url}:`, error);
       throw error;
     }
   }
@@ -491,14 +545,11 @@ export class AlteredApiClient {
         if (!allCards.has(card.id)) {
           try {
             const detail = await this.getCardDetail(card['@id']);
-            console.log('IOAIOIAIOAIO')
-            console.log(detail)
-            process.exit(1)
             allCards.set(card.id, detail);
             console.log(`    Added card: ${detail.name} (${detail.id})`);
             
             // Small delay between card detail requests
-            await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 200)); // 200-400ms
+            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); // 100-200ms
             
           } catch (error: any) {
             const errorMsg = `Failed to fetch detail for card ${card.id} (@id: ${card['@id']}): ${error}`;
