@@ -63,3 +63,7 @@ This tool allows users to:
 - fs-extra - For file system operations
 - prompt-sync - For command line input
 # altered-deck-download-print
+
+H = hand
+J = jolly
+R = reserve

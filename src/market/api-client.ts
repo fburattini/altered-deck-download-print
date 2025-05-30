@@ -16,20 +16,23 @@ export interface FilterOptions {
   itemsPerPage?: number;
   page?: number;
   locale?: string;
+  cardName?: string;
 }
 
 export class AlteredApiClient {
   private baseUrl = 'https://api.altered.gg';
   private defaultLocale = 'en-us';
+  private bearerToken?: string;
 
-  constructor(private locale: string = 'en-us') {
+  constructor(private locale: string = 'en-us', bearerToken?: string) {
     this.defaultLocale = locale;
+    this.bearerToken = bearerToken;
   }
 
   /**
    * Build query parameters for the cards API
    */
-  private buildQueryParams = (options: FilterOptions): URLSearchParams => {
+  buildQueryParams = (options: FilterOptions): URLSearchParams => {
     const params = new URLSearchParams();
 
     // Default parameters
@@ -54,8 +57,28 @@ export class AlteredApiClient {
     options.mountainPower?.forEach(mp => params.append('mountainPower[]', mp.toString()));
     options.oceanPower?.forEach(op => params.append('oceanPower[]', op.toString()));
 
+    // Card name filter
+    if (options.cardName && options.cardName.trim()) {
+      params.append('translations.name', options.cardName.trim());
+    }
+
     return params;
   };
+
+  /**
+   * Get HTTP headers for API requests
+   */
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.bearerToken) {
+      headers.Authorization = `Bearer ${this.bearerToken}`;
+    }
+
+    return headers;
+  }
 
   /**
    * Fetch a single page with retry logic for rate limiting
@@ -64,7 +87,9 @@ export class AlteredApiClient {
     const maxRetries = 3;
     
     try {
-      const response: AxiosResponse<CardCollection> = await axios.get(url);
+      const response: AxiosResponse<CardCollection> = await axios.get(url, {
+        headers: this.getHeaders()
+      });
       return response.data;
     } catch (error: any) {
       // Handle rate limiting (429) with exponential backoff
@@ -142,7 +167,9 @@ export class AlteredApiClient {
     const maxRetries = 3;
     
     try {
-      const response: AxiosResponse<CardDetail> = await axios.get(`${url}?${params.toString()}`);
+      const response: AxiosResponse<CardDetail> = await axios.get(`${url}?${params.toString()}`, {
+        headers: this.getHeaders()
+      });
       return response.data;
     } catch (error: any) {
       // Handle rate limiting (429) with exponential backoff
@@ -464,6 +491,9 @@ export class AlteredApiClient {
         if (!allCards.has(card.id)) {
           try {
             const detail = await this.getCardDetail(card['@id']);
+            console.log('IOAIOIAIOAIO')
+            console.log(detail)
+            process.exit(1)
             allCards.set(card.id, detail);
             console.log(`    Added card: ${detail.name} (${detail.id})`);
             
@@ -534,6 +564,7 @@ export class AlteredApiClient {
     if (filters.mountainPower) parts.push(`mountain-${filters.mountainPower.join(',')}`);
     if (filters.oceanPower) parts.push(`ocean-${filters.oceanPower.join(',')}`);
     if (filters.inSale !== undefined) parts.push(`sale-${filters.inSale}`);
+    if (filters.cardName) parts.push(`name-${filters.cardName.replace(/[^a-zA-Z0-9]/g, '_')}`);
     
     return parts.length > 0 ? parts.join('_') : 'no-filters';
   }

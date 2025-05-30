@@ -17,7 +17,7 @@ import { createScraper } from '../market/scraper';
 const RARITY = 'UNIQUE';              // Options: 'COMMON', 'RARE', 'UNIQUE', or ''
 
 // Which card set? (leave blank for all)  
-const CARD_SET = 'CORE';              // Options: 'CORE', 'ALIZE', or ''
+const CARD_SET = '';              // Options: 'CORE', 'ALIZE', or ''
 
 // Which faction? (leave blank for all)
 const FACTION = 'YZ';                 // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 'YZ', or ''
@@ -26,7 +26,10 @@ const FACTION = 'YZ';                 // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 
 const MAIN_COST = '3-4';              // Examples: '1', '1-3', '5-10', or ''
 
 // What recall cost? (leave blank for all, or use ranges like '1-2')
-const RECALL_COST = '3-4';            // Examples: '1', '1-2', '0-5', or ''
+const RECALL_COST: string = '';            // Examples: '1', '1-2', '0-5', or ''
+
+// What card name? (leave blank for all, use partial name matching)
+const CARD_NAME = 'belasenka';                     // Examples: 'Kelon', 'Dragon', 'Elemental', or ''
 
 // Only cards for sale?
 const ONLY_FOR_SALE = true;           // true or false
@@ -40,6 +43,7 @@ const filters: any = {};
 if (RARITY) filters.rarity = [RARITY];
 if (CARD_SET) filters.cardSet = [CARD_SET];
 if (FACTION) filters.factions = [FACTION];
+if (CARD_NAME) filters.cardName = CARD_NAME;
 if (ONLY_FOR_SALE) filters.inSale = true;
 
 // Handle cost ranges
@@ -75,6 +79,7 @@ const runSimpleQuery = async () => {
   if (FACTION) description += ` ${FACTION}`;
   if (CARD_SET) description += ` from ${CARD_SET}`;
   description += ' cards';
+  if (CARD_NAME) description += ` with name containing "${CARD_NAME}"`;
   if (MAIN_COST) description += ` with main cost ${MAIN_COST}`;
   if (RECALL_COST) description += ` and recall cost ${RECALL_COST}`;
   if (ONLY_FOR_SALE) description += ' that are for sale';
@@ -86,7 +91,10 @@ const runSimpleQuery = async () => {
   console.log('');
   
   try {
-    const scraper = createScraper();
+    const locale = 'en-us'
+    const token = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJDMFo0V3JVWE1xT2JtMy1CTU8xRFV5YktidFA2bldLb2VvWmE1UGJuZHhZIn0.eyJleHAiOjE3NDg2MTM2MTcsImlhdCI6MTc0ODYwNjQxNywiYXV0aF90aW1lIjoxNzQ3ODM3MzU3LCJqdGkiOiI0Yzg3MmUwNy0xNzI2LTQ0NmMtYWM1Yy02OGJmYmEyYmY1ZDkiLCJpc3MiOiJodHRwczovL2F1dGguYWx0ZXJlZC5nZy9yZWFsbXMvcGxheWVycyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJiYmUzMGI4Yi1mNjhlLTRjYjQtYWMxMS0zZjY5ZmM5ZjBlN2MiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJ3ZWIiLCJzaWQiOiI0OTRmMjg1Ni05OWZlLTQxYzEtYTU2YS1lNDI2NDkyZmRhZGUiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vYXV0aC5hbHRlcmVkLmdnIiwiaHR0cHM6Ly93d3cuYWx0ZXJlZC5nZyJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib3RwX2VtYWlsIiwiZGVmYXVsdC1yb2xlcy1wbGF5ZXJzIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIHByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicHJlZmVycmVkX3VzZXJuYW1lIjoiZi5idXJhdHRpbmk5N0BnbWFpbC5jb20iLCJlbWFpbCI6ImYuYnVyYXR0aW5pOTdAZ21haWwuY29tIn0.uNwGSxAXbDEiqn0G6nSfPVSRM-w5ATIM_8_aBm4ibwCzah0RhEBJYFI35_YkVySl56f7fnlPWxCD3C9Z6NtxlW4qri-XVYIg_WpcX1a3TXG4hzxgw7n6B_0gObc5VzglVcpGiucLNl6gnO7LVeCiGlDX2Iv17Cl8D1zB8wYt0EROKXu2pfovma1fayhbs374k3-zzOBRLGnlwtIjsddk-l6XafHVM8uFu4FGy733-VO4KmJCajf8QxpZvaPXFySJA5SPQkHM-gv1xhSyPZUeh_nOlRKyFwaK4c8E5mPMycrwPxoKuU1FNEkXJ-xPgO1Gjmx7ECnfMIz0so1wxS1k3g'
+
+    const scraper = createScraper(locale, token);
     const startTime = Date.now();
     
     await scraper.runFilteredScrape(filters, true);

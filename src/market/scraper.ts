@@ -6,8 +6,8 @@ export class AlteredScraper {
   private apiClient: AlteredApiClient;
   private cardDb = 'card_db'
 
-  constructor(locale: string = 'en-us') {
-    this.apiClient = new AlteredApiClient(locale);
+  constructor(locale: string = 'en-us', bearerToken?: string) {
+    this.apiClient = new AlteredApiClient(locale, bearerToken);
   }
 
   /**
@@ -202,10 +202,11 @@ export class AlteredScraper {
     if (filters.mountainPower) parts.push(`mountain-${filters.mountainPower.join('-')}`);
     if (filters.oceanPower) parts.push(`ocean-${filters.oceanPower.join('-')}`);
     if (filters.inSale !== undefined) parts.push(`sale-${filters.inSale}`);
+    if (filters.cardName) parts.push(`name-${filters.cardName.replace(/[^a-zA-Z0-9]/g, '_')}`);
     
     return parts.length > 0 ? parts.join('_') : 'no-filters';
   }
 }
 
 // Export for CLI usage
-export const createScraper = (locale?: string) => new AlteredScraper(locale);
+export const createScraper = (locale?: string, bearerToken?: string) => new AlteredScraper(locale, bearerToken);
