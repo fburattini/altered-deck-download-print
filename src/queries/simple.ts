@@ -8,7 +8,6 @@
  */
 
 import { createScraper } from '../market/scraper';
-import { FilterOptions, CardStats } from '../market/api-client';
 import { getBearerToken } from '../config/auth';
 
 // ============================================
@@ -25,13 +24,13 @@ const CARD_SET = '';              // Options: 'CORE', 'ALIZE', or ''
 const FACTION = 'YZ';                 // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 'YZ', or ''
 
 // What main cost? (leave blank for all, or use ranges like '1-3')
-const MAIN_COST = '4';              // Examples: '1', '1-3', '5-10', or ''
+const MAIN_COST = '3';              // Examples: '1', '1-3', '5-10', or ''
 
 // What recall cost? (leave blank for all, or use ranges like '1-2')
 const RECALL_COST: string = '';            // Examples: '1', '1-2', '0-5', or ''
 
 // What card name? (leave blank for all, use partial name matching)
-const CARD_NAME = 'belasenka';                     // Examples: 'Kelon', 'Dragon', 'Elemental', or ''
+const CARD_NAME = 'baku';                     // Examples: 'Kelon', 'Dragon', 'Elemental', or ''
 
 // Only cards for sale?
 const ONLY_FOR_SALE = true;           // true or false

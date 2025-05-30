@@ -185,6 +185,7 @@ export class AlteredApiClient {
       const response: AxiosResponse<CardStats> = await axios.get(url, {
         headers: this.getHeaders()
       });
+      
       return response.data;
     } catch (error: any) {
       // Handle rate limiting (429) with exponential backoff

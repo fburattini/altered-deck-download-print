@@ -230,9 +230,10 @@ export class AlteredScraper {
       }
       
       // Merge pricing data into card details
-      console.log('🔗 Merging pricing data with card details...');
       const enrichedCards = cardResult.cards.map(card => {
-        const pricing = pricingMap.get(card.id) || {
+        // Extract the reference ID from the card's @id field (same as what we use for pricing map keys)
+        const cardRefId = card['@id'].replace('/cards/', '');
+        const pricing = pricingMap.get(cardRefId) || {
           lowerPrice: 0,
           lastSale: 0,
           inSale: 0,

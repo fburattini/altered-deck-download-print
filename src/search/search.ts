@@ -16,18 +16,18 @@ import { CardDetail } from '../market/markte-types';
 // ============================================
 
 // Main cost filter (exact match or range like "1-3")
-const MAIN_COST_FILTER = '3-4';          // Examples: '3', '1-3', '5-7', or ''
+const MAIN_COST_FILTER = '';          // Examples: '3', '1-3', '5-7', or ''
 
 // Main effect text search (case-insensitive partial match)
 // Support multiple terms: 'draw,boost' (OR logic) or 'draw+boost' (AND logic)
-const MAIN_EFFECT_FILTER = '';        // Examples: 'boost', 'draw,boost', 'discard+exhaust', or ''
+const MAIN_EFFECT_FILTER = 'discards a card from their hand.';        // Examples: 'boost', 'draw,boost', 'discard+exhaust', or ''
 
 // Echo effect text search (case-insensitive partial match)  
 // Support multiple terms: 'reserve,expedition' (OR logic) or 'reserve+draw' (AND logic)
 const ECHO_EFFECT_FILTER = '';        // Examples: 'draw', 'reserve,expedition', 'token+sacrifice', or ''
 
 // Card name filter (case-insensitive partial match)
-const NAME_FILTER = 'belasenka';               // Examples: 'Dragon', 'Elemental', 'Snowball', or ''
+const NAME_FILTER = 'baku';               // Examples: 'Dragon', 'Elemental', 'Snowball', or ''
 
 // Faction filter
 const FACTION_FILTER = '';            // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 'YZ', or ''
@@ -36,7 +36,7 @@ const FACTION_FILTER = '';            // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 
 const RARITY_FILTER = '';             // Options: 'COMMON', 'RARE', 'UNIQUE', or ''
 
 // Show results limit (0 = show all)
-const RESULT_LIMIT = 20;
+const RESULT_LIMIT = 40;
 
 // ============================================
 // 🔧 SEARCH INTERFACE
@@ -73,6 +73,7 @@ const loadCardData = async (filePath: string): Promise<CardDetail[]> => {
   
   return lines.map(line => {
     try {
+        // console.log(line, JSON.parse(line))
       return JSON.parse(line) as CardDetail;
     } catch (error) {
       console.warn(`Failed to parse line: ${line.substring(0, 100)}...`);
@@ -346,7 +347,7 @@ const displayResults = (results: SearchResult[], limit: number = 0): void => {
     
     console.log(`\n${index + 1}. ${card.name}`);
     console.log(`   ID: ${card.id}`);
-    console.log(`   Reference: ${card.reference}`);
+    console.log(`   Reference: https://www.altered.gg/cards/${card.reference}`);
     console.log(`   Faction: ${card.mainFaction.name} (${card.mainFaction.reference})`);
     console.log(`   Price: €${card.pricing?.lowerPrice ?? '??'} (x${card.pricing?.numberCopyAvailable ?? 0})`);
     console.log(`   Set: ${card.cardSet.name}`);
@@ -406,11 +407,12 @@ const runSearch = async (): Promise<void> => {
   console.log('');
   
   try {
-    const results = (await searchCards(filters)).sort((a, b) => {
+    const results = (await searchCards(filters)).filter(x => x.card.pricing?.inSale).sort((a, b) => {
       const priceA = a.card.pricing?.lowerPrice ?? Infinity;
       const priceB = b.card.pricing?.lowerPrice ?? Infinity;
       return priceA === priceB ? 0 : priceA < priceB ? -1 : 1;
     });
+
     displayResults(results, RESULT_LIMIT);
     
   } catch (error) {
