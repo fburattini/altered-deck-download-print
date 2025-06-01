@@ -35,6 +35,38 @@ $border-radius-full: 9999px;
   border: 1px solid $border-light;
 }
 
+// Base button placeholder (moved from APICardSearch.scss)
+%btn-base {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // width: 100%; // Decided to make width optional at base level, apply with .btn-full or specific component needs
+  padding: 0.5rem 1rem; // Default padding, can be overridden
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: $border-radius-sm;
+  border: 1px solid transparent; // Default border, can be overridden by specific buttons
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  gap: 0.5rem; // For icon + text
+  text-decoration: none; // For <a> tags styled as buttons
+  white-space: nowrap; // Prevent text wrapping
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($primary-color, 0.2); // Softened shadow slightly for general use
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    // Ensure hover effects are removed on disabled state
+    transform: none !important;
+    box-shadow: none !important;
+    // Specific buttons should define their own disabled background if needed
+  }
+}
+
 // Layout
 .app-container {
   max-width: 1200px;
@@ -223,24 +255,25 @@ $border-radius-full: 9999px;
 }
 
 .btn-primary {
+  @extend %btn-base; // Extend the new base placeholder
   background: $primary-color;
   color: white;
 
   &:hover {
     background: $primary-dark;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    // transform and box-shadow are inherited from %btn-base
+    // If a more pronounced shadow is needed for primary buttons specifically:
+    // box-shadow: 0 6px 14px rgba($primary-color, 0.5);
   }
 
   &:disabled {
-    background: $text-light;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    background: $text-light; // Specific disabled background
+    // opacity from %btn-base also applies
   }
 }
 
 .btn-secondary {
+  @extend %btn-base; // Extend the new base placeholder
   background: $background-white;
   color: $text-medium;
   border: 1px solid $border-medium;
@@ -248,6 +281,9 @@ $border-radius-full: 9999px;
   &:hover {
     background: $background-light;
     border-color: $text-light;
+    // Override hover effects from %btn-base if not desired (e.g., if shadow is too much for secondary)
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); // Lighter shadow for secondary
+    transform: translateY(0); // Or remove transform if not wanted
   }
 }
 

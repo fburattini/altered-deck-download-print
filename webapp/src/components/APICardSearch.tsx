@@ -326,7 +326,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 					</button>
 					<button type="button" onClick={handleScrape} className="scrape-button" disabled={isSearching || isScraping}>
 						<CloudArrowDownIcon />
-						{isScraping ? 'Scraping...' : 'Download Data'}
+						{isScraping ? 'Scraping...' : 'Fetch Cards'}
 					</button>
 					<button type="button" onClick={clearAllFilters} className="clear-button" disabled={isSearching || isScraping}>
 						Clear Filters

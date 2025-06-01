@@ -181,32 +181,19 @@
 }
 
 .search-button {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  @extend %btn-base;
   color: white;
   background: $primary-color;
-  border: none;
-  border-radius: $border-radius-sm;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  border: none; // Override base border
 
   &:hover {
     background: $primary-dark;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    // transform and box-shadow are now inherited from %btn-base
   }
 
   &:disabled {
-    background: $text-light;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    background: $text-light; // Specific disabled background
+    // opacity from %btn-base also applies
   }
 
   .search-button-icon {
@@ -215,20 +202,42 @@
   }
 }
 
+.scrape-button {
+  @extend %btn-base;
+  color: white;
+  background: $primary-color; // Styled like the search button
+  border: none; // Override base border
+
+  &:hover {
+    background: $primary-dark;
+    // transform and box-shadow are now inherited from %btn-base
+  }
+
+  &:disabled {
+    background: $text-light; // Specific disabled background
+    // opacity from %btn-base also applies
+  }
+
+  // Assuming icons (like Heroicons) will size correctly or be sized via props/SVG attributes.
+  // The 'gap' from %btn-base will handle spacing if an icon is a direct child.
+}
+
 .clear-button {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  @extend %btn-base;
   color: $text-medium;
   background: white;
-  border: 1px solid $border-medium;
-  border-radius: $border-radius-sm;
-  cursor: pointer;
-  transition: all 0.2s;
+  border: 1px solid $border-medium; // Override base border
 
   &:hover {
     background: $background-light;
     border-color: $text-light;
+    // Override hover effects from %btn-base that are not desired for this button
+    transform: none;
+    box-shadow: none;
   }
+  // Inherits base disabled state (opacity, cursor, no transform/shadow)
+  // If a specific background for disabled is needed, it can be added here:
+  // &:disabled {
+  //   background-color: $some-disabled-grey-for-clear-button;
+  // }
 }
