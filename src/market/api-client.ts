@@ -790,26 +790,33 @@ export class AlteredApiClient {
       }
     }
     
-    // Check if card already exists (by ID or reference)
-    const isDuplicate = existingCards.some(existing => 
+    // Check if card already exists (by ID or reference) and find its index
+    const duplicateIndex = existingCards.findIndex(existing => 
       existing.id === card.id || 
       existing.reference === card.reference ||
       existing['@id'] === card['@id']
     );
     
-    if (isDuplicate) {
-      console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, skipping`);
-      return;
+    if (duplicateIndex !== -1) {
+      // Card exists, overwrite it with the new card data
+      console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, overwriting with new data.`);
+      existingCards[duplicateIndex] = card;
+    } else {
+      // Card does not exist, add it
+      // console.log(`Adding new card ${card.name} (${card.id}) to ${filename}.`); // Original log before change
+      existingCards.push(card);
     }
-    
-    // Add the new card
-    existingCards.push(card);
     
     // Save all cards back to file
     const jsonlContent = existingCards.map(c => JSON.stringify(c)).join('\n');
     await fs.writeFile(filePath, jsonlContent, 'utf8');
     
-    console.log(`Saved card ${card.name} to ${filename} (${existingCards.length} total cards)`);
+    // console.log(`Saved card ${card.name} to ${filename} (${existingCards.length} total cards)`); // Original log
+    if (duplicateIndex !== -1) {
+      console.log(`Updated card ${card.name} in ${filename} (${existingCards.length} total cards)`);
+    } else {
+      console.log(`Saved new card ${card.name} to ${filename} (${existingCards.length} total cards)`);
+    }
   }
 
   /**
@@ -855,31 +862,36 @@ export class AlteredApiClient {
         }
       }
       
-      // Create a set of existing card identifiers for fast lookup
-      const existingIds = new Set(existingCards.map(c => c.id));
-      const existingReferences = new Set(existingCards.map(c => c.reference));
-      const existingAtIds = new Set(existingCards.map(c => c['@id']));
-      
-      // Filter out duplicates from new cards
-      const newCards = cardsForFile.filter(card => 
-        !existingIds.has(card.id) && 
-        !existingReferences.has(card.reference) &&
-        !existingAtIds.has(card['@id'])
-      );
-      
-      if (newCards.length === 0) {
-        console.log(`No new cards to add to ${filename}`);
-        continue;
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      // Process each card from the input `cardsForFile`
+      for (const newCard of cardsForFile) {
+        const duplicateIndex = existingCards.findIndex(existing => 
+          existing.id === newCard.id || 
+          existing.reference === newCard.reference ||
+          existing['@id'] === newCard['@id']
+        );
+
+        if (duplicateIndex !== -1) {
+          // Card exists, overwrite it with the new card data
+          existingCards[duplicateIndex] = newCard;
+          updatedCount++;
+        } else {
+          // Card does not exist, add it to the list
+          existingCards.push(newCard);
+          addedCount++;
+        }
       }
       
-      // Add new cards to existing ones
-      const allCards = [...existingCards, ...newCards];
-      
-      // Save all cards back to file
-      const jsonlContent = allCards.map(c => JSON.stringify(c)).join('\n');
-      await fs.writeFile(filePath, jsonlContent, 'utf8');
-      
-      console.log(`Updated ${filename}: added ${newCards.length} new cards (${allCards.length} total)`);
+      // Only save if there were actual changes
+      if (addedCount > 0 || updatedCount > 0) {
+        const jsonlContent = existingCards.map(c => JSON.stringify(c)).join('\n');
+        await fs.writeFile(filePath, jsonlContent, 'utf8');
+        console.log(`Updated ${filename}: ${addedCount} new cards added, ${updatedCount} cards updated. (${existingCards.length} total)`);
+      } else {
+        console.log(`No new cards to add or update in ${filename}`);
+      }
     }
   }
 }
