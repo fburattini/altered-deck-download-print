@@ -10,8 +10,8 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "build": "tsc",
     "cli": "npx tsx src/cli.ts",
-    "server": "npx tsx server/index.ts",
-    "server:dev": "nodemon --watch 'webapp/server/**/*.ts' --watch 'src/**/*.ts' --exec 'npx tsx' webapp/server/index.ts",
+    "server": "npx tsx server/server.ts",
+    "server:dev": "nodemon --watch 'webapp/server/**/*.ts' --watch 'src/**/*.ts' --exec 'npx tsx' webapp/server/server.ts",
     "dev:webapp": "vite",
     "build:webapp": "vite build"
   },
