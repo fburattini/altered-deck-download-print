@@ -8,3 +8,4 @@ yarn-error.log*
 decks/
 card_db/
 data/
+checkpoints_db/

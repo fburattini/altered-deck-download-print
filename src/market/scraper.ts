@@ -55,9 +55,8 @@ export class AlteredScraper {
 
       console.log(`\nData saved to:`);
       console.log(`  Cards: ${cardsFile}`);
-      console.log(`  Summary: ${summaryFile}`);
-      console.log(`  Latest cards also available at: data/altered-cards-latest.jsonl`);
-      console.log(`  Checkpoint: data/scrape-checkpoint.json`);
+      console.log(`  Summary: ${summaryFile}`);      console.log(`  Latest cards also available at: checkpoints_db/altered-cards-latest.jsonl`);
+      console.log(`  Checkpoint: checkpoints_db/scrape-checkpoint.json`);
 
     } catch (error) {
       console.error('Scrape failed:', error);

@@ -54,8 +54,8 @@ The scraper uses a narrow filtering strategy to avoid the API's 1000-item limit:
 - **Automatic progress saving** every 10 processed combinations
 - **Resume functionality** to continue from where you left off
 - **Separate data files**:
-  - `data/scrape-checkpoint.json` - Progress tracking (lightweight)
-  - `data/altered-cards-latest.jsonl` - Current card data (updated on each checkpoint)
+  - `checkpoints_db/scrape-checkpoint.json` - Progress tracking (lightweight)
+  - `checkpoints_db/altered-cards-latest.jsonl` - Current card data (updated on each checkpoint)
 - **Error recovery** - Checkpoints saved on errors to prevent data loss
 
 ## New Feature: Filtered Scraping
@@ -121,8 +121,8 @@ await scraper.runFilteredScrape({
 Filtered scrapes create uniquely named files based on your filters:
 - `card_db/altered-cards-filtered-{filter-description}-{timestamp}.json` - Card data
 - `card_db/scrape-summary-filtered-{filter-description}-{timestamp}.json` - Scrape summary
-- `data/filtered-cards-latest-{filter-key}.jsonl` - Latest cards (for checkpoints)
-- `data/filtered-scrape-checkpoint-{filter-key}.json` - Checkpoint data
+- `checkpoints_db/filtered-cards-latest-{filter-key}.jsonl` - Latest cards (for checkpoints)
+- `checkpoints_db/filtered-scrape-checkpoint-{filter-key}.json` - Checkpoint data
 
 ### Performance Comparison
 

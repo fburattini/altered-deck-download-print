@@ -287,7 +287,6 @@ export class AlteredApiClient {
 
     return combinations;
   }
-
   /**
    * Load checkpoint data from file
    */
@@ -296,8 +295,8 @@ export class AlteredApiClient {
     allCards: Map<string, CardDetail>,
     summary: any 
   } | null> {
-    const checkpointPath = path.join(process.cwd(), 'data', 'scrape-checkpoint.json');
-    const cardsDataPath = path.join(process.cwd(), 'data', 'altered-cards-latest.jsonl');
+    const checkpointPath = path.join(process.cwd(), 'checkpoints_db', 'scrape-checkpoint.json');
+    const cardsDataPath = path.join(process.cwd(), 'checkpoints_db', 'altered-cards-latest.jsonl');
     
     try {
       if (await fs.pathExists(checkpointPath)) {
@@ -334,7 +333,6 @@ export class AlteredApiClient {
     
     return null;
   }
-
   /**
    * Save checkpoint data to file
    */
@@ -343,7 +341,7 @@ export class AlteredApiClient {
     allCards: Map<string, CardDetail>,
     summary: any
   ): Promise<void> {
-    const checkpointPath = path.join(process.cwd(), 'data', 'scrape-checkpoint.json');
+    const checkpointPath = path.join(process.cwd(), 'checkpoints_db', 'scrape-checkpoint.json');
     
     const checkpointData = {
       timestamp: new Date().toISOString(),
@@ -355,9 +353,8 @@ export class AlteredApiClient {
       await fs.ensureDir(path.dirname(checkpointPath));
       await fs.writeJson(checkpointPath, checkpointData, { spaces: 2 });
       console.log(`Checkpoint saved: ${processedCombinations.size} combinations, ${allCards.size} cards`);
-      
-      // Save the current cards data to a dedicated file for easy access
-      const cardsDataPath = path.join('data', 'altered-cards-latest.jsonl');
+        // Save the current cards data to a dedicated file for easy access
+      const cardsDataPath = path.join('checkpoints_db', 'altered-cards-latest.jsonl');
       const cardsArray = Array.from(allCards.values());
       await this.saveToFile(cardsArray, cardsDataPath);
       
@@ -457,11 +454,19 @@ export class AlteredApiClient {
         // Mark this combination as processed
         processedCombinations.add(combinationKey);
         summary.processedCombinations = processedCombinations.size;
-        summary.uniqueCards = allCards.size;
-
-        // Save checkpoint every 10 combinations
+        summary.uniqueCards = allCards.size;        // Save checkpoint every 10 combinations
         if (processedCombinations.size % 10 === 0) {
           await this.saveCheckpoint(processedCombinations, allCards, summary);
+          
+          // Also save cards using name and faction approach
+          try {
+            const cardsArray = Array.from(allCards.values());
+            if (cardsArray.length > 0) {
+              await this.saveCardsByNameAndFaction(cardsArray);
+            }
+          } catch (error) {
+            console.warn('Failed to save cards by name and faction during checkpoint:', error);
+          }
         }
 
         // Add delay to be respectful to the API (increased for rate limiting)
@@ -477,17 +482,35 @@ export class AlteredApiClient {
           console.warn('Rate limited on combination request, waiting 5 seconds before continuing...');
           await new Promise(resolve => setTimeout(resolve, 5000));
         }
-        
-        // Save checkpoint on error
+          // Save checkpoint on error
         await this.saveCheckpoint(processedCombinations, allCards, summary);
+        
+        // Also save cards using name and faction approach
+        try {
+          const cardsArray = Array.from(allCards.values());
+          if (cardsArray.length > 0) {
+            await this.saveCardsByNameAndFaction(cardsArray);
+          }
+        } catch (saveError) {
+          console.warn('Failed to save cards by name and faction during error checkpoint:', saveError);
+        }
       }
-    }
-
-    // Final checkpoint save
+    }    // Final checkpoint save
     summary.endTime = new Date().toISOString();
     await this.saveCheckpoint(processedCombinations, allCards, summary);
 
     console.log(`Scraping completed. Found ${allCards.size} unique cards.`);
+    
+    // Save cards using the new name and faction-based approach
+    try {
+      const cardsArray = Array.from(allCards.values());
+      console.log('Saving cards by name and faction...');
+      await this.saveCardsByNameAndFaction(cardsArray);
+      console.log('Cards saved successfully using name and faction-based filenames.');
+    } catch (error) {
+      console.error('Failed to save cards by name and faction:', error);
+      summary.errors.push(`Failed to save cards by name and faction: ${error}`);
+    }
     
     return {
       cards: Array.from(allCards.values()),
@@ -518,9 +541,8 @@ export class AlteredApiClient {
     };
 
     // Create a unique checkpoint name based on the filters
-    const filterKey = this.getFilterKey(filters);
-    const checkpointPath = path.join(process.cwd(), 'data', `${checkpointPrefix}-scrape-checkpoint-${filterKey}.json`);
-    const cardsDataPath = path.join(process.cwd(), 'data', `${checkpointPrefix}-cards-latest-${filterKey}.jsonl`);
+    const filterKey = this.getFilterKey(filters);    const checkpointPath = path.join(process.cwd(), 'checkpoints_db', `${checkpointPrefix}-scrape-checkpoint-${filterKey}.json`);
+    const cardsDataPath = path.join(process.cwd(), 'checkpoints_db', `${checkpointPrefix}-cards-latest-${filterKey}.jsonl`);
 
     // Try to load checkpoint
     if (resumeFromCheckpoint) {
@@ -569,9 +591,11 @@ export class AlteredApiClient {
       // Mark as processed
       processedCombinations.add(filterKey);
       summary.processedCombinations = 1;
-      summary.uniqueCards = allCards.size;
-
-      // Save checkpoint
+      summary.uniqueCards = allCards.size;      // Save cards using new name+faction approach
+      const cardsArray = Array.from(allCards.values());
+      await this.saveCardsByNameAndFaction(cardsArray);
+      
+      // Save checkpoint for resume functionality
       await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
         
     } catch (error: any) {
@@ -585,12 +609,22 @@ export class AlteredApiClient {
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
       
-      // Save checkpoint on error
+      // Save checkpoint on error (but still try to save cards first)
+      try {
+        const cardsArray = Array.from(allCards.values());
+        if (cardsArray.length > 0) {
+          await this.saveCardsByNameAndFaction(cardsArray);
+        }
+      } catch (saveError) {
+        console.error(`Failed to save cards after error: ${saveError}`);
+      }
       await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
     }
 
-    // Final checkpoint save
+    // Final saves
     summary.endTime = new Date().toISOString();
+    const cardsArray = Array.from(allCards.values());
+    await this.saveCardsByNameAndFaction(cardsArray);
     await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
 
     console.log(`Filtered scraping completed. Found ${allCards.size} unique cards.`);
@@ -712,6 +746,140 @@ export class AlteredApiClient {
       // Save as regular JSON
       await fs.writeJson(filePath, data, { spaces: 2 });
       console.log(`Data saved to ${filePath}`);
+    }
+  }
+
+  /**
+   * Generate filename for card based on name and faction
+   */
+  private getCardFileName(card: CardDetail): string {
+    // Sanitize card name for filename
+    const sanitizedName = card.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-').toLowerCase();
+    const faction = card.mainFaction.reference;
+    return `card_db/cards-${sanitizedName}-${faction}.jsonl`;
+  }
+
+  /**
+   * Save a single card to its dedicated file based on name and faction
+   * Checks for duplicates before adding
+   */
+  async saveCardByNameAndFaction(card: CardDetail): Promise<void> {
+    const filename = this.getCardFileName(card);
+    const filePath = path.join(process.cwd(), filename);
+    
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(filePath));
+    
+    // Load existing cards if file exists
+    const existingCards: CardDetail[] = [];
+    if (await fs.pathExists(filePath)) {
+      try {
+        const content = await fs.readFile(filePath, 'utf8');
+        const lines = content.trim().split('\n').filter(line => line.length > 0);
+        
+        for (const line of lines) {
+          try {
+            const existingCard: CardDetail = JSON.parse(line);
+            existingCards.push(existingCard);
+          } catch (error) {
+            console.warn(`Failed to parse existing card line in ${filename}: ${error}`);
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to read existing cards from ${filename}: ${error}`);
+      }
+    }
+    
+    // Check if card already exists (by ID or reference)
+    const isDuplicate = existingCards.some(existing => 
+      existing.id === card.id || 
+      existing.reference === card.reference ||
+      existing['@id'] === card['@id']
+    );
+    
+    if (isDuplicate) {
+      console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, skipping`);
+      return;
+    }
+    
+    // Add the new card
+    existingCards.push(card);
+    
+    // Save all cards back to file
+    const jsonlContent = existingCards.map(c => JSON.stringify(c)).join('\n');
+    await fs.writeFile(filePath, jsonlContent, 'utf8');
+    
+    console.log(`Saved card ${card.name} to ${filename} (${existingCards.length} total cards)`);
+  }
+
+  /**
+   * Save multiple cards to their respective files based on name and faction
+   * Groups cards and checks for duplicates
+   */
+  async saveCardsByNameAndFaction(cards: CardDetail[]): Promise<void> {
+    // Group cards by their filename
+    const cardsByFile = new Map<string, CardDetail[]>();
+    
+    for (const card of cards) {
+      const filename = this.getCardFileName(card);
+      if (!cardsByFile.has(filename)) {
+        cardsByFile.set(filename, []);
+      }
+      cardsByFile.get(filename)!.push(card);
+    }
+    
+    // Save each group to its respective file
+    for (const [filename, cardsForFile] of cardsByFile) {
+      const filePath = path.join(process.cwd(), filename);
+      
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(filePath));
+      
+      // Load existing cards if file exists
+      const existingCards: CardDetail[] = [];
+      if (await fs.pathExists(filePath)) {
+        try {
+          const content = await fs.readFile(filePath, 'utf8');
+          const lines = content.trim().split('\n').filter(line => line.length > 0);
+          
+          for (const line of lines) {
+            try {
+              const existingCard: CardDetail = JSON.parse(line);
+              existingCards.push(existingCard);
+            } catch (error) {
+              console.warn(`Failed to parse existing card line in ${filename}: ${error}`);
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to read existing cards from ${filename}: ${error}`);
+        }
+      }
+      
+      // Create a set of existing card identifiers for fast lookup
+      const existingIds = new Set(existingCards.map(c => c.id));
+      const existingReferences = new Set(existingCards.map(c => c.reference));
+      const existingAtIds = new Set(existingCards.map(c => c['@id']));
+      
+      // Filter out duplicates from new cards
+      const newCards = cardsForFile.filter(card => 
+        !existingIds.has(card.id) && 
+        !existingReferences.has(card.reference) &&
+        !existingAtIds.has(card['@id'])
+      );
+      
+      if (newCards.length === 0) {
+        console.log(`No new cards to add to ${filename}`);
+        continue;
+      }
+      
+      // Add new cards to existing ones
+      const allCards = [...existingCards, ...newCards];
+      
+      // Save all cards back to file
+      const jsonlContent = allCards.map(c => JSON.stringify(c)).join('\n');
+      await fs.writeFile(filePath, jsonlContent, 'utf8');
+      
+      console.log(`Updated ${filename}: added ${newCards.length} new cards (${allCards.length} total)`);
     }
   }
 }

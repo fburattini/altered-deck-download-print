@@ -13,9 +13,8 @@ const testCheckpoint = async () => {
     console.log('\n1. Running initial test scrape (will create checkpoint)...');
     const result1 = await apiClient.scrapeAllCards(true); // Start fresh
     console.log(`Initial scrape result: ${result1.cards.length} cards, ${result1.summary.processedCombinations} combinations`);
-    
-    console.log('\n2. Checking if checkpoint file exists...');
-    const checkpointPath = path.join(process.cwd(), 'data', 'scrape-checkpoint.json');
+      console.log('\n2. Checking if checkpoint file exists...');
+    const checkpointPath = path.join(process.cwd(), 'checkpoints_db', 'scrape-checkpoint.json');
     const checkpointExists = await fs.pathExists(checkpointPath);
     console.log(`Checkpoint file exists: ${checkpointExists}`);
     
