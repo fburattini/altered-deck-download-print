@@ -1,4 +1,5 @@
 import { Card } from '../types';
+import { searchAPI, APISearchResponse } from '../services/searchAPI';
 
 export interface DataLoaderResult {
   cards: Card[];
@@ -488,5 +489,111 @@ export const setupMockCardDataAPI = () => {
         cardCount: 3
       });
     };
+  }
+};
+
+/**
+ * Load all card data from the backend search API
+ */
+export const loadAllCardsFromBackend = async (): Promise<DataLoaderResult> => {
+  const result: DataLoaderResult = {
+    cards: [],
+    fileCount: 0,
+    cardCount: 0,
+    errors: []
+  };
+
+  try {
+    console.log('🔗 Loading all cards from backend search API...');
+    
+    // Test connection first
+    const isConnected = await searchAPI.testConnection();
+    if (!isConnected) {
+      throw new Error('Backend API is not available. Please ensure the server is running on port 3000.');
+    }
+
+    // Search with empty filters to get all cards
+    const searchResponse: APISearchResponse = await searchAPI.searchCards({}, {
+      resultLimit: 0, // Get all cards
+      sortByPrice: false,
+      inSaleOnly: false
+    });
+
+    if (!searchResponse.success) {
+      throw new Error(searchResponse.error || 'Search API returned error');
+    }
+
+    // Transform search results to Card objects
+    const transformedCards: Card[] = searchResponse.data.map(searchResult => {
+      const cardData = searchResult.card;
+      
+      return {
+        id: cardData.id || cardData.reference || '',
+        name: cardData.name || '',
+        '@id': cardData['@id'] || '',
+        '@context': cardData['@context'] || '',
+        '@type': cardData['@type'] || '',
+        cardType: cardData.cardType || {
+          '@id': '',
+          '@type': 'CardType',
+          reference: '',
+          id: '',
+          name: ''
+        },
+        cardSubTypes: cardData.cardSubTypes || [],
+        cardSet: cardData.cardSet || {
+          '@id': '',
+          '@type': 'CardSet',
+          id: '',
+          reference: '',
+          name: ''
+        },
+        rarity: cardData.rarity || {
+          '@id': '',
+          '@type': 'Rarity',
+          reference: '',
+          id: '',
+          name: ''
+        },
+        cardRulings: cardData.cardRulings || [],
+        imagePath: cardData.imagePath || '',
+        assets: cardData.assets || { WEB: [] },
+        lowerPrice: cardData.lowerPrice || 0,
+        qrUrlDetail: cardData.qrUrlDetail || '',
+        isSuspended: cardData.isSuspended || false,
+        reference: cardData.reference || '',
+        mainFaction: cardData.mainFaction || {
+          '@id': '',
+          '@type': 'Faction',
+          reference: '',
+          color: '',
+          id: '',
+          name: ''
+        },
+        elements: cardData.elements || {
+          MAIN_COST: '0',
+          RECALL_COST: '0',
+          FOREST_POWER: '0',
+          MOUNTAIN_POWER: '0',
+          OCEAN_POWER: '0',
+          MAIN_EFFECT: '',
+          ECHO_EFFECT: ''
+        },
+        pricing: cardData.pricing || null
+      } as Card;
+    });
+
+    result.cards = transformedCards;
+    result.cardCount = transformedCards.length;
+    result.fileCount = 1; // API is treated as one source
+    
+    console.log(`✅ Loaded ${result.cardCount} cards from backend API`);
+    
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error loading from backend';
+    console.error('❌ Backend API loading error:', error);
+    result.errors.push(errorMessage);
+    throw error;
   }
 };

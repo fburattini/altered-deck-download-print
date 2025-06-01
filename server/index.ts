@@ -5,7 +5,7 @@ import { CardSearcher, SearchFilters, SearchOptions } from '../src/search/search
 const app = express();
 app.use(cors());
 app.use(express.json()); // Add JSON body parsing
-const port: number = 3000;
+const port: number = 3001;
 
 app.get('/', (req: Request, res: Response) => {
     res.json({

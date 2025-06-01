@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import CardSearch from './components/CardSearch';
+import APICardSearch from './components/APICardSearch';
 import CardDisplay from './components/CardDisplay';
 import { Card } from './types';
-import { loadCardDataFromAPI, DataLoaderResult } from './utils/dataLoader';
 
 // Sorting options
 type SortOption = 'name' | 'mainCost' | 'price' | 'rarity' | 'faction';
 type SortDirection = 'asc' | 'desc';
 
 const App: React.FC = () => {
-	const [allCards, setAllCards] = useState<Card[]>([]);
-	const [filteredCards, setFilteredCards] = useState<Card[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [dataInfo, setDataInfo] = useState<DataLoaderResult | null>(null);
+	const [searchResults, setSearchResults] = useState<Card[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [searchError, setSearchError] = useState<string | null>(null);
 
 	// Sorting state
 	const [sortBy, setSortBy] = useState<SortOption>('name');
@@ -23,116 +20,54 @@ const App: React.FC = () => {
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [cardsPerPage, setCardsPerPage] = useState(20);
 	const [currentPage, setCurrentPage] = useState(1);
-	// Load card data on component mount
-	useEffect(() => {
-		const loadData = async () => {
-			setLoading(true);
-			setError(null);
-			try {
-				const result = await loadCardDataFromAPI();
 
-				if (result.errors.length > 0) {
-					console.warn('Data loading warnings:', result.errors);
-				}
-
-				setAllCards(result.cards);
-				setFilteredCards(result.cards);
-				setDataInfo(result);
-			} catch (err) {
-				const errorMessage = err instanceof Error ? err.message : 'Failed to load card data';
-				setError(errorMessage);
-				console.error('Error loading card data:', err);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		loadData();
-	}, []);
-
-	// Handle filtered cards from CardSearch component and apply sorting
-	const handleFilteredCards = (cards: Card[]) => {
-		// Apply sorting to the filtered cards
-		const sortedCards = [...cards].sort((a, b) => {
-			let comparison = 0;
-
-			switch (sortBy) {
-				case 'name':
-					comparison = a.name.localeCompare(b.name);
-					break;
-				case 'mainCost':
-					comparison = parseInt(a.elements.MAIN_COST) - parseInt(b.elements.MAIN_COST);
-					break;
-				case 'price':
-					const priceA = a.pricing?.lowerPrice || 0;
-					const priceB = b.pricing?.lowerPrice || 0;
-					comparison = priceA - priceB;
-					break;
-				case 'rarity':
-					const rarityOrder = { 'COMMON': 1, 'RARE': 2, 'UNIQUE': 3 };
-					const rarityA = rarityOrder[a.rarity.reference as keyof typeof rarityOrder] || 0;
-					const rarityB = rarityOrder[b.rarity.reference as keyof typeof rarityOrder] || 0;
-					comparison = rarityA - rarityB;
-					break;
-				case 'faction':
-					comparison = a.mainFaction.name.localeCompare(b.mainFaction.name);
-					break;
-				default:
-					comparison = 0;
-			}
-
-			return sortDirection === 'desc' ? -comparison : comparison;
-		});
-
-		setFilteredCards(sortedCards);
-		setCurrentPage(1); // Reset to first page when filters change
+	// Handle search results from APICardSearch component
+	const handleSearchResults = (cards: Card[], loading: boolean, error?: string) => {
+		setSearchResults(cards);
+		setIsLoading(loading);
+		setSearchError(error || null);
+		setCurrentPage(1); // Reset to first page when search results change
 	};
 
-	// Apply sorting when sort options change
-	useEffect(() => {
-		if (filteredCards.length > 0) {
-			const sortedCards = [...filteredCards].sort((a, b) => {
-				let comparison = 0;
+	// Apply sorting to search results
+	const sortedResults = [...searchResults].sort((a, b) => {
+		let comparison = 0;
 
-				switch (sortBy) {
-					case 'name':
-						comparison = a.name.localeCompare(b.name);
-						break;
-					case 'mainCost':
-						comparison = parseInt(a.elements.MAIN_COST) - parseInt(b.elements.MAIN_COST);
-						break;
-					case 'price':
-						const priceA = a.pricing?.lowerPrice || 0;
-						const priceB = b.pricing?.lowerPrice || 0;
-						comparison = priceA - priceB;
-						break;
-					case 'rarity':
-						const rarityOrder = { 'COMMON': 1, 'RARE': 2, 'UNIQUE': 3 };
-						const rarityA = rarityOrder[a.rarity.reference as keyof typeof rarityOrder] || 0;
-						const rarityB = rarityOrder[b.rarity.reference as keyof typeof rarityOrder] || 0;
-						comparison = rarityA - rarityB;
-						break;
-					case 'faction':
-						comparison = a.mainFaction.name.localeCompare(b.mainFaction.name);
-						break;
-					default:
-						comparison = 0;
-				}
-
-				return sortDirection === 'desc' ? -comparison : comparison;
-			});
-
-			setFilteredCards(sortedCards);
+		switch (sortBy) {
+			case 'name':
+				comparison = a.name.localeCompare(b.name);
+				break;
+			case 'mainCost':
+				comparison = parseInt(a.elements.MAIN_COST) - parseInt(b.elements.MAIN_COST);
+				break;
+			case 'price':
+				const priceA = a.pricing?.lowerPrice || 0;
+				const priceB = b.pricing?.lowerPrice || 0;
+				comparison = priceA - priceB;
+				break;
+			case 'rarity':
+				const rarityOrder = { 'COMMON': 1, 'RARE': 2, 'UNIQUE': 3 };
+				const rarityA = rarityOrder[a.rarity.reference as keyof typeof rarityOrder] || 0;
+				const rarityB = rarityOrder[b.rarity.reference as keyof typeof rarityOrder] || 0;
+				comparison = rarityA - rarityB;
+				break;
+			case 'faction':
+				comparison = a.mainFaction.name.localeCompare(b.mainFaction.name);
+				break;
+			default:
+				comparison = 0;
 		}
-	}, [sortBy, sortDirection]);
+
+		return sortDirection === 'desc' ? -comparison : comparison;
+	});
 
 	// Get paginated cards
-	const paginatedCards = filteredCards.slice(
+	const paginatedCards = sortedResults.slice(
 		(currentPage - 1) * cardsPerPage,
 		currentPage * cardsPerPage
 	);
 
-	const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+	const totalPages = Math.ceil(sortedResults.length / cardsPerPage);
 
 	const handleSortChange = (newSortBy: SortOption) => {
 		if (newSortBy === sortBy) {
@@ -143,20 +78,20 @@ const App: React.FC = () => {
 		}
 	};
 
-	// Data status component
-	const DataStatus: React.FC = () => {
-		if (loading) {
+	// Status component
+	const SearchStatus: React.FC = () => {
+		if (isLoading) {
 			return (
 				<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
 					<div className="flex items-center">
 						<div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-						<span className="text-blue-800">Loading card data...</span>
+						<span className="text-blue-800">Searching cards...</span>
 					</div>
 				</div>
 			);
 		}
 
-		if (error) {
+		if (searchError) {
 			return (
 				<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
 					<div className="flex">
@@ -166,15 +101,15 @@ const App: React.FC = () => {
 							</svg>
 						</div>
 						<div className="ml-3">
-							<h3 className="text-sm font-medium text-red-800">Error loading data</h3>
-							<p className="text-sm text-red-700 mt-1">{error}</p>
+							<h3 className="text-sm font-medium text-red-800">Search Error</h3>
+							<p className="text-sm text-red-700 mt-1">{searchError}</p>
 						</div>
 					</div>
 				</div>
 			);
 		}
 
-		if (dataInfo) {
+		if (searchResults.length > 0) {
 			return (
 				<div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
 					<div className="flex items-center justify-between">
@@ -183,25 +118,13 @@ const App: React.FC = () => {
 								<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
 							</svg>
 							<span className="text-green-800 font-medium">
-								Loaded {dataInfo.cardCount.toLocaleString()} cards from {dataInfo.fileCount} files
+								Found {searchResults.length.toLocaleString()} cards
 							</span>
 						</div>
 						<div className="text-sm text-green-700">
-							Showing {filteredCards.length.toLocaleString()} filtered results
+							Powered by backend API
 						</div>
 					</div>
-					{dataInfo.errors.length > 0 && (
-						<div className="mt-2 text-sm text-yellow-700">
-							<details className="cursor-pointer">
-								<summary className="font-medium">Warnings ({dataInfo.errors.length})</summary>
-								<ul className="mt-1 ml-4 list-disc">
-									{dataInfo.errors.map((error, index) => (
-										<li key={index}>{error}</li>
-									))}
-								</ul>
-							</details>
-						</div>
-					)}
 				</div>
 			);
 		}
@@ -209,34 +132,12 @@ const App: React.FC = () => {
 		return null;
 	};
 
-	if (loading) {
+	if (isLoading && searchResults.length === 0) {
 		return (
 			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
 				<div className="text-center">
 					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Loading card data...</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (error) {
-		return (
-			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
-				<div className="text-center max-w-md">
-					<div className="text-red-600 mb-4">
-						<svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
-						</svg>
-					</div>
-					<h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Cards</h2>
-					<p className="text-gray-600 mb-4">{error}</p>
-					<button
-						onClick={() => window.location.reload()}
-						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-					>
-						Retry
-					</button>
+					<p className="text-gray-600">Loading cards from backend...</p>
 				</div>
 			</div>
 		);
@@ -250,23 +151,19 @@ const App: React.FC = () => {
 						<h1 className="text-2xl font-bold text-gray-900">
 							Altered Card Search
 						</h1>
-
-						{dataInfo && (
-							<div className="text-sm text-gray-600">
-								{dataInfo.cardCount.toLocaleString()} cards from {dataInfo.fileCount} files
-							</div>
-						)}
+						<div className="text-sm text-gray-600">
+							Backend API Search
+						</div>
 					</div>
 				</div>
 			</header>
 
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-				<div className="grid grid-cols-1 lg:grid-cols-4 gap-6">          {/* Search and Filters Sidebar */}
+				<div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+					{/* Search and Filters Sidebar */}
 					<div className="lg:col-span-1">
-						<div className="bg-white rounded-lg shadow p-6 sticky top-6">              <CardSearch
-							cards={allCards}
-							onFilteredCards={handleFilteredCards}
-						/>
+						<div className="bg-white rounded-lg shadow p-6 sticky top-6">
+							<APICardSearch onSearchResults={handleSearchResults} />
 						</div>
 					</div>
 
@@ -277,7 +174,7 @@ const App: React.FC = () => {
 							<div className="flex flex-wrap items-center justify-between gap-4">
 								{/* Results Count */}
 								<div className="text-sm text-gray-600">
-									Showing {((currentPage - 1) * cardsPerPage) + 1}-{Math.min(currentPage * cardsPerPage, filteredCards.length)} of {filteredCards.length} cards
+									Showing {((currentPage - 1) * cardsPerPage) + 1}-{Math.min(currentPage * cardsPerPage, sortedResults.length)} of {sortedResults.length} cards
 								</div>
 
 								{/* View and Sort Controls */}
@@ -339,11 +236,11 @@ const App: React.FC = () => {
 							</div>
 						</div>
 
-						{/* Data Status */}
-						<DataStatus />
+						{/* Search Status */}
+						<SearchStatus />
 
 						{/* Cards Display */}
-						{filteredCards.length === 0 ? (
+						{sortedResults.length === 0 && !isLoading ? (
 							<div className="bg-white rounded-lg shadow p-8 text-center">
 								<div className="text-gray-400 mb-4">
 									<svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
