@@ -1,10 +1,7 @@
 import { AlteredApiClient, CardStatItem, FilterOptions } from './api-client';
-import * as fs from 'fs-extra';
-import * as path from 'path';
 
 export class AlteredScraper {
   private apiClient: AlteredApiClient;
-  private cardDb = 'card_db'
 
   constructor(locale: string = 'en-us', bearerToken?: string) {
     this.apiClient = new AlteredApiClient(locale, bearerToken);
@@ -21,23 +18,8 @@ export class AlteredScraper {
       console.log('Will attempt to resume from checkpoint if available...');
     } else {
       console.log('Starting fresh scrape (ignoring any existing checkpoint)...');
-    }
-    
-    try {
+    }    try {
       const result = await this.apiClient.scrapeAllCards(resumeFromCheckpoint);
-      
-      // Create data directory if it doesn't exist
-      const dataDir = path.join(process.cwd(), this.cardDb);
-      await fs.ensureDir(dataDir);
-
-      // Save all cards data
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const cardsFile = `${this.cardDb}/altered-cards-${timestamp}.json`;
-      await this.apiClient.saveToFile(result.cards, cardsFile);
-
-      // Save summary
-      const summaryFile = `${this.cardDb}/scrape-summary-${timestamp}.json`;
-      await this.apiClient.saveToFile(result.summary, summaryFile);
 
       // Log summary
       console.log('\n=== Scrape Summary ===');
@@ -53,9 +35,8 @@ export class AlteredScraper {
         }
       }
 
-      console.log(`\nData saved to:`);
-      console.log(`  Cards: ${cardsFile}`);
-      console.log(`  Summary: ${summaryFile}`);      console.log(`  Latest cards also available at: checkpoints_db/altered-cards-latest.jsonl`);
+      console.log(`\nCards saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
+      console.log(`  Latest cards also available at: checkpoints_db/altered-cards-latest.jsonl`);
       console.log(`  Checkpoint: checkpoints_db/scrape-checkpoint.json`);
 
     } catch (error) {
@@ -94,7 +75,7 @@ export class AlteredScraper {
         console.log(`Card detail: ${cardDetail.name} - ${cardDetail.cardType.name}`);
         console.log(`Elements: ${JSON.stringify(cardDetail.elements, null, 2)}`);
       
-        await this.apiClient.saveToFile(testResult['hydra:member'], `${this.cardDb}/test.jsonl`)
+        await this.apiClient.saveToFile(testResult['hydra:member'], `card_db/test.jsonl`)
     }
 
     } catch (error) {
@@ -144,23 +125,8 @@ export class AlteredScraper {
     } else {
       console.log('Starting fresh scrape (ignoring any existing checkpoint)...');
     }
-    
-    try {
+      try {
       const result = await this.apiClient.scrapeWithFilters(filters, resumeFromCheckpoint);
-      
-      // Create data directory if it doesn't exist
-      const dataDir = path.join(process.cwd(), this.cardDb);
-      await fs.ensureDir(dataDir);
-
-      // Save all cards data with filter-specific filename
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filterKey = this.getFilterKeyForFilename(filters);
-      const cardsFile = `${this.cardDb}/altered-cards-filtered-${filterKey}-${timestamp}.json`;
-      await this.apiClient.saveToFile(result.cards, cardsFile);
-
-      // Save summary
-      const summaryFile = `${this.cardDb}/scrape-summary-filtered-${filterKey}-${timestamp}.json`;
-      await this.apiClient.saveToFile(result.summary, summaryFile);
 
       // Log summary
       console.log('\n=== Filtered Scrape Summary ===');
@@ -176,9 +142,7 @@ export class AlteredScraper {
         }
       }
 
-      console.log(`\nData saved to:`);
-      console.log(`  Cards: ${cardsFile}`);
-      console.log(`  Summary: ${summaryFile}`);
+      console.log(`\nCards saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
 
     } catch (error) {
       console.error('Filtered scrape failed:', error);
@@ -247,29 +211,19 @@ export class AlteredScraper {
         return {
           ...card,
           pricing: pricing
-        };
-      });
+        };      });
       
-      // Create data directory if it doesn't exist
-      const dataDir = path.join(process.cwd(), this.cardDb);
-      await fs.ensureDir(dataDir);
+      // Save the enriched cards using the new name+faction based saving system
+      console.log('💾 Saving enriched cards with pricing data...');
+      await this.apiClient.saveCardsByNameAndFaction(enrichedCards);
 
-      // Save enriched cards data with filter-specific filename
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filterKey = this.getFilterKeyForFilename(filters);
-      const cardsFile = `${this.cardDb}/altered-cards-with-pricing-filtered-${filterKey}-${timestamp}.json`;
-      await this.apiClient.saveToFile(enrichedCards, cardsFile);
-
-      // Save summary with pricing stats
+      // Calculate pricing stats for summary
       const pricingStats = this.calculatePricingStats(enrichedCards);
       const enhancedSummary = {
         ...cardResult.summary,
         pricingStats,
         cardsWithPricing: enrichedCards.filter(card => card.pricing.lowerPrice > 0).length
       };
-      
-      const summaryFile = `${this.cardDb}/scrape-summary-with-pricing-filtered-${filterKey}-${timestamp}.json`;
-      await this.apiClient.saveToFile(enhancedSummary, summaryFile);
 
       // Log summary
       console.log('\n=== Filtered Scrape with Pricing Summary ===');
@@ -288,9 +242,7 @@ export class AlteredScraper {
         }
       }
 
-      console.log(`\nEnriched data saved to:`);
-      console.log(`  Cards with pricing: ${cardsFile}`);
-      console.log(`  Summary: ${summaryFile}`);
+      console.log(`\nEnriched cards with pricing saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
 
     } catch (error) {
       console.error('Filtered scrape with pricing failed:', error);
@@ -397,30 +349,7 @@ export class AlteredScraper {
       avgPrice,
       avgLastSale,
       totalCardsWithPricing: cardsWithPricing.length,
-      totalCardsWithLastSale: lastSales.length
-    };
-  }
-
-  /**
-   * Generate a filename-safe filter key
-   */
-  private getFilterKeyForFilename(filters: FilterOptions): string {
-    const parts: string[] = [];
-    
-    if (filters.rarity) parts.push(`rarity-${filters.rarity.join('-')}`);
-    if (filters.cardSet) parts.push(`set-${filters.cardSet.join('-')}`);
-    if (filters.factions) parts.push(`faction-${filters.factions.join('-')}`);
-    if (filters.mainCost) parts.push(`main-${filters.mainCost.join('-')}`);
-    if (filters.recallCost) parts.push(`recall-${filters.recallCost.join('-')}`);
-    if (filters.forestPower) parts.push(`forest-${filters.forestPower.join('-')}`);
-    if (filters.mountainPower) parts.push(`mountain-${filters.mountainPower.join('-')}`);
-    if (filters.oceanPower) parts.push(`ocean-${filters.oceanPower.join('-')}`);
-    if (filters.inSale !== undefined) parts.push(`sale-${filters.inSale}`);
-    if (filters.cardName) parts.push(`name-${filters.cardName.replace(/[^a-zA-Z0-9]/g, '_')}`);
-    
-    return parts.length > 0 ? parts.join('_') : 'no-filters';
+      totalCardsWithLastSale: lastSales.length    };
   }
 }
-
-// Export for CLI usage
 export const createScraper = (locale?: string, bearerToken?: string) => new AlteredScraper(locale, bearerToken);
