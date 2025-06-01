@@ -1,0 +1,56 @@
+/* Styles for CardDisplay component */
+.card-display-row {
+  &:hover {
+    background-color: #f3f4f6; // Corresponds to hover:bg-gray-100
+  }
+  cursor: pointer; // Corresponds to cursor-pointer
+}
+
+.faction-indicator {
+  width: 0.75rem; // Corresponds to w-3
+  height: 0.75rem; // Corresponds to h-3
+  border-radius: 9999px; // Corresponds to rounded-full
+  margin-right: 0.5rem; // Corresponds to mr-2
+  flex-shrink: 0; // Corresponds to flex-shrink-0
+}
+
+.card-name-cell {
+  padding-left: 1rem; // Corresponds to px-4
+  padding-right: 1rem; // Corresponds to px-4
+  padding-top: 0.5rem; // Corresponds to py-2
+  padding-bottom: 0.5rem; // Corresponds to py-2
+  font-weight: 500; // Corresponds to font-medium
+  color: #111827; // Corresponds to text-gray-900
+  white-space: nowrap; // Corresponds to whitespace-nowrap
+
+  .flex-container {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.centered-cell {
+  padding-left: 1rem; // Corresponds to px-4
+  padding-right: 1rem; // Corresponds to px-4
+  padding-top: 0.5rem; // Corresponds to py-2
+  padding-bottom: 0.5rem; // Corresponds to py-2
+  text-align: center; // Corresponds to text-center
+}
+
+.attributes-cell {
+  padding-left: 1rem; // Corresponds to px-4
+  padding-right: 1rem; // Corresponds to px-4
+  padding-top: 0.5rem; // Corresponds to py-2
+  padding-bottom: 0.5rem; // Corresponds to py-2
+}
+
+.effect-cell {
+  padding-left: 1rem; // Corresponds to px-4
+  padding-right: 1rem; // Corresponds to px-4
+  padding-top: 0.5rem; // Corresponds to py-2
+  padding-bottom: 0.5rem; // Corresponds to py-2
+  font-size: 0.875rem; // Corresponds to text-sm
+  color: #4b5563; // Corresponds to text-gray-600
+  min-width: 200px; // Corresponds to min-w-[200px]
+  white-space: pre-wrap; // Corresponds to whitespace-pre-wrap
+}

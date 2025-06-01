@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from '../types';
+import '../styles/CardDisplay.scss';
 
 interface CardDisplayProps {
   card: Card;
@@ -22,31 +23,31 @@ const CardDisplay: React.FC<CardDisplayProps> = ({ card }) => {
     if (!effect) return null;
     // Replace game symbols with readable text
     return effect
-      .replace(/\\{(\\w+)\\}/g, '[$1]')
-      .replace(/\\[\\[(\\w+)\\]\\]/g, '[$1]');
+      .replace(/\{(\w+)\}/g, '[$1]')
+      .replace(/\[\[(\w+)\]\]/g, '[$1]');
   };
 
   return (
     <>
-      <td className="px-4 py-2 font-medium text-gray-900 whitespace-nowrap">
-        <div className="flex items-center">
-          <span 
-            className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+      <td className="card-name-cell">
+        <div className="flex-container">
+          <span
+            className="faction-indicator"
             style={{ backgroundColor: getFactionColor(card.mainFaction.reference) }}
             title={card.mainFaction.name}
           ></span>
           {card.name}
         </div>
       </td>
-      <td className="px-4 py-2 text-center">{card.elements.MAIN_COST}</td>
-      <td className="px-4 py-2 text-center">{card.elements.RECALL_COST}</td>
-      <td className="px-4 py-2">
+      <td className="centered-cell">{card.elements.MAIN_COST}</td>
+      <td className="centered-cell">{card.elements.RECALL_COST}</td>
+      <td className="attributes-cell">
         🌲{card.elements.FOREST_POWER} ⛰️{card.elements.MOUNTAIN_POWER} 🌊{card.elements.OCEAN_POWER}
       </td>
-      <td className="px-4 py-2 text-sm text-gray-600 min-w-[200px] whitespace-pre-wrap">
+      <td className="effect-cell">
         {formatEffect(card.elements.MAIN_EFFECT)}
       </td>
-      <td className="px-4 py-2 text-sm text-gray-600 min-w-[200px] whitespace-pre-wrap">
+      <td className="effect-cell">
         {formatEffect(card.elements.ECHO_EFFECT)}
       </td>
     </>
