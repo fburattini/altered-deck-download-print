@@ -32,6 +32,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 	const [isScraping, setIsScraping] = useState(false);
 	const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
 	const [scrapeError, setScrapeError] = useState<string | null>(null);
+	const [bearerTokenInput, setBearerTokenInput] = useState<string>(''); // State for the token input
 
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
@@ -136,8 +137,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 			// e.g., scrapeFilters.RARITY = 'UNIQUE';
 			// scrapeFilters.ONLY_FOR_SALE = true;
 
-			console.log('🚀 Performing API scrape with filters:', scrapeFilters);
-			const response = await searchAPI.scrapeCards(scrapeFilters);
+			console.log('🚀 Performing API scrape with filters:', scrapeFilters, 'and token:', bearerTokenInput || '(using backend default)');
+			const response = await searchAPI.scrapeCards(scrapeFilters, bearerTokenInput || undefined);
 
 			if (response.success) {
 				setScrapeMessage(response.message || 'Scrape initiated successfully.');
@@ -151,7 +152,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 		} finally {
 			setIsScraping(false);
 		}
-	}, [filters, isScraping]);
+	}, [filters, isScraping, bearerTokenInput]); // Added bearerTokenInput to dependencies
 
 	const updateFilter = (key: keyof LocalFilters, value: any) => {
 		setFilters(prev => ({
@@ -232,6 +233,20 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 					<strong>Scrape Error:</strong> {scrapeError}
 				</div>
 			)}
+
+			{/* Bearer Token Input for Scrape */}
+			<div className="filter-group">
+				<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token (Optional for Scrape)</label>
+				<input
+					id="bearerTokenInput"
+					type="text"
+					placeholder="Enter Bearer Token (or leave blank)"
+					value={bearerTokenInput}
+					onChange={(e) => setBearerTokenInput(e.target.value)}
+					className="search-input" // Reuse search-input style or create a new one
+					disabled={isScraping || isSearching}
+				/>
+			</div>
 
 			{/* Search Input */}
 			<div className="search-input-container">

@@ -36,6 +36,7 @@ export interface APIScrapeFilters {
   CARD_NAME?: string;
   FACTION?: string;
   MAIN_COST?: string; // e.g., "2" or "1-3"
+  bearerToken?: string; // Added optional bearerToken
   // Add other filters from your backend if needed, e.g., RARITY, ONLY_FOR_SALE
   // For now, we'll only include what the user requested for the webapp
 }
@@ -108,17 +109,22 @@ class SearchAPIService {
    * Scrape cards using the backend API
    */
   async scrapeCards(
-    filters: APIScrapeFilters = {}
+    filters: APIScrapeFilters = {},
+    bearerToken?: string // Optional token to be passed in the body
   ): Promise<APIScrapeResponse> {
     try {
-      console.log('🚀 Requesting scrape via API with filters:', filters);
+      const bodyPayload: APIScrapeFilters = { ...filters };
+      if (bearerToken) {
+        bodyPayload.bearerToken = bearerToken;
+      }
+      console.log('🚀 Requesting scrape via API with payload:', bodyPayload);
 
       const response = await fetch(`${this.baseUrl}/api/scrape`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(filters) // Directly pass the filters
+        body: JSON.stringify(bodyPayload) // Pass the potentially modified payload
       });
 
       if (!response.ok) {
