@@ -103,8 +103,103 @@ const parseJsonlContent = (content: string): Card[] => {
 };
 
 /**
- * Load card data from .jsonl files in the card_db directory
+ * Load card data from the backend API instead of static files
  */
+export const loadCardDataFromAPI = async (): Promise<DataLoaderResult> => {
+  const result: DataLoaderResult = {
+    cards: [],
+    fileCount: 0,
+    cardCount: 0,
+    errors: []
+  };
+
+  try {
+    console.log('🔗 Loading card data from backend API...');
+    
+    // Check if we're in development (frontend dev server) or production
+    const apiBaseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '';
+    const response = await fetch(`${apiBaseUrl}/api/cards/all`);
+    
+    if (!response.ok) {
+      throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const apiData = await response.json();
+    
+    // Transform backend response to our format
+    const transformedCards: Card[] = apiData.cards.map((cardData: any) => ({
+      id: cardData.id || cardData.reference || '',
+      name: cardData.name || '',
+      '@id': cardData['@id'] || '',
+      '@context': cardData['@context'] || '',
+      '@type': cardData['@type'] || '',
+      cardType: cardData.cardType || {
+        '@id': '',
+        '@type': 'CardType',
+        reference: '',
+        id: '',
+        name: ''
+      },
+      cardSubTypes: cardData.cardSubTypes || [],
+      cardSet: cardData.cardSet || {
+        '@id': '',
+        '@type': 'CardSet',
+        id: '',
+        reference: '',
+        name: ''
+      },
+      rarity: cardData.rarity || {
+        '@id': '',
+        '@type': 'Rarity',
+        reference: '',
+        id: '',
+        name: ''
+      },
+      cardRulings: cardData.cardRulings || [],
+      imagePath: cardData.imagePath || '',
+      assets: cardData.assets || { WEB: [] },
+      lowerPrice: cardData.lowerPrice || 0,
+      qrUrlDetail: cardData.qrUrlDetail || '',
+      isSuspended: cardData.isSuspended || false,
+      reference: cardData.reference || '',
+      mainFaction: cardData.mainFaction || {
+        '@id': '',
+        '@type': 'Faction',
+        reference: '',
+        color: '',
+        id: '',
+        name: ''
+      },
+      allImagePath: cardData.allImagePath || {},
+      elements: cardData.elements || {
+        MAIN_COST: '0',
+        RECALL_COST: '0',
+        MOUNTAIN_POWER: '0',
+        OCEAN_POWER: '0',
+        FOREST_POWER: '0'
+      },
+      pricing: cardData.pricing || undefined,
+      loreEntries: cardData.loreEntries || []
+    }));
+    
+    result.cards = transformedCards;
+    result.fileCount = apiData.fileCount || 1;
+    result.cardCount = transformedCards.length;
+    result.errors = apiData.errors || [];
+    
+    console.log(`✅ Successfully loaded ${result.cardCount} cards from backend API (${result.fileCount} files)`);
+    
+  } catch (error) {
+    console.error('❌ Failed to load data from backend API:', error);
+    result.errors.push(`Backend API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    
+    // Fallback to static file loading
+    console.log('🔄 Falling back to static file loading...');
+    return await loadCardData();
+  }
+
+  return result;
+};
 export const loadCardData = async (): Promise<DataLoaderResult> => {
   const result: DataLoaderResult = {
     cards: [],
