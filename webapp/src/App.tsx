@@ -16,10 +16,13 @@ const App: React.FC = () => {
 	const [sortBy, setSortBy] = useState<SortOption>('name');
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-	// View options
-	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+	// View options - viewMode is removed, default to table view
+	// const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); 
 	const [cardsPerPage, setCardsPerPage] = useState(20);
 	const [currentPage, setCurrentPage] = useState(1);
+
+  // State for hovered/selected card image
+  const [hoveredCardImage, setHoveredCardImage] = useState<string | null>(null);
 
 	// Handle search results from APICardSearch component
 	const handleSearchResults = (cards: Card[], loading: boolean, error?: string) => {
@@ -164,8 +167,8 @@ const App: React.FC = () => {
 
 						{/* View and Sort Controls */}
 						<div className="control-group">
-							{/* View Mode Toggle */}
-							<div className="view-toggle">
+							{/* View Mode Toggle - Removed */}
+							{/* <div className="view-toggle">
 								<button
 									onClick={() => setViewMode('grid')}
 									className={viewMode === 'grid' ? 'active' : ''}
@@ -181,7 +184,7 @@ const App: React.FC = () => {
 								>
 									List
 								</button>
-							</div>
+							</div> */}
 
 							{/* Sort Controls */}
 							<select
@@ -224,29 +227,73 @@ const App: React.FC = () => {
 				{/* Cards Display */}
 				{sortedResults.length === 0 && !isLoading ? (
 					<div className="bg-white rounded-lg shadow p-8 text-center">
-						<div className="text-gray-400 mb-4">
-							<svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653.71-1.46 1.302-2.364 1.748z" />
-							</svg>
-						</div>
-						<h3 className="text-lg font-medium text-gray-900 mb-2">No cards found</h3>
-						<p className="text-gray-600">Try adjusting your search filters to find cards.</p>
-					</div>
+            <div className="text-gray-400 mb-4">
+              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653.71-1.46 1.302-2.364 1.748z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No cards found</h3>
+            <p className="text-gray-600">Try adjusting your search filters to find cards.</p>
+          </div>
 				) : (
 					<>
-						{/* Card Grid/List */}
-						<div className={
-							viewMode === 'grid'
-								? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-								: 'space-y-4'
-						}>
-							{paginatedCards.map((card) => (
-								<CardDisplay
-									key={card.id}
-									card={card}
-									viewMode={viewMode}
-								/>
-							))}
+						{/* Card Table and Image Preview */}
+						<div className='flex'> {/* Always use flex for table and image preview */}
+              {sortedResults.length > 0 && (
+                <div className="flex-grow overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 shadow-sm rounded-lg overflow-hidden">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Main Cost
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Recall Cost
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Attributes
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Main Effect
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Echo Effect
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paginatedCards.map((card) => (
+                        <tr 
+                          key={card.id} 
+                          className="hover:bg-gray-100 cursor-pointer"
+                          onMouseEnter={() => setHoveredCardImage(card.imagePath || null)}
+                          onMouseLeave={() => setHoveredCardImage(null)}
+                        >
+                          <CardDisplay card={card} /> {/* viewMode prop removed */}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {hoveredCardImage && (
+                <div className="ml-4 w-64 flex-shrink-0 hidden md:block"> 
+                  <div className="sticky top-20 bg-white rounded-lg shadow-md p-2">
+                    <img 
+                      src={hoveredCardImage} 
+                      alt="Hovered card" 
+                      className="w-full h-auto object-contain rounded"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'; 
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 						</div>
 
 						{/* Pagination */}

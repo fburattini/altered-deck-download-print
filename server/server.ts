@@ -92,11 +92,11 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 		// AUTO-CONVERSION TO FILTERS (similar to simple.ts)
 		const filters: any = {};
 
+		filters.inSale = true;
 		if (RARITY) filters.rarity = [RARITY];
 		if (CARD_SET) filters.cardSet = [CARD_SET];
 		if (FACTION) filters.factions = [FACTION];
 		if (CARD_NAME) filters.cardName = CARD_NAME;
-		if (ONLY_FOR_SALE) filters.inSale = true;
 
 		// Handle cost ranges
 		if (MAIN_COST) {
@@ -127,7 +127,7 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 		// Run filtered scrape with pricing data integration
 		// The result of runFilteredScrapeWithPricing is void, it saves data to files.
 		// We can indicate success if no error is thrown.
-		await scraper.runFilteredScrapeWithPricing(filters, true);
+		await scraper.runFilteredScrapeWithPricing(filters, false);
 
 		res.json({
 			success: true,
