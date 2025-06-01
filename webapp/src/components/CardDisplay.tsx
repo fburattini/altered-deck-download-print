@@ -39,6 +39,9 @@ const CardDisplay: React.FC<CardDisplayProps> = ({ card }) => {
           {card.name}
         </div>
       </td>
+      <td className="centered-cell">
+        {card.pricing?.lowerPrice ? `$${card.pricing.lowerPrice.toFixed(2)}` : 'N/A'}
+      </td>
       <td className="centered-cell">{card.elements.MAIN_COST}</td>
       <td className="centered-cell">{card.elements.RECALL_COST}</td>
       <td className="attributes-cell">

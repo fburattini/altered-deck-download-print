@@ -17,11 +17,6 @@ const App: React.FC = () => {
 	const [sortBy, setSortBy] = useState<SortOption>('name');
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-	// View options - viewMode is removed, default to table view
-	// const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); 
-	const [cardsPerPage, setCardsPerPage] = useState(20);
-	const [currentPage, setCurrentPage] = useState(1);
-
 	// State for hovered/selected card image
 	const [hoveredCardImage, setHoveredCardImage] = useState<string | null>(null);
 
@@ -30,7 +25,6 @@ const App: React.FC = () => {
 		setSearchResults(cards);
 		setIsLoading(loading);
 		setSearchError(error || null);
-		setCurrentPage(1); // Reset to first page when search results change
 	};
 
 	// Apply sorting to search results
@@ -64,14 +58,6 @@ const App: React.FC = () => {
 
 		return sortDirection === 'desc' ? -comparison : comparison;
 	});
-
-	// Get paginated cards
-	const paginatedCards = sortedResults.slice(
-		(currentPage - 1) * cardsPerPage,
-		currentPage * cardsPerPage
-	);
-
-	const totalPages = Math.ceil(sortedResults.length / cardsPerPage);
 
 	const handleSortChange = (newSortBy: SortOption) => {
 		if (newSortBy === sortBy) {
@@ -144,7 +130,7 @@ const App: React.FC = () => {
 		<div className="app-container">
 			<header className="app-header">
 				<h1 className="app-title">Altered Card Search</h1>
-				<p className="app-subtitle">Backend API Search - UNIQUE Rarity Cards</p>
+				<p className="app-subtitle">Backend API Search</p>
 			</header>
 
 			<div className="main-layout">
@@ -157,34 +143,15 @@ const App: React.FC = () => {
 					<div className="controls-bar">
 						{/* Results Count */}
 						<div className="results-count">
-							Showing {((currentPage - 1) * cardsPerPage) + 1}-{Math.min(currentPage * cardsPerPage, sortedResults.length)} of {sortedResults.length} cards
+							Displaying {sortedResults.length} cards
 						</div>
 
 						{/* View and Sort Controls */}
 						<div className="control-group">
-							{/* View Mode Toggle - Removed */}
-							{/* <div className="view-toggle">
-								<button
-									onClick={() => setViewMode('grid')}
-									className={viewMode === 'grid' ? 'active' : ''}
-								>
-									Grid
-								</button>
-								<button
-									onClick={() => setViewMode('list')}
-									className={`px-3 py-1 rounded text-sm font-medium ${viewMode === 'list'
-										? 'bg-white text-gray-900 shadow-sm'
-										: 'text-gray-600 hover:text-gray-900'
-										}`}
-								>
-									List
-								</button>
-							</div> */}
-
 							{/* Sort Controls */}
 							<select
 								value={sortBy}
-								onChange={(e) => setSortBy(e.target.value as SortOption)}
+								onChange={(e) => handleSortChange(e.target.value as SortOption)}
 							// className removed, will be styled by .control-group select
 							>
 								<option value="name">Name</option>
@@ -196,28 +163,12 @@ const App: React.FC = () => {
 
 							<button
 								onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-								className="sort-button-padding" // Updated class for specific padding
+								className="sort-button-padding"
 							>
 								{sortDirection === 'asc' ? '↑' : '↓'}
 							</button>
-
-							{/* Cards per page */}
-							<select
-								value={cardsPerPage}
-								onChange={(e) => setCardsPerPage(parseInt(e.target.value))}
-							// className removed, will be styled by .control-group select
-							>
-								<option value={10}>10 per page</option>
-								<option value={20}>20 per page</option>
-								<option value={50}>50 per page</option>
-								<option value={100}>100 per page</option>
-							</select>
 						</div>
 					</div>
-				</div>
-
-				{/* Search Status */}
-				<SearchStatus />
 
 				{/* Cards Display */}
 				{sortedResults.length === 0 && !isLoading ? (
@@ -236,11 +187,14 @@ const App: React.FC = () => {
 						<div className='table-image-container'> {/* Updated class */}
 							{sortedResults.length > 0 && (
 								<div className="table-container"> {/* Updated class */}
-									<table> {/* Removed min-w-full etc. as it's in SCSS now */}
-										<thead> {/* Removed bg-gray-50 as it's in SCSS now */}
+									<table> {/* Removed min-w-full etc. as it\'s in SCSS now */}
+										<thead> {/* Removed bg-gray-50 as it\'s in SCSS now */}
 											<tr>
 												<th scope="col"> {/* Removed Tailwind classes */}
 													Name
+												</th>
+												<th scope="col" className="text-center"> {/* Added text-center for SCSS */}
+													Price
 												</th>
 												<th scope="col" className="text-center"> {/* Added text-center for SCSS */}
 													Main Cost
@@ -259,8 +213,8 @@ const App: React.FC = () => {
 												</th>
 											</tr>
 										</thead>
-										<tbody> {/* Removed bg-white etc. as it's in SCSS now */}
-											{paginatedCards.map((card) => (
+										<tbody> {/* Removed bg-white etc. as it\'s in SCSS now */}
+											{sortedResults.map((card) => ( // Changed from paginatedCards to sortedResults
 												<tr
 													key={card.id}
 													className="card-display-row" // Retained from previous step
@@ -291,54 +245,9 @@ const App: React.FC = () => {
 							)}
 						</div>
 
-						{/* Pagination */}
-						{totalPages > 1 && (
-							<div className="pagination-container"> {/* Updated class */}
-								<nav> {/* Removed flex items-center space-x-2 */}
-									<button
-										onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-										disabled={currentPage === 1}
-									// className removed, will be styled by .pagination-container button
-									>
-										Previous
-									</button>
-
-									{/* Page numbers */}
-									{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-										let pageNum;
-										if (totalPages <= 5) {
-											pageNum = i + 1;
-										} else if (currentPage <= 3) {
-											pageNum = i + 1;
-										} else if (currentPage >= totalPages - 2) {
-											pageNum = totalPages - 4 + i;
-										} else {
-											pageNum = currentPage - 2 + i;
-										}
-
-										return (
-											<button
-												key={pageNum}
-												onClick={() => setCurrentPage(pageNum)}
-												className={currentPage === pageNum ? 'active' : ''} // Simplified className for SCSS
-											>
-												{pageNum}
-											</button>
-										);
-									})}
-
-									<button
-										onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-										disabled={currentPage === totalPages}
-									// className removed, will be styled by .pagination-container button
-									>
-										Next
-									</button>
-								</nav>
-							</div>
-						)}
 					</>
 				)}
+				</div>
 			</div>
 		</div>
 	);
