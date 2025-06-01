@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card } from '../types';
-import { searchAPI, APISearchFilters, APISearchOptions } from '../services/searchAPI';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { searchAPI, APISearchFilters, APISearchOptions, APIScrapeFilters } from '../services/searchAPI';
+import { MagnifyingGlassIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'; // Added CloudArrowDownIcon
 
 interface APICardSearchProps {
 	onSearchResults: (cards: Card[], isLoading: boolean, error?: string) => void;
@@ -29,6 +29,9 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
 	const [hasSearched, setHasSearched] = useState(false);
+	const [isScraping, setIsScraping] = useState(false);
+	const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
+	const [scrapeError, setScrapeError] = useState<string | null>(null);
 
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
@@ -95,6 +98,61 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 		}
 	};
 
+	// Function to handle scrape request
+	const handleScrape = useCallback(async () => {
+		if (isScraping) return;
+
+		setIsScraping(true);
+		setScrapeMessage(null);
+		setScrapeError(null);
+
+		try {
+			const scrapeFilters: APIScrapeFilters = {};
+
+			if (filters.searchQuery.trim()) {
+				scrapeFilters.CARD_NAME = filters.searchQuery.trim();
+			}
+			if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
+				scrapeFilters.FACTION = filters.factions[0];
+			}
+
+			if (filters.mainCostRange.min !== undefined || filters.mainCostRange.max !== undefined) {
+				const min = filters.mainCostRange.min;
+				const max = filters.mainCostRange.max;
+				if (min !== undefined && max !== undefined && min === max) {
+					scrapeFilters.MAIN_COST = `${min}`;
+				} else if (min !== undefined && max !== undefined) {
+					scrapeFilters.MAIN_COST = `${min}-${max}`;
+				} else if (min !== undefined) {
+					scrapeFilters.MAIN_COST = `${min}`;
+				} else if (max !== undefined) {
+					// If only max is set, backend might need a range like "1-max" or just max depending on its logic.
+					// For now, sending just max. Adjust if backend expects a range.
+					scrapeFilters.MAIN_COST = `${max}`;
+				}
+			}
+
+			// You might want to add default RARITY and ONLY_FOR_SALE here if the backend expects them
+			// e.g., scrapeFilters.RARITY = 'UNIQUE';
+			// scrapeFilters.ONLY_FOR_SALE = true;
+
+			console.log('🚀 Performing API scrape with filters:', scrapeFilters);
+			const response = await searchAPI.scrapeCards(scrapeFilters);
+
+			if (response.success) {
+				setScrapeMessage(response.message || 'Scrape initiated successfully.');
+			} else {
+				throw new Error(response.error || 'Scrape failed');
+			}
+
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Scrape operation failed';
+			setScrapeError(errorMessage);
+		} finally {
+			setIsScraping(false);
+		}
+	}, [filters, isScraping]);
+
 	const updateFilter = (key: keyof LocalFilters, value: any) => {
 		setFilters(prev => ({
 			...prev,
@@ -141,6 +199,12 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 						Searching...
 					</div>
 				)}
+				{isScraping && (
+					<div className="loading-indicator">
+						<div className="loading-spinner"></div>
+						Scraping data...
+					</div>
+				)}
 			</div>
 
 			{/* Search Status */}
@@ -154,6 +218,18 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 			{searchError && (
 				<div className="status-error">
 					<strong>Search Error:</strong> {searchError}
+				</div>
+			)}
+
+			{/* Scrape Status/Error Messages */}
+			{scrapeMessage && (
+				<div className="status-success">
+					{scrapeMessage}
+				</div>
+			)}
+			{scrapeError && (
+				<div className="status-error">
+					<strong>Scrape Error:</strong> {scrapeError}
 				</div>
 			)}
 
@@ -186,6 +262,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 								type="button"
 								onClick={() => toggleArrayFilter('factions', faction.ref)}
 								className={`filter-button ${filters.factions.includes(faction.ref) ? 'active' : ''}`}
+								// Disable multi-select for factions if scrape only supports one
+								disabled={isScraping && filters.factions.length > 0 && !filters.factions.includes(faction.ref)}
 							>
 								{faction.name}
 							</button>
@@ -225,49 +303,21 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 					</div>
 				</div>
 
-				{/* In Sale Only */}
-				<div className="checkbox-group">
-					<input
-						type="checkbox"
-						id="inSaleOnly"
-						checked={filters.inSaleOnly}
-						onChange={(e) => updateFilter('inSaleOnly', e.target.checked)}
-						className="checkbox"
-					/>
-					<label htmlFor="inSaleOnly" className="checkbox-label">
-						Show only cards for sale
-					</label>
+				{/* Action Buttons */}
+				<div className="action-buttons">
+					<button type="submit" className="search-button" disabled={isSearching || isScraping}>
+						<MagnifyingGlassIcon />
+						{isSearching ? 'Searching...' : 'Search Cards'}
+					</button>
+					<button type="button" onClick={handleScrape} className="scrape-button" disabled={isSearching || isScraping}>
+						<CloudArrowDownIcon />
+						{isScraping ? 'Scraping...' : 'Download Data'}
+					</button>
+					<button type="button" onClick={clearAllFilters} className="clear-button" disabled={isSearching || isScraping}>
+						Clear Filters
+					</button>
 				</div>
 			</div>
-
-			{/* Search Button */}
-			<button
-				type="button"
-				onClick={handleSearch}
-				disabled={isSearching}
-				className="search-button"
-			>
-				{isSearching ? (
-					<>
-						<div className="loading-spinner"></div>
-						Searching...
-					</>
-				) : (
-					<>
-						<MagnifyingGlassIcon className="search-button-icon" />
-						Search Cards
-					</>
-				)}
-			</button>
-
-			{/* Clear Filters */}
-			<button
-				type="button"
-				onClick={clearAllFilters}
-				className="clear-button"
-			>
-				Clear All Filters
-			</button>
 		</form>
 	);
 };

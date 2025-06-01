@@ -31,6 +31,22 @@ export interface APISearchResponse {
   error?: string;
 }
 
+// Interface for the scrape request body, based on the backend
+export interface APIScrapeFilters {
+  CARD_NAME?: string;
+  FACTION?: string;
+  MAIN_COST?: string; // e.g., "2" or "1-3"
+  // Add other filters from your backend if needed, e.g., RARITY, ONLY_FOR_SALE
+  // For now, we'll only include what the user requested for the webapp
+}
+
+export interface APIScrapeResponse {
+  success: boolean;
+  message?: string;
+  filtersApplied?: any;
+  error?: string;
+}
+
 class SearchAPIService {
   private baseUrl: string;
 
@@ -68,7 +84,8 @@ class SearchAPIService {
       });
 
       if (!response.ok) {
-        throw new Error(`Search API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Search API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
@@ -83,6 +100,41 @@ class SearchAPIService {
         count: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown search error'
+      };
+    }
+  }
+
+  /**
+   * Scrape cards using the backend API
+   */
+  async scrapeCards(
+    filters: APIScrapeFilters = {}
+  ): Promise<APIScrapeResponse> {
+    try {
+      console.log('🚀 Requesting scrape via API with filters:', filters);
+
+      const response = await fetch(`${this.baseUrl}/api/scrape`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filters) // Directly pass the filters
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Scrape API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ API scrape request completed:', data.message);
+      return data;
+
+    } catch (error) {
+      console.error('❌ Scrape API error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown scrape error'
       };
     }
   }
