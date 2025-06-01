@@ -94,6 +94,88 @@ $border-radius-full: 9999px;
   @include card;
   padding: 1.5rem;
   min-height: 400px;
+  
+  .controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid $border-light;
+    
+    .results-count {
+      font-size: 0.875rem;
+      color: $text-light;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      
+      .view-toggle {
+        display: flex;
+        background: $background-light;
+        border-radius: $border-radius-sm;
+        padding: 0.25rem;
+        
+        button {
+          padding: 0.5rem 1rem;
+          border-radius: $border-radius-sm;
+          font-size: 0.875rem;
+          font-weight: 500;
+          background: none;
+          border: none;
+          cursor: pointer;
+          
+          &.active {
+            background: white;
+            color: $text-dark;
+            box-shadow: $shadow-sm;
+          }
+          
+          &:not(.active) {
+            color: $text-light;
+            
+            &:hover {
+              color: $text-medium;
+            }
+          }
+        }
+      }
+      
+      .sort-control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        
+        label {
+          font-size: 0.875rem;
+          color: $text-light;
+        }
+        
+        select {
+          padding: 0.375rem 2rem 0.375rem 0.75rem;
+          font-size: 0.875rem;
+          border: 1px solid $border-medium;
+          border-radius: $border-radius-sm;
+          background-color: white;
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+          background-position: right 0.5rem center;
+          background-repeat: no-repeat;
+          background-size: 1.5em 1.5em;
+          
+          &:focus {
+            outline: none;
+            border-color: $primary-color;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+        }
+      }
+    }
+  }
 }
 
 // Form elements
@@ -216,6 +298,31 @@ $border-radius-full: 9999px;
   100% { transform: rotate(360deg); }
 }
 
+// Loading state
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  
+  .spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $text-light;
+    font-size: 1rem;
+  }
+}
+
 // Cards grid
 .cards-grid {
   display: grid;
@@ -234,6 +341,3 @@ $border-radius-full: 9999px;
     box-shadow: $shadow-lg;
   }
 }
-
-// Import component styles
-@import './components/APICardSearch.scss';

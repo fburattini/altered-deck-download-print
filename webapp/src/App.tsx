@@ -134,10 +134,10 @@ const App: React.FC = () => {
 
 	if (isLoading && searchResults.length === 0) {
 		return (
-			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Loading cards from backend...</p>
+			<div className="app-container">
+				<div className="loading-state">
+					<div className="spinner"></div>
+					<p>Loading cards from backend...</p>
 				</div>
 			</div>
 		);
@@ -153,162 +153,155 @@ const App: React.FC = () => {
 				{/* Search and Filters Sidebar */}
 				<div className="search-panel">
 					<APICardSearch onSearchResults={handleSearchResults} />
-				</div>
-
-				{/* Main Content */}
+				</div>				{/* Main Content */}
 				<div className="results-area">
-						{/* Controls Bar */}
-						<div className="bg-white rounded-lg shadow p-4 mb-6">
-							<div className="flex flex-wrap items-center justify-between gap-4">
-								{/* Results Count */}
-								<div className="text-sm text-gray-600">
-									Showing {((currentPage - 1) * cardsPerPage) + 1}-{Math.min(currentPage * cardsPerPage, sortedResults.length)} of {sortedResults.length} cards
-								</div>
-
-								{/* View and Sort Controls */}
-								<div className="flex items-center gap-4">
-									{/* View Mode Toggle */}
-									<div className="flex bg-gray-100 rounded-lg p-1">
-										<button
-											onClick={() => setViewMode('grid')}
-											className={`px-3 py-1 rounded text-sm font-medium ${viewMode === 'grid'
-													? 'bg-white text-gray-900 shadow-sm'
-													: 'text-gray-600 hover:text-gray-900'
-												}`}
-										>
-											Grid
-										</button>
-										<button
-											onClick={() => setViewMode('list')}
-											className={`px-3 py-1 rounded text-sm font-medium ${viewMode === 'list'
-													? 'bg-white text-gray-900 shadow-sm'
-													: 'text-gray-600 hover:text-gray-900'
-												}`}
-										>
-											List
-										</button>
-									</div>
-
-									{/* Sort Controls */}
-									<select
-										value={sortBy}
-										onChange={(e) => setSortBy(e.target.value as SortOption)}
-										className="border border-gray-300 rounded px-3 py-1 text-sm"
-									>
-										<option value="name">Name</option>
-										<option value="mainCost">Main Cost</option>
-										<option value="price">Price</option>
-										<option value="rarity">Rarity</option>
-										<option value="faction">Faction</option>
-									</select>
-
-									<button
-										onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-										className="p-1 text-gray-600 hover:text-gray-900"
-									>
-										{sortDirection === 'asc' ? '↑' : '↓'}
-									</button>
-
-									{/* Cards per page */}
-									<select
-										value={cardsPerPage}
-										onChange={(e) => setCardsPerPage(parseInt(e.target.value))}
-										className="border border-gray-300 rounded px-3 py-1 text-sm"
-									>
-										<option value={10}>10 per page</option>
-										<option value={20}>20 per page</option>
-										<option value={50}>50 per page</option>
-										<option value={100}>100 per page</option>
-									</select>
-								</div>
-							</div>
+					{/* Controls Bar */}
+					<div className="controls-bar">
+						{/* Results Count */}
+						<div className="results-count">
+							Showing {((currentPage - 1) * cardsPerPage) + 1}-{Math.min(currentPage * cardsPerPage, sortedResults.length)} of {sortedResults.length} cards
 						</div>
 
-						{/* Search Status */}
-						<SearchStatus />
-
-						{/* Cards Display */}
-						{sortedResults.length === 0 && !isLoading ? (
-							<div className="bg-white rounded-lg shadow p-8 text-center">
-								<div className="text-gray-400 mb-4">
-									<svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653.71-1.46 1.302-2.364 1.748z" />
-									</svg>
-								</div>
-								<h3 className="text-lg font-medium text-gray-900 mb-2">No cards found</h3>
-								<p className="text-gray-600">Try adjusting your search filters to find cards.</p>
+						{/* View and Sort Controls */}
+						<div className="control-group">
+							{/* View Mode Toggle */}
+							<div className="view-toggle">
+								<button
+									onClick={() => setViewMode('grid')}
+									className={viewMode === 'grid' ? 'active' : ''}
+								>
+									Grid
+								</button>
+								<button
+									onClick={() => setViewMode('list')}
+									className={`px-3 py-1 rounded text-sm font-medium ${viewMode === 'list'
+										? 'bg-white text-gray-900 shadow-sm'
+										: 'text-gray-600 hover:text-gray-900'
+										}`}
+								>
+									List
+								</button>
 							</div>
-						) : (
-							<>
-								{/* Card Grid/List */}
-								<div className={
-									viewMode === 'grid'
-										? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-										: 'space-y-4'
-								}>
-									{paginatedCards.map((card) => (
-										<CardDisplay
-											key={card.id}
-											card={card}
-											viewMode={viewMode}
-										/>
-									))}
-								</div>
 
-								{/* Pagination */}
-								{totalPages > 1 && (
-									<div className="mt-8 flex items-center justify-center">
-										<nav className="flex items-center space-x-2">
-											<button
-												onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-												disabled={currentPage === 1}
-												className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-											>
-												Previous
-											</button>
+							{/* Sort Controls */}
+							<select
+								value={sortBy}
+								onChange={(e) => setSortBy(e.target.value as SortOption)}
+								className="border border-gray-300 rounded px-3 py-1 text-sm"
+							>
+								<option value="name">Name</option>
+								<option value="mainCost">Main Cost</option>
+								<option value="price">Price</option>
+								<option value="rarity">Rarity</option>
+								<option value="faction">Faction</option>
+							</select>
 
-											{/* Page numbers */}
-											{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-												let pageNum;
-												if (totalPages <= 5) {
-													pageNum = i + 1;
-												} else if (currentPage <= 3) {
-													pageNum = i + 1;
-												} else if (currentPage >= totalPages - 2) {
-													pageNum = totalPages - 4 + i;
-												} else {
-													pageNum = currentPage - 2 + i;
-												}
+							<button
+								onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+								className="p-1 text-gray-600 hover:text-gray-900"
+							>
+								{sortDirection === 'asc' ? '↑' : '↓'}
+							</button>
 
-												return (
-													<button
-														key={pageNum}
-														onClick={() => setCurrentPage(pageNum)}
-														className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === pageNum
-																? 'text-blue-600 bg-blue-50 border border-blue-300'
-																: 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-															}`}
-													>
-														{pageNum}
-													</button>
-												);
-											})}
-
-											<button
-												onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-												disabled={currentPage === totalPages}
-												className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-											>
-												Next
-											</button>
-										</nav>
-									</div>
-								)}
-							</>
-						)}
+							{/* Cards per page */}
+							<select
+								value={cardsPerPage}
+								onChange={(e) => setCardsPerPage(parseInt(e.target.value))}
+								className="border border-gray-300 rounded px-3 py-1 text-sm"
+							>
+								<option value={10}>10 per page</option>
+								<option value={20}>20 per page</option>
+								<option value={50}>50 per page</option>
+								<option value={100}>100 per page</option>
+							</select>
+						</div>
 					</div>
-				</div>				
 				</div>
+
+				{/* Search Status */}
+				<SearchStatus />
+
+				{/* Cards Display */}
+				{sortedResults.length === 0 && !isLoading ? (
+					<div className="bg-white rounded-lg shadow p-8 text-center">
+						<div className="text-gray-400 mb-4">
+							<svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653.71-1.46 1.302-2.364 1.748z" />
+							</svg>
+						</div>
+						<h3 className="text-lg font-medium text-gray-900 mb-2">No cards found</h3>
+						<p className="text-gray-600">Try adjusting your search filters to find cards.</p>
+					</div>
+				) : (
+					<>
+						{/* Card Grid/List */}
+						<div className={
+							viewMode === 'grid'
+								? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
+								: 'space-y-4'
+						}>
+							{paginatedCards.map((card) => (
+								<CardDisplay
+									key={card.id}
+									card={card}
+									viewMode={viewMode}
+								/>
+							))}
+						</div>
+
+						{/* Pagination */}
+						{totalPages > 1 && (
+							<div className="mt-8 flex items-center justify-center">
+								<nav className="flex items-center space-x-2">
+									<button
+										onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+										disabled={currentPage === 1}
+										className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										Previous
+									</button>
+
+									{/* Page numbers */}
+									{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+										let pageNum;
+										if (totalPages <= 5) {
+											pageNum = i + 1;
+										} else if (currentPage <= 3) {
+											pageNum = i + 1;
+										} else if (currentPage >= totalPages - 2) {
+											pageNum = totalPages - 4 + i;
+										} else {
+											pageNum = currentPage - 2 + i;
+										}
+
+										return (
+											<button
+												key={pageNum}
+												onClick={() => setCurrentPage(pageNum)}
+												className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === pageNum
+													? 'text-blue-600 bg-blue-50 border border-blue-300'
+													: 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+													}`}
+											>
+												{pageNum}
+											</button>
+										);
+									})}
+
+									<button
+										onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+										disabled={currentPage === totalPages}
+										className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										Next
+									</button>
+								</nav>
+							</div>
+						)}
+					</>
+				)}
+			</div>
+		</div>
 	);
 };
 

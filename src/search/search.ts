@@ -15,7 +15,7 @@ import { CardDetail } from '../market/markte-types';
 // 🔧 SEARCH INTERFACE
 // ============================================
 
-interface SearchFilters {
+export interface SearchFilters {
   mainCost?: string;
   mainEffect?: string;
   echoEffect?: string;
@@ -24,12 +24,12 @@ interface SearchFilters {
   rarity?: string;
 }
 
-interface SearchResult {
+export interface SearchResult {
   card: CardDetail;
   matchReasons: string[];
 }
 
-interface SearchOptions {
+export interface SearchOptions {
   resultLimit?: number;
   sortByPrice?: boolean;
   inSaleOnly?: boolean;
@@ -101,13 +101,12 @@ export class CardSearcher {
       await this.loadCardData();
     }
 
-    const {
+    const
       resultLimit = 0,
       sortByPrice = true,
-      inSaleOnly = true
-    } = options;
+      inSaleOnly = false
 
-    console.log('🔍 Searching cards...');
+    console.log('🔍 Searching cards...', filters, options);
     
     const results: SearchResult[] = [];
     
@@ -366,83 +365,3 @@ export class CardSearcher {
     return { matches, reasons };
   }
 }
-
-// ============================================
-// 🚀 CLI EXECUTION (for backward compatibility)
-// ============================================
-
-const runLegacySearch = async (): Promise<void> => {
-  console.log('🔍 Local Altered Card Search');
-  console.log('============================');
-  
-  // Legacy configuration for CLI usage
-  const MAIN_COST_FILTER = '';
-  const MAIN_EFFECT_FILTER = 'When you roll';
-  const ECHO_EFFECT_FILTER = '';
-  const NAME_FILTER = 'cloth';
-  const FACTION_FILTER = '';
-  const RARITY_FILTER = '';
-  const RESULT_LIMIT = 40;
-  
-  // Build filters from configuration
-  const filters: SearchFilters = {};
-  
-  if (MAIN_COST_FILTER) filters.mainCost = MAIN_COST_FILTER;
-  if (MAIN_EFFECT_FILTER) filters.mainEffect = MAIN_EFFECT_FILTER;
-  if (ECHO_EFFECT_FILTER) filters.echoEffect = ECHO_EFFECT_FILTER;
-  if (NAME_FILTER) filters.name = NAME_FILTER;
-  if (FACTION_FILTER) filters.faction = FACTION_FILTER;
-  if (RARITY_FILTER) filters.rarity = RARITY_FILTER;
-  
-  // Show search criteria
-  console.log('🎯 Search Criteria:');
-  if (Object.keys(filters).length === 0) {
-    console.log('   (No filters specified - showing all cards)');
-  } else {
-    Object.entries(filters).forEach(([key, value]) => {
-      const displayKey = key.replace(/([A-Z])/g, ' $1').toLowerCase().replace(/^./, str => str.toUpperCase());
-      console.log(`   ${displayKey}: "${value}"`);
-    });
-  }
-  console.log('');
-  
-  try {
-    const searcher = new CardSearcher();
-    const results = await searcher.search(filters, {
-      resultLimit: RESULT_LIMIT,
-      sortByPrice: true,
-      inSaleOnly: true
-    });
-
-    searcher.displayResults(results, RESULT_LIMIT);
-    
-  } catch (error) {
-    console.error('❌ Search failed:', error);
-    process.exit(1);
-  }
-};
-
-// Run the search if this file is executed directly
-if (require.main === module) {
-  runLegacySearch().catch(console.error);
-}
-
-// Export for use as a module
-export { SearchFilters, SearchResult, SearchOptions };
-
-// Legacy exports for backward compatibility
-export const searchCards = async (filters: SearchFilters): Promise<SearchResult[]> => {
-  const searcher = new CardSearcher();
-  return searcher.search(filters);
-};
-
-export const loadCardData = async (): Promise<CardDetail[]> => {
-  const searcher = new CardSearcher();
-  await searcher.loadCardData();
-  return (searcher as any).cards; // Access private property for legacy compatibility
-};
-
-export const getAvailableDataFiles = async (): Promise<string[]> => {
-  const searcher = new CardSearcher();
-  return (searcher as any).getAvailableDataFiles();
-};

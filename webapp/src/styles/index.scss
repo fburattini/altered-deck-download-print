@@ -1,4 +1,8 @@
 /* Global styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html {
   height: 100%;
 }
@@ -26,3 +30,4 @@ code {
 
 // Import component styles
 @import './App.scss';
+@import './APICardSearch.scss';
