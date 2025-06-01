@@ -129,16 +129,14 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {  
     e.preventDefault();
     handleSearch();
   };
-
-  return (    <form onSubmit={handleFormSubmit} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Search Cards</h2>
-          <p className="text-sm text-gray-500">Showing only UNIQUE rarity cards</p>
-        </div>
+  return (
+    <form onSubmit={handleFormSubmit} className="search-form">
+      <div className="search-header">
+        <h2 className="search-title">Search Cards</h2>
+        <p className="search-subtitle">Showing only UNIQUE rarity cards</p>
         {isSearching && (
-          <div className="flex items-center text-sm text-blue-600">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+          <div className="loading-indicator">
+            <div className="loading-spinner"></div>
             Searching...
           </div>
         )}
@@ -146,40 +144,33 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {  
 
       {/* Search Status */}
       {!isSearching && hasSearched && searchError === null && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <div className="text-sm text-green-800">
-            <strong>Ready:</strong> Adjust filters and click "Search Cards" to find new results
-          </div>
+        <div className="status-ready">
+          <strong>Ready:</strong> Adjust filters and click "Search Cards" to find new results
         </div>
       )}
 
       {/* Search Error */}
       {searchError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <div className="text-sm text-red-800">
-            <strong>Search Error:</strong> {searchError}
-          </div>
+        <div className="status-error">
+          <strong>Search Error:</strong> {searchError}
         </div>
       )}
 
       {/* Search Input */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-        </div>
+      <div className="search-input-container">
+        <MagnifyingGlassIcon className="search-icon" />
         <input
           type="text"
           placeholder="Search by name, effect, or keyword..."
           value={filters.searchQuery}
           onChange={(e) => updateFilter('searchQuery', e.target.value)}
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          className="search-input"
         />
-      </div>      {/* Quick Filters */}
-      <div className="space-y-4">
+      </div>      <div className="filters-section">
         {/* Faction Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Faction</label>
-          <div className="flex flex-wrap gap-2">
+        <div className="filter-group">
+          <label className="filter-label">Faction</label>
+          <div className="filter-buttons">
             {[
               { ref: 'AX', name: 'Axiom' },
               { ref: 'BR', name: 'Bravos' },
@@ -190,12 +181,9 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {  
             ].map(faction => (
               <button
                 key={faction.ref}
+                type="button"
                 onClick={() => toggleArrayFilter('factions', faction.ref)}
-                className={`px-3 py-1 text-sm rounded-full border ${
-                  filters.factions.includes(faction.ref)
-                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+                className={`filter-button ${filters.factions.includes(faction.ref) ? 'active' : ''}`}
               >
                 {faction.name}
               </button>
@@ -204,9 +192,9 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {  
         </div>
 
         {/* Main Cost Range */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Main Cost</label>
-          <div className="flex items-center space-x-2">
+        <div className="filter-group">
+          <label className="filter-label">Main Cost</label>
+          <div className="cost-range">
             <input
               type="number"
               placeholder="Min"
@@ -217,9 +205,9 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {  
                 ...filters.mainCostRange,
                 min: e.target.value ? parseInt(e.target.value) : undefined
               })}
-              className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+              className="cost-input"
             />
-            <span className="text-gray-500">to</span>
+            <span className="cost-separator">to</span>
             <input
               type="number"
               placeholder="Max"
@@ -230,46 +218,51 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {  
                 ...filters.mainCostRange,
                 max: e.target.value ? parseInt(e.target.value) : undefined
               })}
-              className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+              className="cost-input"
             />
           </div>
         </div>
 
         {/* In Sale Only */}
-        <div className="flex items-center">
+        <div className="checkbox-group">
           <input
             type="checkbox"
             id="inSaleOnly"
             checked={filters.inSaleOnly}
             onChange={(e) => updateFilter('inSaleOnly', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="checkbox"
           />
-          <label htmlFor="inSaleOnly" className="ml-2 block text-sm text-gray-700">
+          <label htmlFor="inSaleOnly" className="checkbox-label">
             Show only cards for sale
-          </label>        </div>
+          </label>
+        </div>
       </div>
 
       {/* Search Button */}
       <button
+        type="button"
         onClick={handleSearch}
         disabled={isSearching}
-        className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        className="search-button"
       >
         {isSearching ? (
           <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            <div className="loading-spinner"></div>
             Searching...
           </>
         ) : (
           <>
-            <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
+            <MagnifyingGlassIcon className="search-button-icon" />
             Search Cards
           </>
         )}
-      </button>      {/* Clear Filters */}
+      </button>
+
+      {/* Clear Filters */}
       <button
+        type="button"
         onClick={clearAllFilters}
-        className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        className="clear-button"
       >
         Clear All Filters
       </button>

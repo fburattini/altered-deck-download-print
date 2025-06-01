@@ -142,33 +142,21 @@ const App: React.FC = () => {
 			</div>
 		);
 	}
-
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<header className="bg-white shadow-sm border-b">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-					<div className="flex items-center justify-between">
-						<h1 className="text-2xl font-bold text-gray-900">
-							Altered Card Search
-						</h1>
-						<div className="text-sm text-gray-600">
-							Backend API Search
-						</div>
-					</div>
-				</div>
+		<div className="app-container">
+			<header className="app-header">
+				<h1 className="app-title">Altered Card Search</h1>
+				<p className="app-subtitle">Backend API Search - UNIQUE Rarity Cards</p>
 			</header>
 
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-				<div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-					{/* Search and Filters Sidebar */}
-					<div className="lg:col-span-1">
-						<div className="bg-white rounded-lg shadow p-6 sticky top-6">
-							<APICardSearch onSearchResults={handleSearchResults} />
-						</div>
-					</div>
+			<div className="main-layout">
+				{/* Search and Filters Sidebar */}
+				<div className="search-panel">
+					<APICardSearch onSearchResults={handleSearchResults} />
+				</div>
 
-					{/* Main Content */}
-					<div className="lg:col-span-3">
+				{/* Main Content */}
+				<div className="results-area">
 						{/* Controls Bar */}
 						<div className="bg-white rounded-lg shadow p-4 mb-6">
 							<div className="flex flex-wrap items-center justify-between gap-4">
@@ -319,9 +307,8 @@ const App: React.FC = () => {
 							</>
 						)}
 					</div>
+				</div>				
 				</div>
-			</div>
-		</div>
 	);
 };
 

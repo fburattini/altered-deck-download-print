@@ -1,7 +1,8 @@
 {
   "name": "altered_deck_download",
   "version": "1.0.0",
-  "main": "index.js",  "scripts": {
+  "main": "index.js",
+  "scripts": {
     "scrape": "npx tsx src/queries/simple.ts",
     "search": "npx tsx src/search/search.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -24,6 +25,7 @@
     "@types/pdfkit": "^0.13.9",
     "@types/prompt-sync": "^4.2.3",
     "nodemon": "^3.1.10",
+    "sass": "^1.89.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
@@ -31,7 +33,6 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
-    "@tailwindcss/postcss": "^4.1.8",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/react": "^19.1.6",
@@ -51,7 +52,6 @@
     "prompt-sync": "^4.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwindcss": "^4.1.8",
     "vite": "^6.3.5"
   }
 }
