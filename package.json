@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "scrape": "npx tsx src/queries/simple.ts",
+    "search": "npx tsx src/search/search.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx tsx src/index.ts",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "build": "tsc",
-    "cli": "npx tsx src/cli.ts",
-    "scrape": "npx tsx src/scrape.ts"
+    "cli": "npx tsx src/cli.ts"
   },
   "keywords": [],
   "author": "",

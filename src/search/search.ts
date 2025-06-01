@@ -16,18 +16,18 @@ import { CardDetail } from '../market/markte-types';
 // ============================================
 
 // Main cost filter (exact match or range like "1-3")
-const MAIN_COST_FILTER = '2';          // Examples: '3', '1-3', '5-7', or ''
+const MAIN_COST_FILTER = '';          // Examples: '3', '1-3', '5-7', or ''
 
 // Main effect text search (case-insensitive partial match)
 // Support multiple terms: 'draw,boost' (OR logic) or 'draw+boost' (AND logic)
-const MAIN_EFFECT_FILTER = '';        // Examples: 'boost', 'draw,boost', 'discard+exhaust', or ''
+const MAIN_EFFECT_FILTER = 'When you roll';        // Examples: 'boost', 'draw,boost', 'discard+exhaust', or ''
 
 // Echo effect text search (case-insensitive partial match)  
 // Support multiple terms: 'reserve,expedition' (OR logic) or 'reserve+draw' (AND logic)
 const ECHO_EFFECT_FILTER = '';        // Examples: 'draw', 'reserve,expedition', 'token+sacrifice', or ''
 
 // Card name filter (case-insensitive partial match)
-const NAME_FILTER = 'pamola';               // Examples: 'Dragon', 'Elemental', 'Snowball', or ''
+const NAME_FILTER = 'cloth';               // Examples: 'Dragon', 'Elemental', 'Snowball', or ''
 
 // Faction filter
 const FACTION_FILTER = '';            // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 'YZ', or ''

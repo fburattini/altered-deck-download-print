@@ -21,16 +21,16 @@ const RARITY = 'UNIQUE';              // Options: 'COMMON', 'RARE', 'UNIQUE', or
 const CARD_SET = '';              // Options: 'CORE', 'ALIZE', or ''
 
 // Which faction? (leave blank for all)
-const FACTION = 'YZ';                 // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 'YZ', or ''
+const FACTION = 'LY';                 // Options: 'AX', 'BR', 'LY', 'MU', 'OR', 'YZ', or ''
 
 // What main cost? (leave blank for all, or use ranges like '1-3')
-const MAIN_COST = '4-5';              // Examples: '1', '1-3', '5-10', or ''
+const MAIN_COST = '2-3';              // Examples: '1', '1-3', '5-10', or ''
 
 // What recall cost? (leave blank for all, or use ranges like '1-2')
 const RECALL_COST: string = '';            // Examples: '1', '1-2', '0-5', or ''
 
 // What card name? (leave blank for all, use partial name matching)
-const CARD_NAME = 'kuwat';                     // Examples: 'Kelon', 'Dragon', 'Elemental', or ''
+const CARD_NAME = 'cloth';                     // Examples: 'Kelon', 'Dragon', 'Elemental', or ''
 
 // Only cards for sale?
 const ONLY_FOR_SALE = true;           // true or false
