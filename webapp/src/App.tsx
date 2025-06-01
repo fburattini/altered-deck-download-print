@@ -68,54 +68,6 @@ const App: React.FC = () => {
 		}
 	};
 
-	// Status component
-	const SearchStatus: React.FC = () => {
-		if (isLoading) {
-			return (
-				<div className="status-loading"> {/* Updated class */}
-					<div className="spinner-icon"></div> {/* Updated class for spinner */}
-					<span className="text">Searching cards...</span> {/* Updated class */}
-				</div>
-			);
-		}
-
-		if (searchError) {
-			return (
-				<div className="status-error"> {/* Updated class */}
-					<div className="icon"> {/* Updated class */}
-						<svg viewBox="0 0 20 20" fill="currentColor">
-							<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-						</svg>
-					</div>
-					<div className="content"> {/* Updated class */}
-						<h3 className="title">Search Error</h3> {/* Updated class */}
-						<p className="message">{searchError}</p> {/* Updated class */}
-					</div>
-				</div>
-			);
-		}
-
-		if (searchResults.length > 0) {
-			return (
-				<div className="status-success"> {/* Updated class */}
-					<div className="left-content"> {/* Added wrapper for icon and text */}
-						<svg className="icon" fill="currentColor" viewBox="0 0 20 20"> {/* Updated class */}
-							<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-						</svg>
-						<span className="text">
-							Found {searchResults.length.toLocaleString()} cards
-						</span> {/* Updated class */}
-					</div>
-					<div className="powered-by">
-						Powered by backend API
-					</div> {/* Updated class */}
-				</div>
-			);
-		}
-
-		return null;
-	};
-
 	if (isLoading && searchResults.length === 0) {
 		return (
 			<div className="app-container">
