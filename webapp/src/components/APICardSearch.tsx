@@ -9,6 +9,7 @@ interface APICardSearchProps {
 
 interface LocalFilters {
 	searchQuery: string;
+	mainEffect: string;
 	factions: string[];
 	cardType: string[];
 	mainCostRange: { min?: number; max?: number };
@@ -16,9 +17,9 @@ interface LocalFilters {
 	inSaleOnly: boolean;
 }
 
-const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
-	const [filters, setFilters] = useState<LocalFilters>({
+const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	const [filters, setFilters] = useState<LocalFilters>({
 		searchQuery: '',
+		mainEffect: '',
 		factions: [],
 		cardType: [],
 		mainCostRange: {},
@@ -46,9 +47,14 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 				resultLimit: 0, // Get all results
 				sortByPrice: true,
 				inSaleOnly: currentFilters.inSaleOnly
-			};      // Convert search query to name filter
+			};			// Convert search query to name filter
 			if (currentFilters.searchQuery.trim()) {
 				apiFilters.name = currentFilters.searchQuery.trim();
+			}
+
+			// Convert main effect filter
+			if (currentFilters.mainEffect.trim()) {
+				apiFilters.mainEffect = currentFilters.mainEffect.trim();
 			}
 
 			// Always filter for UNIQUE rarity
@@ -108,10 +114,11 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 		setScrapeError(null);
 
 		try {
-			const scrapeFilters: APIScrapeFilters = {};
-
-			if (filters.searchQuery.trim()) {
+			const scrapeFilters: APIScrapeFilters = {};			if (filters.searchQuery.trim()) {
 				scrapeFilters.CARD_NAME = filters.searchQuery.trim();
+			}
+			if (filters.mainEffect.trim()) {
+				scrapeFilters.MAIN_EFFECT = filters.mainEffect.trim();
 			}
 			if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
 				scrapeFilters.FACTION = filters.factions[0];
@@ -173,9 +180,10 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 				[key]: newArray
 			};
 		});
-	}; const clearAllFilters = () => {
+	};	const clearAllFilters = () => {
 		setFilters({
 			searchQuery: '',
+			mainEffect: '',
 			factions: [],
 			cardType: [],
 			mainCostRange: {},
@@ -188,152 +196,160 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 	const handleFormSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		handleSearch();
-	};
-	return (
-		<form onSubmit={handleFormSubmit} className="search-form">
-			<div className="search-header">
-				<h2 className="search-title">Search Cards</h2>
-				<p className="search-subtitle">Showing only UNIQUE rarity cards</p>
-				{isSearching && (
-					<div className="loading-indicator">
-						<div className="loading-spinner"></div>
-						Searching...
+	}; return (
+		<div className="top-search-layout">
+			<form onSubmit={handleFormSubmit} className="search-form">
+				<div className="search-header">
+					<h2 className="search-title">Search Cards</h2>
+					<p className="search-subtitle">Showing only UNIQUE rarity cards</p>
+					{isSearching && (
+						<div className="loading-indicator">
+							<div className="loading-spinner"></div>
+							Searching...
+						</div>
+					)}
+					{isScraping && (
+						<div className="loading-indicator">
+							<div className="loading-spinner"></div>
+							Scraping data...
+						</div>
+					)}
+				</div>
+
+				{/* Search Error */}
+				{searchError && (
+					<div className="status-error">
+						<strong>Search Error:</strong> {searchError}
 					</div>
 				)}
-				{isScraping && (
-					<div className="loading-indicator">
-						<div className="loading-spinner"></div>
-						Scraping data...
+
+				{/* Scrape Status/Error Messages */}
+				{scrapeMessage && (
+					<div className="status-success">
+						{scrapeMessage}
 					</div>
 				)}
-			</div>
-
-			{/* Search Status */}
-			{!isSearching && hasSearched && searchError === null && (
-				<div className="status-ready">
-					<strong>Ready:</strong> Adjust filters and click "Search Cards" to find new results
-				</div>
-			)}
-
-			{/* Search Error */}
-			{searchError && (
-				<div className="status-error">
-					<strong>Search Error:</strong> {searchError}
-				</div>
-			)}
-
-			{/* Scrape Status/Error Messages */}
-			{scrapeMessage && (
-				<div className="status-success">
-					{scrapeMessage}
-				</div>
-			)}
-			{scrapeError && (
-				<div className="status-error">
-					<strong>Scrape Error:</strong> {scrapeError}
-				</div>
-			)}
-
-			{/* Bearer Token Input for Scrape */}
-			<div className="filter-group">
-				<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token (Optional for Scrape)</label>
-				<input
-					id="bearerTokenInput"
-					type="text"
-					placeholder="Enter Bearer Token (or leave blank)"
-					value={bearerTokenInput}
-					onChange={(e) => setBearerTokenInput(e.target.value)}
-					className="base-input"
-					disabled={isScraping || isSearching}
-				/>
-			</div>
-
-			{/* Search Input */}
-			<div className="search-input-container">
-				<MagnifyingGlassIcon className="search-icon" />
-				<input
-					type="text"
-					placeholder="Search by name, effect, or keyword..."
-					value={filters.searchQuery}
-					onChange={(e) => updateFilter('searchQuery', e.target.value)}
-					className="base-input base-input-icon"
-				/>
-			</div>
-			<div className="filters-section">
-				{/* Faction Filter */}
-				<div className="filter-group">
-					<label className="filter-label">Faction</label>
-					<div className="filter-buttons">
-						{[
-							{ ref: 'AX', name: 'Axiom' },
-							{ ref: 'BR', name: 'Bravos' },
-							{ ref: 'LY', name: 'Lyra' },
-							{ ref: 'MU', name: 'Muna' },
-							{ ref: 'OR', name: 'Ordis' },
-							{ ref: 'YZ', name: 'Yzmir' }
-						].map(faction => (
-							<button
-								key={faction.ref}
-								type="button"
-								onClick={() => toggleArrayFilter('factions', faction.ref)}
-								className={`filter-button ${filters.factions.includes(faction.ref) ? 'active' : ''}`}
-								// Disable multi-select for factions if scrape only supports one
-								disabled={isScraping && filters.factions.length > 0 && !filters.factions.includes(faction.ref)}
-							>
-								{faction.name}
-							</button>
-						))}
+				{scrapeError && (
+					<div className="status-error">
+						<strong>Scrape Error:</strong> {scrapeError}
 					</div>
-				</div>
+				)}
 
-				{/* Main Cost Range */}
+				{/* Bearer Token Input for Scrape */}
 				<div className="filter-group">
-					<label className="filter-label">Main Cost</label>
-					<div className="cost-range">
+					<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token</label>
+					<input
+						id="bearerTokenInput"
+						type="text"
+						placeholder="Enter Bearer Token (or leave blank)"
+						value={bearerTokenInput}
+						onChange={(e) => setBearerTokenInput(e.target.value)}
+						className="base-input"
+						disabled={isScraping || isSearching}
+					/>
+				</div>				{/* Search Inputs Row */}
+				<div className="search-inputs-row">
+					<div className="search-input-container">
+						<label htmlFor="searchQuery" className="filter-label">Card Name</label>
+						<MagnifyingGlassIcon className="search-icon" />
 						<input
-							type="number"
-							placeholder="Min"
-							min="0"
-							max="10"
-							value={filters.mainCostRange.min || ''}
-							onChange={(e) => updateFilter('mainCostRange', {
-								...filters.mainCostRange,
-								min: e.target.value ? parseInt(e.target.value) : undefined
-							})}
-							className="cost-input"
+							id="searchQuery"
+							type="text"
+							placeholder="Search by card name..."
+							value={filters.searchQuery}
+							onChange={(e) => updateFilter('searchQuery', e.target.value)}
+							className="base-input base-input-icon"
 						/>
-						<span className="cost-separator">to</span>
+					</div>
+					
+					<div className="search-input-container">
+						<label htmlFor="mainEffect" className="filter-label">Main Effect</label>
 						<input
-							type="number"
-							placeholder="Max"
-							min="0"
-							max="10"
-							value={filters.mainCostRange.max || ''}
-							onChange={(e) => updateFilter('mainCostRange', {
-								...filters.mainCostRange,
-								max: e.target.value ? parseInt(e.target.value) : undefined
-							})}
-							className="cost-input"
+							id="mainEffect"
+							type="text"
+							placeholder="Search by main effect text..."
+							value={filters.mainEffect}
+							onChange={(e) => updateFilter('mainEffect', e.target.value)}
+							className="base-input"
 						/>
 					</div>
 				</div>
+				<div className="filters-section">
+					{/* Faction Filter */}
+					<div className="filter-group">
+						<label className="filter-label">Faction</label>
+						<div className="filter-buttons">
+							{[
+								{ ref: 'AX', name: 'Axiom' },
+								{ ref: 'BR', name: 'Bravos' },
+								{ ref: 'LY', name: 'Lyra' },
+								{ ref: 'MU', name: 'Muna' },
+								{ ref: 'OR', name: 'Ordis' },
+								{ ref: 'YZ', name: 'Yzmir' }
+							].map(faction => (
+								<button
+									key={faction.ref}
+									type="button"
+									onClick={() => toggleArrayFilter('factions', faction.ref)}
+									className={`filter-button ${filters.factions.includes(faction.ref) ? 'active' : ''}`}
+									// Disable multi-select for factions if scrape only supports one
+									disabled={isScraping && filters.factions.length > 0 && !filters.factions.includes(faction.ref)}
+								>
+									{faction.name}
+								</button>
+							))}
+						</div>
+					</div>
 
-				{/* Action Buttons */}
-				<div className="action-buttons">
-					<button type="submit" className="search-button" disabled={isSearching || isScraping}>
-						<MagnifyingGlassIcon />
-						{isSearching ? 'Searching...' : 'Search Cards'}
-					</button>
-					<button type="button" onClick={handleScrape} className="scrape-button" disabled={isSearching || isScraping}>
-						<CloudArrowDownIcon />
-						{isScraping ? 'Scraping...' : 'Fetch Cards'}
-					</button>
-					<button type="button" onClick={clearAllFilters} className="clear-button" disabled={isSearching || isScraping}>
-						Clear Filters
-					</button>
+					{/* Main Cost Range */}
+					<div className="filter-group">
+						<label className="filter-label">Main Cost</label>
+						<div className="cost-range">
+							<input
+								type="number"
+								placeholder="Min"
+								min="0"
+								max="10"
+								value={filters.mainCostRange.min || ''}
+								onChange={(e) => updateFilter('mainCostRange', {
+									...filters.mainCostRange,
+									min: e.target.value ? parseInt(e.target.value) : undefined
+								})}
+								className="cost-input"
+							/>
+							<span className="cost-separator">to</span>
+							<input
+								type="number"
+								placeholder="Max"
+								min="0"
+								max="10"
+								value={filters.mainCostRange.max || ''}
+								onChange={(e) => updateFilter('mainCostRange', {
+									...filters.mainCostRange,
+									max: e.target.value ? parseInt(e.target.value) : undefined
+								})}
+								className="cost-input"
+							/>
+						</div>
+					</div>
+
+					{/* Action Buttons */}
+					<div className="action-buttons">
+						<button type="submit" className="search-button" disabled={isSearching || isScraping}>
+							<MagnifyingGlassIcon />
+							{isSearching ? 'Searching...' : 'Search Cards'}
+						</button>
+						<button type="button" onClick={handleScrape} className="scrape-button" disabled={isSearching || isScraping}>
+							<CloudArrowDownIcon />
+							{isScraping ? 'Scraping...' : 'Fetch Cards'}
+						</button>
+						<button type="button" onClick={clearAllFilters} className="clear-button" disabled={isSearching || isScraping}>
+							Clear Filters
+						</button>
+					</div>
 				</div>
-			</div>
-		</form>
+			</form>
+		</div>
 	);
 };
 

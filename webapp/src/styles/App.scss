@@ -69,63 +69,47 @@ $border-radius-full: 9999px;
 
 // Layout
 .app-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// Top search bar layout
+.top-search-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem 2rem;
+  box-shadow: $shadow-md;
+  border-bottom: 1px solid $border-light;
+
+  .search-section {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+// Main content layout
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  min-height: 100vh;
-}
-
-.app-header {
-  text-align: center;
-  margin-bottom: 3rem;
-  padding: 2rem 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-lg;
-
-  .app-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-  }
-
-  .app-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin: 0;
-  }
-}
-
-.main-layout {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 2rem;
-  align-items: start;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-// Search panel
-.search-panel {
-  @include card;
-  padding: 1.5rem;
-  position: sticky;
-  top: 2rem;
-
-  @media (max-width: 768px) {
-    position: static;
-  }
+  width: 100%;
+  box-sizing: border-box;
 }
 
 // Results area
 .results-area {
   @include card;
   padding: 1.5rem;
-  min-height: 400px;
+  min-height: 500px;
+  max-width: 100%;
+  overflow: hidden;
+  flex: 1;
   
   .controls-bar {
     display: flex;
@@ -378,123 +362,7 @@ $border-radius-full: 9999px;
   }
 }
 
-/* Styles for App.tsx component */
-
-.app-container {
-  padding: 1rem; // Example padding, adjust if needed
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh; // Example: full viewport height
-  .spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border-left-color: #09f; // Example spinner color
-    animation: spin 1s ease infinite;
-  }
-  p {
-    margin-top: 1rem;
-    font-size: 1rem;
-    color: #333;
-  }
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.app-header {
-  background-color: #f8f9fa; 
-  padding: 1.5rem;
-  text-align: center;
-  border-bottom: 1px solid #dee2e6;
-  margin-bottom: 1.5rem;
-}
-
-.app-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #343a40;
-  margin: 0;
-}
-
-.app-subtitle {
-  font-size: 1rem;
-  color: #6c757d;
-  margin-top: 0.25rem;
-}
-
-.main-layout {
-  display: flex;
-  gap: 1.5rem; 
-  padding: 0 1.5rem; 
-}
-
-.search-panel {
-  width: 25%; 
-  min-width: 250px; 
-}
-
-.results-area {
-  flex-grow: 1;
-}
-
-.controls-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding: 0.75rem;
-  background-color: #fff; 
-  border-radius: 0.375rem; 
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); 
-}
-
-.results-count {
-  font-size: 0.875rem; 
-  color: #4b5563; 
-}
-
-.control-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem; 
-
-  select,
-  button {
-    border: 1px solid #d1d5db; 
-    border-radius: 0.25rem; 
-    padding: 0.25rem 0.75rem; 
-    font-size: 0.875rem; 
-  }
-
-  button {
-    background-color: #fff; 
-    color: #4b5563; 
-    &:hover {
-      color: #111827; 
-      background-color: #f9fafb; 
-    }
-    &:disabled {
-      opacity: 0.5; 
-      cursor: not-allowed; 
-    }
-  }
-  .sort-button-padding {
-    padding: 0.25rem; // Corresponds to p-1
-  }
-}
+// Duplicate styles removed - keeping the organized versions above
 
 
 .status-base {
@@ -603,102 +471,71 @@ $border-radius-full: 9999px;
 
 
 .table-image-container {
-  display: flex; 
+  display: flex;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .table-container {
   flex-grow: 1; 
-  overflow-x: auto; 
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: calc(100% - 17rem); /* Account for image preview width + margin */
+  
+  @media (max-width: 767.98px) {
+    max-width: 100%; /* Full width on mobile when image is hidden */
+  }
+  
   table {
     min-width: 100%; 
     border-collapse: collapse; 
     box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); 
     border-radius: 0.375rem; 
     overflow: hidden; 
-  }
-  thead {
-    background-color: #f9fafb; 
-  }
-  th {
-    padding: 0.75rem 1rem; 
-    text-align: left; 
-    font-size: 0.75rem; 
-    font-weight: 500; 
-    color: #6b7280; 
-    text-transform: uppercase; 
-    letter-spacing: 0.05em; 
-    &.text-center {
-      text-align: center;
+    table-layout: fixed;
+    width: 100%;
+    
+    th, td {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-  }
-  tbody {
-    background-color: #fff; 
-    tr {
-      border-bottom: 1px solid #e5e7eb; 
-      &:last-child {
-        border-bottom: none;
-      }
-    }
+    
+    /* Column width distribution */
+    th:nth-child(1), td:nth-child(1) { width: 20%; min-width: 150px; } /* Name */
+    th:nth-child(2), td:nth-child(2) { width: 10%; min-width: 80px; }  /* Price */
+    th:nth-child(3), td:nth-child(3) { width: 10%; min-width: 80px; }  /* Main Cost */
+    th:nth-child(4), td:nth-child(4) { width: 10%; min-width: 80px; }  /* Recall Cost */
+    th:nth-child(5), td:nth-child(5) { width: 15%; min-width: 120px; } /* Attributes */
+    th:nth-child(6), td:nth-child(6) { width: 20%; min-width: 150px; } /* Main Effect */
+    th:nth-child(7), td:nth-child(7) { width: 15%; min-width: 120px; } /* Echo Effect */
   }
 }
 
-.image-preview-container {
-  margin-left: 1rem; 
-  width: 16rem; 
-  flex-shrink: 0; 
+// Mobile responsiveness for table
+@media (max-width: 768px) {
+  .table-image-container {
+    overflow-x: auto;
+  }
   
-  @media (min-width: 768px) { 
-    display: block;
-  }
-  @media (max-width: 767.98px) {
-    display: none;
-  }
-  .sticky-image-wrapper {
-    position: sticky;
-    top: 5rem; 
-    background-color: #fff; 
-    border-radius: 0.375rem; 
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06); 
-    padding: 0.5rem; 
-    img {
-      width: 100%; 
-      height: auto; 
-      object-fit: contain; 
-      border-radius: 0.25rem; 
-    }
-  }
-}
-
-
-.pagination-container {
-  margin-top: 2rem; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  nav {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem; 
-  }
-  button {
-    padding: 0.5rem 0.75rem; 
-    font-size: 0.875rem; 
-    font-weight: 500; 
-    border-radius: 0.375rem; 
-    border: 1px solid #d1d5db; 
-    background-color: #fff; 
-    color: #6b7280; 
-    &:hover {
-      background-color: #f9fafb; 
-    }
-    &:disabled {
-      opacity: 0.5; 
-      cursor: not-allowed; 
-    }
-    &.active {
-      color: #2563eb; 
-      background-color: #eff6ff; 
-      border-color: #93c5fd; 
+  .table-container {
+    max-width: 100%;
+    
+    table {
+      min-width: 600px; // Ensure minimum width for readability
+      
+      th, td {
+        padding: 0.5rem 0.25rem; // Reduce padding on mobile
+        font-size: 0.75rem; // Smaller font on mobile
+      }
+      
+      /* Adjust column widths for mobile */
+      th:nth-child(1), td:nth-child(1) { min-width: 120px; } /* Name */
+      th:nth-child(2), td:nth-child(2) { min-width: 60px; }  /* Price */
+      th:nth-child(3), td:nth-child(3) { min-width: 60px; }  /* Main Cost */
+      th:nth-child(4), td:nth-child(4) { min-width: 60px; }  /* Recall Cost */
+      th:nth-child(5), td:nth-child(5) { min-width: 80px; }  /* Attributes */
+      th:nth-child(6), td:nth-child(6) { min-width: 100px; } /* Main Effect */
+      th:nth-child(7), td:nth-child(7) { min-width: 80px; }  /* Echo Effect */
     }
   }
 }

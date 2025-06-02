@@ -3,7 +3,189 @@
 .search-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+  // Horizontal layout for top search bar
+  .top-search-layout & {
+    background: none;
+    padding: 0;
+    
+    .search-header {
+      display: none; // Hide header in horizontal layout
+    }
+    
+    .search-inputs-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+      .search-input-container {
+      margin-bottom: 1rem;
+      
+      .filter-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: white;
+        font-weight: 500;
+        font-size: 0.875rem;
+      }
+      
+      .search-icon {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      .base-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.7);
+        }
+        
+        &:focus {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.4);
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+    
+    .filters-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 2rem;
+      align-items: start;
+      
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      
+      .filter-label {
+        margin: 0;
+        white-space: nowrap;
+        color: white;
+        font-weight: 500;
+        font-size: 0.875rem;
+      }
+      
+      .filter-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        
+        .filter-button {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: rgba(255, 255, 255, 0.9);
+          
+          &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+          }
+          
+          &.active {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: white;
+            color: #667eea;
+          }
+        }
+      }
+      
+      .cost-range {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        
+        .cost-input {
+          width: 4rem;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+          }
+          
+          &:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+          }
+        }
+        
+        .cost-separator {
+          color: rgba(255, 255, 255, 0.8);
+        }
+      }
+      
+      .base-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.7);
+        }
+        
+        &:focus {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.4);
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+    
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-self: end;
+      
+      .search-button,
+      .scrape-button,
+      .clear-button {
+        background: rgba(255, 255, 255, 0.9);
+        color: #667eea;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 600;
+        white-space: nowrap;
+        
+        &:hover:not(:disabled) {
+          background: white;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+        
+        &:disabled {
+          background: rgba(255, 255, 255, 0.5);
+          color: rgba(102, 126, 234, 0.7);
+        }
+      }
+    }
+    
+    // Status messages in horizontal layout
+    .status-ready,
+    .status-error,
+    .status-success {
+      grid-column: 1 / -1;
+      margin-top: 1rem;
+      margin-bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 6px;
+    }
+  }
 }
 
 .search-header {

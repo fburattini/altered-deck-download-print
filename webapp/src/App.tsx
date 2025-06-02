@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import APICardSearch from './components/APICardSearch';
-import CardDisplay from './components/CardDisplay';
+import CardTable from './components/CardTable';
 import { Card } from './types';
 import './styles/App.scss';
 
@@ -77,19 +77,17 @@ const App: React.FC = () => {
 				</div>
 			</div>
 		);
-	}
-	return (
+	}	return (
 		<div className="app-container">
-			<header className="app-header">
-				<h1 className="app-title">Altered Card Search</h1>
-				<p className="app-subtitle">Backend API Search</p>
-			</header>
-
-			<div className="main-layout">
-				{/* Search and Filters Sidebar */}
-				<div className="search-panel">
+			{/* Top Search Bar */}
+			<div className="top-search-bar">
+				<div className="search-section">
 					<APICardSearch onSearchResults={handleSearchResults} />
-				</div>				{/* Main Content */}
+				</div>
+			</div>
+
+			{/* Main Content Area */}
+			<div className="main-content">
 				<div className="results-area">
 					{/* Controls Bar */}
 					<div className="controls-bar">
@@ -130,71 +128,15 @@ const App: React.FC = () => {
 							</svg>
 						</div>
 						<h3 className="title">No cards found</h3>
-						<p className="message">Try adjusting your search filters to find cards.</p> {/* Updated class */}
-					</div>
-				) : (
+						<p className="message">Try adjusting your search filters to find cards.</p>
+					</div>				) : (
 					<>
 						{/* Card Table and Image Preview */}
-						<div className='table-image-container'>
-							{sortedResults.length > 0 && (
-								<div className="table-container">
-									<table>
-										<thead>
-											<tr>
-												<th scope="col">
-													Name
-												</th>
-												<th scope="col" className="text-center">
-													Price
-												</th>
-												<th scope="col" className="text-center">
-													Main Cost
-												</th>
-												<th scope="col" className="text-center">
-													Recall Cost
-												</th>
-												<th scope="col">
-													Attributes
-												</th>
-												<th scope="col">
-													Main Effect
-												</th>
-												<th scope="col">
-													Echo Effect
-												</th>
-											</tr>
-										</thead>
-										<tbody>
-											{sortedResults.map((card) => ( // Changed from paginatedCards to sortedResults
-												<tr
-													key={card.id}
-													className="card-display-row" // Retained from previous step
-													onMouseEnter={() => setHoveredCardImage(card.imagePath || null)}
-													onMouseLeave={() => setHoveredCardImage(null)}
-												>
-													<CardDisplay card={card} />
-												</tr>
-											))}
-										</tbody>
-									</table>
-								</div>
-							)}
-
-							{hoveredCardImage && (
-								<div className="image-preview-container">
-									<div className="sticky-image-wrapper">
-										<img
-											src={hoveredCardImage}
-											alt="Hovered card"
-											onError={(e) => {
-												(e.target as HTMLImageElement).style.display = 'none';
-											}}
-										/>
-									</div>
-								</div>
-							)}
-						</div>
-
+						<CardTable 
+							cards={sortedResults}
+							hoveredCardImage={hoveredCardImage}
+							onCardHover={setHoveredCardImage}
+						/>
 					</>
 				)}
 				</div>

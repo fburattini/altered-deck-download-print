@@ -34,6 +34,7 @@ export interface APISearchResponse {
 // Interface for the scrape request body, based on the backend
 export interface APIScrapeFilters {
   CARD_NAME?: string;
+  MAIN_EFFECT?: string;
   FACTION?: string;
   MAIN_COST?: string; // e.g., "2" or "1-3"
   bearerToken?: string; // Added optional bearerToken

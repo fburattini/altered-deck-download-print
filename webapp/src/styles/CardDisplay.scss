@@ -51,6 +51,7 @@
   padding-bottom: 0.5rem; // Corresponds to py-2
   font-size: 0.875rem; // Corresponds to text-sm
   color: #4b5563; // Corresponds to text-gray-600
-  min-width: 200px; // Corresponds to min-w-[200px]
+  max-width: 200px; // Limit width to prevent overflow
   white-space: pre-wrap; // Corresponds to whitespace-pre-wrap
+  word-break: break-word; // Allow breaking long words
 }
