@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import APICardSearch from './components/APICardSearch';
 import CardTable from './components/CardTable';
 import CardPreview from './components/CardPreview';
+import AvailableCardsList from './components/AvailableCardsList';
 import { Card } from './types';
+import { searchAPI, CardNameFaction } from './services/searchAPI';
 import './styles/App.scss';
+import './styles/AvailableCardsList.scss';
 
 // Sorting options
 type SortOption = 'name' | 'mainCost' | 'price' | 'rarity' | 'faction';
@@ -13,12 +16,40 @@ const App: React.FC = () => {
 	const [searchResults, setSearchResults] = useState<Card[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
+	// Available cards state
+	const [availableCards, setAvailableCards] = useState<CardNameFaction[]>([]);
+	const [availableCardsLoading, setAvailableCardsLoading] = useState(true);
+	const [availableCardsError, setAvailableCardsError] = useState<string | null>(null);
+	const [showAvailableCards, setShowAvailableCards] = useState(false);
 
 	// Sorting state
 	const [sortBy, setSortBy] = useState<SortOption>('name');
-	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-	// State for hovered/selected card
+	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');	// State for hovered/selected card
 	const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+
+	// Fetch available cards on app startup
+	useEffect(() => {
+		const fetchAvailableCards = async () => {
+			setAvailableCardsLoading(true);
+			setAvailableCardsError(null);
+
+			try {
+				const response = await searchAPI.getCardsInDB();
+				
+				if (response.success) {
+					setAvailableCards(response.data);
+				} else {
+					setAvailableCardsError(response.error || 'Failed to fetch available cards');
+				}
+			} catch (error) {
+				setAvailableCardsError(error instanceof Error ? error.message : 'Unknown error');
+			} finally {
+				setAvailableCardsLoading(false);
+			}
+		};
+
+		fetchAvailableCards();
+	}, []);
 
 	// Handle search results from APICardSearch component
 	const handleSearchResults = (cards: Card[], loading: boolean, error?: string) => {
@@ -77,14 +108,20 @@ const App: React.FC = () => {
 				</div>
 			</div>
 		);
-	} return (
-		<div className="app-container">
-			{/* Top Search Bar */}
+	} return (		<div className="app-container">			{/* Top Search Bar */}
 			<div className="top-search-bar">
 				<div className="search-section">
 					<APICardSearch onSearchResults={handleSearchResults} />
 				</div>
-			</div>			{/* Main Content Area */}
+			</div>{/* Available Cards List - Popup */}
+			{showAvailableCards && (
+				<AvailableCardsList
+					cards={availableCards}
+					loading={availableCardsLoading}
+					error={availableCardsError}
+					onClose={() => setShowAvailableCards(false)}
+				/>
+			)}{/* Main Content Area */}
 			<div className="main-content">
 				<div className="content-with-preview">
 					<div className="results-area">
@@ -93,10 +130,26 @@ const App: React.FC = () => {
 							{/* Results Count */}
 							<div className="results-count">
 								Displaying {sortedResults.length} cards
-							</div>
-
-							{/* View and Sort Controls */}
+							</div>							{/* View and Sort Controls */}
 							<div className="control-group">
+								{/* Available Cards Button */}
+								<button
+									onClick={() => setShowAvailableCards(!showAvailableCards)}
+									className="available-cards-button"
+									disabled={availableCardsLoading}
+								>
+									{availableCardsLoading ? (
+										<>
+											<div className="mini-spinner"></div>
+											Loading...
+										</>
+									) : (
+										<>
+											📋 Cards ({availableCards.length})
+										</>
+									)}
+								</button>
+
 								{/* Sort Controls */}
 								<select
 									value={sortBy}

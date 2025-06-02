@@ -49,6 +49,18 @@ export interface APIScrapeResponse {
   error?: string;
 }
 
+export interface CardNameFaction {
+  cardName: string;
+  cardFaction: string;
+}
+
+export interface APICardsInDBResponse {
+  success: boolean;
+  count: number;
+  data: CardNameFaction[];
+  error?: string;
+}
+
 class SearchAPIService {
   private baseUrl: string;
 
@@ -142,6 +154,40 @@ class SearchAPIService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown scrape error'
+      };
+    }
+  }
+  /**
+   * Get list of all cards available in the database
+   */
+  async getCardsInDB(): Promise<APICardsInDBResponse> {
+    try {
+      console.log('📋 Fetching available cards from database...');
+
+      const response = await fetch(`${this.baseUrl}/api/cards-in-db`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Cards-in-DB API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ Available cards fetched: ${data.count} cards`);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Cards-in-DB API error:', error);
+      
+      return {
+        success: false,
+        count: 0,
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown error fetching available cards'
       };
     }
   }
