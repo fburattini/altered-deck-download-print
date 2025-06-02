@@ -149,9 +149,9 @@ $border-radius-full: 9999px;
 .results-area {
   @include card;
   padding: 1.5rem;
-  min-height: 500px;
-  overflow: hidden;
+  overflow-y: auto; /* Changed from hidden to auto for scrolling */
   flex: 1;
+  height: 100%; /* Use full height instead of min-height */
   
   .controls-bar {
     display: flex;
@@ -166,11 +166,41 @@ $border-radius-full: 9999px;
       font-size: 0.875rem;
       color: $text-light;
     }
-    
-    .control-group {
+      .control-group {
       display: flex;
       align-items: center;
       gap: 1rem;
+      
+      .view-type-controls {
+        display: flex;
+        background: $background-light;
+        border-radius: $border-radius-sm;
+        padding: 0.25rem;
+        border: 1px solid $border-medium;
+        
+        .view-type-button {
+          padding: 0.5rem 0.75rem;
+          border-radius: $border-radius-sm;
+          font-size: 1rem;
+          font-weight: 500;
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          color: $text-light;
+          
+          &.active {
+            background: $background-white;
+            color: $text-dark;
+            box-shadow: $shadow-sm;
+          }
+          
+          &:not(.active):hover {
+            color: $text-medium;
+            background: rgba(255, 255, 255, 0.5);
+          }
+        }
+      }
       
       .view-toggle {
         display: flex;

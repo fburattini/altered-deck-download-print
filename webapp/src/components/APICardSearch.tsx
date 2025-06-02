@@ -139,6 +139,11 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			return;
 		}
 
+		if (filters.factions.length === 0) {
+			setScrapeError('A faction must be selected for scraping.');
+			return;
+		}
+
 		if (!bearerTokenInput.trim()) {
 			setScrapeError('Bearer token is required for scraping.');
 			return;
@@ -456,11 +461,13 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 								isScraping || 
 								!filters.searchQuery.trim() || 
 								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ||
+								filters.factions.length === 0 ||
 								!bearerTokenInput.trim()
 							}
 							title={
 								!filters.searchQuery.trim() ? 'Card name is required for scraping' :
 								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ? 'Main cost range is required for scraping' :
+								filters.factions.length === 0 ? 'A faction must be selected for scraping' :
 								!bearerTokenInput.trim() ? 'Bearer token is required for scraping' :
 								''
 							}
