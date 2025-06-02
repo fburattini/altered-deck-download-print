@@ -22,6 +22,7 @@ export interface SearchFilters {
   name?: string;
   faction?: string;
   rarity?: string;
+  inSale?: boolean;
 }
 
 export interface SearchResult {
@@ -350,13 +351,20 @@ export class CardSearcher {
       } else {
         matches = false;
       }
-    }
-
-    // Rarity filter
+    }    // Rarity filter
     if (filters.rarity && matches) {
       const rarityMatches = card.rarity.reference === filters.rarity;
       if (rarityMatches) {
         reasons.push(`Rarity is ${filters.rarity}`);
+      } else {
+        matches = false;
+      }
+    }    // InSale filter
+    if (filters.inSale !== undefined && matches) {
+      const cardInSale = (card.pricing?.inSale ?? 0) > 0;
+      const inSaleMatches = cardInSale === filters.inSale;
+      if (inSaleMatches) {
+        reasons.push(`Card is ${filters.inSale ? 'for sale' : 'not for sale'}`);
       } else {
         matches = false;
       }

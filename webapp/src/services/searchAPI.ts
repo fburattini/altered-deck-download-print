@@ -11,6 +11,7 @@ export interface APISearchFilters {
   name?: string;
   faction?: string;
   rarity?: string;
+  inSale?: boolean;
 }
 
 export interface APISearchOptions {

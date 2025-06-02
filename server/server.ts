@@ -16,14 +16,14 @@ app.get('/', (req: Request, res: Response) => {
 		endpoints: {
 			'POST /api/search': {
 				description: 'Search for cards with filters',
-				body: {
-					filters: {
+				body: {					filters: {
 						mainCost: 'string (e.g., "2" or "1-3")',
 						mainEffect: 'string (e.g., "draw" or "draw,boost" or "draw+boost")',
 						echoEffect: 'string (same format as mainEffect)',
 						name: 'string (partial match)',
 						faction: 'string (AX, BR, LY, MU, OR, YZ)',
-						rarity: 'string (COMMON, RARE, UNIQUE)'
+						rarity: 'string (COMMON, RARE, UNIQUE)',
+						inSale: 'boolean (true = only cards for sale, false = only cards not for sale)'
 					},
 					options: {
 						resultLimit: 'number (0 = unlimited)',

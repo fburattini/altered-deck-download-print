@@ -40,14 +40,15 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 		setIsSearching(true);
 		setSearchError(null);
 
-		try {
-			// Convert local filters to API format
+		try {			// Convert local filters to API format
 			const apiFilters: APISearchFilters = {};
 			const apiOptions: APISearchOptions = {
 				resultLimit: 0, // Get all results
 				sortByPrice: true,
-				inSaleOnly: currentFilters.inSaleOnly
-			};			// Convert search query to name filter
+				inSaleOnly: false // Disable the legacy inSaleOnly option
+			};
+
+			// Convert search query to name filter
 			if (currentFilters.searchQuery.trim()) {
 				apiFilters.name = currentFilters.searchQuery.trim();
 			}
@@ -59,6 +60,11 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 
 			// Always filter for UNIQUE rarity
 			apiFilters.rarity = 'UNIQUE';
+
+			// Convert inSaleOnly to inSale filter
+			if (currentFilters.inSaleOnly) {
+				apiFilters.inSale = true;
+			}
 
 			// Convert faction filter 
 			if (currentFilters.factions.length === 1) {
@@ -330,6 +336,22 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 								})}
 								className="cost-input"
 							/>
+						</div>					</div>
+
+					{/* In Sale Filter */}
+					<div className="filter-group">
+						<label className="filter-label">Availability</label>
+						<div className="checkbox-container">
+							<label className="checkbox-label">
+								<input
+									type="checkbox"
+									checked={filters.inSaleOnly}
+									onChange={(e) => updateFilter('inSaleOnly', e.target.checked)}
+									className="checkbox-input"
+									disabled={isSearching || isScraping}
+								/>
+								<span className="checkbox-text">Only show cards for sale</span>
+							</label>
 						</div>
 					</div>
 
