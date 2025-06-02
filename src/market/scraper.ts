@@ -164,11 +164,10 @@ export class AlteredScraper {
 			throw error;
 		}
 	}
-
 	/**
 	 * Run a filtered scrape with pricing data integrated into card details
 	 */
-	async runFilteredScrapeWithPricing(filters: FilterOptions, resumeFromCheckpoint: boolean = true): Promise<void> {
+	async runFilteredScrapeWithPricing(filters: FilterOptions, resumeFromCheckpoint: boolean = true): Promise<{ totalCards: number, cardsWithPricing: number }> {
 		console.log('Starting filtered scrape with pricing data integration...');
 		console.log(`Applied filters: ${JSON.stringify(filters, null, 2)}`);
 
@@ -256,9 +255,12 @@ export class AlteredScraper {
 				if (enhancedSummary.errors.length > 10) {
 					console.log(`  ... and ${enhancedSummary.errors.length - 10} more errors`);
 				}
-			}
+			}			console.log(`\nEnriched cards with pricing saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
 
-			console.log(`\nEnriched cards with pricing saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
+			return {
+				totalCards: enhancedSummary.uniqueCards,
+				cardsWithPricing: enhancedSummary.cardsWithPricing
+			};
 
 		} catch (error) {
 			console.error('Filtered scrape with pricing failed:', error);

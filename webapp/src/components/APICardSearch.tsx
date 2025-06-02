@@ -124,8 +124,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 		if (!isSearching) {
 			performSearch(filters);
 		}
-	};
-	// Function to handle scrape request
+	};	// Function to handle scrape request
 	const handleScrape = useCallback(async () => {
 		if (isScraping) return;
 
@@ -137,6 +136,11 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 
 		if (filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) {
 			setScrapeError('Main cost range is required for scraping.');
+			return;
+		}
+
+		if (!bearerTokenInput.trim()) {
+			setScrapeError('Bearer token is required for scraping.');
 			return;
 		}
 
@@ -189,10 +193,19 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			// scrapeFilters.ONLY_FOR_SALE = true;
 
 			console.log('🚀 Performing API scrape with filters:', scrapeFilters, 'and token:', bearerTokenInput || '(using backend default)');
-			const response = await searchAPI.scrapeCards(scrapeFilters, bearerTokenInput || undefined);
-
-			if (response.success) {
-				setScrapeMessage(response.message || 'Scrape initiated successfully.');
+			const response = await searchAPI.scrapeCards(scrapeFilters, bearerTokenInput || undefined);			if (response.success) {
+				const baseMessage = response.message || 'Scrape completed successfully.';
+				let countMessage = '';
+				
+				if (response.cardsFound !== undefined) {
+					countMessage = ` Found ${response.cardsFound} card${response.cardsFound !== 1 ? 's' : ''}`;
+					if (response.cardsWithPricing !== undefined) {
+						countMessage += ` (${response.cardsWithPricing} with pricing data)`;
+					}
+					countMessage += '.';
+				}
+				
+				setScrapeMessage(baseMessage + countMessage);
 			} else {
 				throw new Error(response.error || 'Scrape failed');
 			}
@@ -278,21 +291,18 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 					<div className="status-error">
 						<strong>Scrape Error:</strong> {scrapeError}
 					</div>
-				)}
-
-				{/* Bearer Token Input for Scrape */}
+				)}				{/* Bearer Token Input for Scrape */}
 				<div className="filter-group">
-					<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token</label>
-					<input
+					<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token <span style={{fontSize: '0.75rem'}}>(required for scraping)</span></label>					<input
 						id="bearerTokenInput"
 						type="text"
-						placeholder="Enter Bearer Token (or leave blank)"
+						placeholder="Enter Bearer Token"
 						value={bearerTokenInput}
 						onChange={(e) => setBearerTokenInput(e.target.value)}
 						className="base-input"
 						disabled={isScraping || isSearching}
 					/>
-				</div>				{/* Search Inputs Row */}
+				</div>
 				<div className="search-inputs-row">
 					<div className="search-input-container">
 						<label htmlFor="searchQuery" className="filter-label">Card Name <span style={{fontSize: '0.75rem'}}>(required)</span></label>
@@ -437,8 +447,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 						>
 							<MagnifyingGlassIcon />
 							{isSearching ? 'Searching...' : 'Search Cards'}
-						</button>
-						<button 
+						</button>						<button 
 							type="button" 
 							onClick={handleScrape} 
 							className="scrape-button" 
@@ -446,11 +455,13 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 								isSearching || 
 								isScraping || 
 								!filters.searchQuery.trim() || 
-								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined)
+								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ||
+								!bearerTokenInput.trim()
 							}
 							title={
 								!filters.searchQuery.trim() ? 'Card name is required for scraping' :
 								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ? 'Main cost range is required for scraping' :
+								!bearerTokenInput.trim() ? 'Bearer token is required for scraping' :
 								''
 							}
 						>

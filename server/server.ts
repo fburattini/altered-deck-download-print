@@ -143,18 +143,17 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 		const token = bearerToken || getBearerToken();
 		console.log('🔑 Using token from:', bearerToken ? 'request body' : 'config/auth');
 		const scraper = createScraper(locale, token);
-
 		console.log('💰 Fetching card data with integrated pricing...');
 
 		// Run filtered scrape with pricing data integration
-		// The result of runFilteredScrapeWithPricing is void, it saves data to files.
-		// We can indicate success if no error is thrown.
-		await scraper.runFilteredScrapeWithPricing(filters, false);
+		const scrapeResult = await scraper.runFilteredScrapeWithPricing(filters, false);
 
 		res.json({
 			success: true,
 			message: 'Scrape completed successfully. Data saved to file system.',
-			filtersApplied: filters
+			filtersApplied: filters,
+			cardsFound: scrapeResult.totalCards,
+			cardsWithPricing: scrapeResult.cardsWithPricing
 		});
 
 	} catch (error) {

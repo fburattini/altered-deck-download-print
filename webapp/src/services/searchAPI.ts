@@ -50,6 +50,8 @@ export interface APIScrapeResponse {
   message?: string;
   filtersApplied?: any;
   error?: string;
+  cardsFound?: number;
+  cardsWithPricing?: number;
 }
 
 export interface CardNameFaction {
