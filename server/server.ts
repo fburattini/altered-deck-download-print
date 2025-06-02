@@ -3,6 +3,7 @@ import cors from 'cors';
 import { CardSearcher, SearchFilters, SearchOptions } from '../src/search/search';
 import { createScraper } from '../src/market/scraper';
 import { getBearerToken } from '../src/config/auth';
+import { CardReader } from '../src/db/CardReader'; // Added import for CardReader
 
 const app = express();
 app.use(cors());
@@ -140,6 +141,29 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 		res.status(500).json({
 			success: false,
 			error: error instanceof Error ? error.message : 'Unknown error occurred during scrape',
+		});
+	}
+});
+
+// New endpoint to get all card name-faction combinations
+app.get('/api/cards-in-db', async (req: Request, res: Response) => {
+	try {
+		const cardReader = new CardReader();
+		const nameFactions = await cardReader.getCardNameFactions();
+
+		res.json({
+			success: true,
+			count: nameFactions.length,
+			data: nameFactions
+		});
+
+	} catch (error) {
+		console.error('API error fetching card name-factions:', error);
+		res.status(500).json({
+			success: false,
+			error: error instanceof Error ? error.message : 'Unknown error occurred while fetching card name-factions',
+			count: 0,
+			data: []
 		});
 	}
 });

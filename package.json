@@ -13,7 +13,8 @@
     "server": "npx tsx server/server.ts",
     "server:dev": "nodemon --watch 'webapp/server/**/*.ts' --watch 'src/**/*.ts' --exec 'npx tsx' webapp/server/server.ts",
     "dev:webapp": "vite",
-    "build:webapp": "vite build"
+    "build:webapp": "vite build",
+    "dev:all": "concurrently \"npm run server\" \"npm run dev:webapp\""
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,7 @@
     "@types/node": "^22.15.21",
     "@types/pdfkit": "^0.13.9",
     "@types/prompt-sync": "^4.2.3",
+    "concurrently": "^9.1.0",
     "nodemon": "^3.1.10",
     "sass": "^1.89.1",
     "ts-node": "^10.9.2",
