@@ -36,9 +36,14 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 	const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
 	const [scrapeError, setScrapeError] = useState<string | null>(null);
 	const [bearerTokenInput, setBearerTokenInput] = useState<string>(''); // State for the token input
-
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
+		// Validate required fields for search
+		if (!currentFilters.searchQuery.trim()) {
+			setSearchError('Card name is required for searching.');
+			return;
+		}
+
 		setIsSearching(true);
 		setSearchError(null);
 
@@ -48,12 +53,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 				resultLimit: 0, // Get all results
 				sortByPrice: true,
 				inSaleOnly: false // Disable the legacy inSaleOnly option
-			};
-
-			// Convert search query to name filter
-			if (currentFilters.searchQuery.trim()) {
-				apiFilters.name = currentFilters.searchQuery.trim();
-			}
+			};			// Convert search query to name filter (required)
+			apiFilters.name = currentFilters.searchQuery.trim();
 
 			// Convert main effect filter
 			if (currentFilters.mainEffect.trim()) {
@@ -124,38 +125,49 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			performSearch(filters);
 		}
 	};
-
 	// Function to handle scrape request
 	const handleScrape = useCallback(async () => {
 		if (isScraping) return;
+
+		// Validate required fields
+		if (!filters.searchQuery.trim()) {
+			setScrapeError('Card name is required for scraping.');
+			return;
+		}
+
+		if (filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) {
+			setScrapeError('Main cost range is required for scraping.');
+			return;
+		}
 
 		setIsScraping(true);
 		setScrapeMessage(null);
 		setScrapeError(null);
 
 		try {
-			const scrapeFilters: APIScrapeFilters = {};			if (filters.searchQuery.trim()) {
-				scrapeFilters.CARD_NAME = filters.searchQuery.trim();
-			}
+			const scrapeFilters: APIScrapeFilters = {};
+
+			// Name is required (already validated above)
+			scrapeFilters.CARD_NAME = filters.searchQuery.trim();
 			if (filters.mainEffect.trim()) {
 				scrapeFilters.MAIN_EFFECT = filters.mainEffect.trim();
-			}
-			if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
+			}			if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
 				scrapeFilters.FACTION = filters.factions[0];
-			}			if (filters.mainCostRange.min !== undefined || filters.mainCostRange.max !== undefined) {
-				const min = filters.mainCostRange.min;
-				const max = filters.mainCostRange.max;
-				if (min !== undefined && max !== undefined && min === max) {
-					scrapeFilters.MAIN_COST = `${min}`;
-				} else if (min !== undefined && max !== undefined) {
-					scrapeFilters.MAIN_COST = `${min}-${max}`;
-				} else if (min !== undefined) {
-					scrapeFilters.MAIN_COST = `${min}`;
-				} else if (max !== undefined) {
-					// If only max is set, backend might need a range like "1-max" or just max depending on its logic.
-					// For now, sending just max. Adjust if backend expects a range.
-					scrapeFilters.MAIN_COST = `${max}`;
-				}
+			}
+
+			// Main cost is required (already validated above)
+			const min = filters.mainCostRange.min;
+			const max = filters.mainCostRange.max;
+			if (min !== undefined && max !== undefined && min === max) {
+				scrapeFilters.MAIN_COST = `${min}`;
+			} else if (min !== undefined && max !== undefined) {
+				scrapeFilters.MAIN_COST = `${min}-${max}`;
+			} else if (min !== undefined) {
+				scrapeFilters.MAIN_COST = `${min}`;
+			} else if (max !== undefined) {
+				// If only max is set, backend might need a range like "1-max" or just max depending on its logic.
+				// For now, sending just max. Adjust if backend expects a range.
+				scrapeFilters.MAIN_COST = `${max}`;
 			}
 
 			if (filters.recallCostRange.min !== undefined || filters.recallCostRange.max !== undefined) {
@@ -283,7 +295,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 				</div>				{/* Search Inputs Row */}
 				<div className="search-inputs-row">
 					<div className="search-input-container">
-						<label htmlFor="searchQuery" className="filter-label">Card Name</label>
+						<label htmlFor="searchQuery" className="filter-label">Card Name <span style={{fontSize: '0.75rem'}}>(required)</span></label>
 						<MagnifyingGlassIcon className="search-icon" />
 						<input
 							id="searchQuery"
@@ -334,7 +346,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 						</div>
 					</div>					{/* Main Cost Range */}
 					<div className="filter-group">
-						<label className="filter-label">Main Cost</label>
+						<label className="filter-label">Main Cost <span style={{fontSize: '0.75rem'}}>(required for scraping)</span></label>
 						<div className="cost-range">
 							<input
 								type="number"
@@ -410,15 +422,38 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 								<span className="checkbox-text">Only show cards for sale</span>
 							</label>
 						</div>
-					</div>
-
-					{/* Action Buttons */}
-					<div className="action-buttons">
-						<button type="submit" className="search-button" disabled={isSearching || isScraping}>
+					</div>					<div className="action-buttons">
+						<button 
+							type="submit" 
+							className="search-button" 
+							disabled={
+								isSearching || 
+								isScraping || 
+								!filters.searchQuery.trim()
+							}
+							title={
+								!filters.searchQuery.trim() ? 'Card name is required for searching' : ''
+							}
+						>
 							<MagnifyingGlassIcon />
 							{isSearching ? 'Searching...' : 'Search Cards'}
 						</button>
-						<button type="button" onClick={handleScrape} className="scrape-button" disabled={isSearching || isScraping}>
+						<button 
+							type="button" 
+							onClick={handleScrape} 
+							className="scrape-button" 
+							disabled={
+								isSearching || 
+								isScraping || 
+								!filters.searchQuery.trim() || 
+								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined)
+							}
+							title={
+								!filters.searchQuery.trim() ? 'Card name is required for scraping' :
+								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ? 'Main cost range is required for scraping' :
+								''
+							}
+						>
 							<CloudArrowDownIcon />
 							{isScraping ? 'Scraping...' : 'Fetch Cards'}
 						</button>
