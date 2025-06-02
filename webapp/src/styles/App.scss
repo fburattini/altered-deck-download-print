@@ -80,7 +80,7 @@ $border-radius-full: 9999px;
 // Top search bar layout
 .top-search-bar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem; // Reduced from 1rem 2rem
   box-shadow: $shadow-md;
   border-bottom: 1px solid $border-light;
 
@@ -227,11 +227,13 @@ $border-radius-full: 9999px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow-y: auto; // Make content scrollable
   
   .card-preview-header {
     margin-bottom: 0.75rem; // Reduced from 1rem
     border-bottom: 1px solid $border-light;
     padding-bottom: 0.5rem; // Reduced from 0.75rem
+    flex-shrink: 0; // Don't shrink the header
     
     h3 {
       margin: 0;
@@ -242,14 +244,15 @@ $border-radius-full: 9999px;
   }
   
   .card-preview-image {
-    flex: 1;
+    flex-shrink: 0; // Don't shrink the image
     display: flex;
     align-items: flex-start;
     justify-content: center;
+    margin-bottom: 0.75rem;
     
     img {
       max-width: 100%;
-      max-height: 100%;
+      max-height: 400px; // Limit image height to save space
       border-radius: $border-radius-md;
       box-shadow: $shadow-md;
       object-fit: contain;
@@ -257,108 +260,168 @@ $border-radius-full: 9999px;
   }
 }
 
-.card-preview-placeholder {
-  padding: 1.5rem; // Reduced from 2rem
-  height: 100%;
+// Card details section
+.card-details {
+  padding: 0.75rem 0;
+  border-top: 1px solid $border-light;
+  font-size: 0.875rem;
+}
+
+.card-detail-section {
+  margin-bottom: 1rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.card-detail-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: $text-dark;
+}
+
+.card-detail-subtitle {
   display: flex;
   align-items: center;
-  justify-content: center;
-  
-  .placeholder-content {
-    text-align: center;
-    color: $text-light;
-    
-    svg {
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-    
-    p {
-      margin: 0;
-      font-size: 0.875rem;
-    }
-  }
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
 }
 
-// Form elements
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-label {
-  display: block;
+.faction-badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: $border-radius-full;
+  color: white;
+  font-size: 0.75rem;
   font-weight: 600;
+}
+
+.card-type,
+.rarity {
+  padding: 0.125rem 0.375rem;
+  background: $background-light;
+  border-radius: $border-radius-sm;
+  font-size: 0.75rem;
   color: $text-medium;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
 }
 
-.form-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid $border-medium;
-  border-radius: $border-radius-sm;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: $primary-color;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-}
-
-// Buttons
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: $border-radius-sm;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
 }
 
-.btn-primary {
-  @extend %btn-base; // Extend the new base placeholder
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.stat-label {
+  color: $text-light;
+  font-size: 0.75rem;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: $text-dark;
+}
+
+.effect-section {
+  margin-bottom: 0.75rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  h5 {
+    margin: 0 0 0.375rem 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $text-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.effect-text {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: $text-dark;
+  background: $background-light;
+  padding: 0.5rem;
+  border-radius: $border-radius-sm;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pricing-section {
+  h5 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $text-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+}
+
+.price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.price-label {
+  color: $text-light;
+  font-size: 0.75rem;
+}
+
+.price-value {
+  font-weight: 600;
+  color: $text-dark;
+  font-size: 0.75rem;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.view-on-altered-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
   background: $primary-color;
   color: white;
-
+  text-decoration: none;
+  border-radius: $border-radius-sm;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  
   &:hover {
     background: $primary-dark;
-    // transform and box-shadow are inherited from %btn-base
-    // If a more pronounced shadow is needed for primary buttons specifically:
-    // box-shadow: 0 6px 14px rgba($primary-color, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba($primary-color, 0.3);
   }
-
-  &:disabled {
-    background: $text-light; // Specific disabled background
-    // opacity from %btn-base also applies
+  
+  svg {
+    width: 12px;
+    height: 12px;
   }
-}
-
-.btn-secondary {
-  @extend %btn-base; // Extend the new base placeholder
-  background: $background-white;
-  color: $text-medium;
-  border: 1px solid $border-medium;
-
-  &:hover {
-    background: $background-light;
-    border-color: $text-light;
-    // Override hover effects from %btn-base if not desired (e.g., if shadow is too much for secondary)
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); // Lighter shadow for secondary
-    transform: translateY(0); // Or remove transform if not wanted
-  }
-}
-
-.btn-full {
-  width: 100%;
 }
 
 // Status messages
@@ -555,7 +618,6 @@ $border-radius-full: 9999px;
   }
 }
 
-
 // Table styling for standalone layout
 .table-container-standalone {
   width: 100%;
@@ -574,15 +636,14 @@ $border-radius-full: 9999px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    
-    /* Column width distribution */
-    th:nth-child(1), td:nth-child(1) { width: 20%; min-width: 150px; } /* Name */
+      /* Column width distribution */
+    th:nth-child(1), td:nth-child(1) { width: 22%; min-width: 150px; } /* Name */
     th:nth-child(2), td:nth-child(2) { width: 10%; min-width: 80px; }  /* Price */
-    th:nth-child(3), td:nth-child(3) { width: 10%; min-width: 80px; }  /* Main Cost */
-    th:nth-child(4), td:nth-child(4) { width: 10%; min-width: 80px; }  /* Recall Cost */
-    th:nth-child(5), td:nth-child(5) { width: 15%; min-width: 120px; } /* Attributes */
-    th:nth-child(6), td:nth-child(6) { width: 20%; min-width: 150px; } /* Main Effect */
-    th:nth-child(7), td:nth-child(7) { width: 15%; min-width: 120px; } /* Echo Effect */
+    th:nth-child(3), td:nth-child(3) { width: 6%; min-width: 50px; }   /* Main Cost */
+    th:nth-child(4), td:nth-child(4) { width: 6%; min-width: 50px; }   /* Recall Cost */
+    th:nth-child(5), td:nth-child(5) { width: 16%; min-width: 120px; } /* Attributes */
+    th:nth-child(6), td:nth-child(6) { width: 22%; min-width: 150px; } /* Main Effect */
+    th:nth-child(7), td:nth-child(7) { width: 18%; min-width: 120px; } /* Echo Effect */
   }
 }
 
@@ -616,15 +677,14 @@ $border-radius-full: 9999px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    
-    /* Column width distribution */
-    th:nth-child(1), td:nth-child(1) { width: 20%; min-width: 150px; } /* Name */
+      /* Column width distribution */
+    th:nth-child(1), td:nth-child(1) { width: 22%; min-width: 150px; } /* Name */
     th:nth-child(2), td:nth-child(2) { width: 10%; min-width: 80px; }  /* Price */
-    th:nth-child(3), td:nth-child(3) { width: 10%; min-width: 80px; }  /* Main Cost */
-    th:nth-child(4), td:nth-child(4) { width: 10%; min-width: 80px; }  /* Recall Cost */
-    th:nth-child(5), td:nth-child(5) { width: 15%; min-width: 120px; } /* Attributes */
-    th:nth-child(6), td:nth-child(6) { width: 20%; min-width: 150px; } /* Main Effect */
-    th:nth-child(7), td:nth-child(7) { width: 15%; min-width: 120px; } /* Echo Effect */
+    th:nth-child(3), td:nth-child(3) { width: 6%; min-width: 50px; }   /* Main Cost */
+    th:nth-child(4), td:nth-child(4) { width: 6%; min-width: 50px; }   /* Recall Cost */
+    th:nth-child(5), td:nth-child(5) { width: 16%; min-width: 120px; } /* Attributes */
+    th:nth-child(6), td:nth-child(6) { width: 22%; min-width: 150px; } /* Main Effect */
+    th:nth-child(7), td:nth-child(7) { width: 18%; min-width: 120px; } /* Echo Effect */
   }
 }
 
@@ -644,12 +704,11 @@ $border-radius-full: 9999px;
         padding: 0.5rem 0.25rem; // Reduce padding on mobile
         font-size: 0.75rem; // Smaller font on mobile
       }
-      
-      /* Adjust column widths for mobile */
+        /* Adjust column widths for mobile */
       th:nth-child(1), td:nth-child(1) { min-width: 120px; } /* Name */
       th:nth-child(2), td:nth-child(2) { min-width: 60px; }  /* Price */
-      th:nth-child(3), td:nth-child(3) { min-width: 60px; }  /* Main Cost */
-      th:nth-child(4), td:nth-child(4) { min-width: 60px; }  /* Recall Cost */
+      th:nth-child(3), td:nth-child(3) { min-width: 40px; }  /* Main Cost */
+      th:nth-child(4), td:nth-child(4) { min-width: 40px; }  /* Recall Cost */
       th:nth-child(5), td:nth-child(5) { min-width: 80px; }  /* Attributes */
       th:nth-child(6), td:nth-child(6) { min-width: 100px; } /* Main Effect */
       th:nth-child(7), td:nth-child(7) { min-width: 80px; }  /* Echo Effect */

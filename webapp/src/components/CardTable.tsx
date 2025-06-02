@@ -4,15 +4,15 @@ import CardDisplay from './CardDisplay';
 
 interface CardTableProps {
   cards: Card[];
-  hoveredCardImage: string | null;
-  onCardHover: (imagePath: string | null) => void;
+  hoveredCard: Card | null;
+  onCardHover: (card: Card | null) => void;
 }
 
 const CardTable: React.FC<CardTableProps> = ({ 
   cards, 
-  hoveredCardImage, 
+  hoveredCard, 
   onCardHover 
-}) => {  return (
+}) => {return (
     <div className='table-container-standalone'>
       {cards.length > 0 && (
         <table>
@@ -25,10 +25,10 @@ const CardTable: React.FC<CardTableProps> = ({
                 Price
               </th>
               <th scope="col" className="text-center">
-                Main Cost
+                H.C.
               </th>
               <th scope="col" className="text-center">
-                Recall Cost
+                R.C.
               </th>
               <th scope="col">
                 Attributes
@@ -41,12 +41,11 @@ const CardTable: React.FC<CardTableProps> = ({
               </th>
             </tr>
           </thead>
-          <tbody>
-            {cards.map((card) => (
+          <tbody>            {cards.map((card) => (
               <tr
                 key={card.id}
-                className="card-display-row"
-                onMouseEnter={() => onCardHover(card.imagePath || null)}
+                className={`card-display-row ${hoveredCard?.id === card.id ? 'highlighted' : ''}`}
+                onMouseEnter={() => onCardHover(card)}
               >
                 <CardDisplay card={card} />
               </tr>

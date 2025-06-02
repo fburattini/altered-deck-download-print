@@ -3,6 +3,13 @@
   &:hover {
     background-color: #f3f4f6; // Corresponds to hover:bg-gray-100
   }
+  
+  &.highlighted {
+    background-color: #dbeafe; // Light blue background for highlighted row
+    border-left: 4px solid #3b82f6; // Blue left border
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1); // Subtle blue shadow
+  }
+  
   cursor: pointer; // Corresponds to cursor-pointer
 }
 
@@ -22,10 +29,46 @@
   font-weight: 500; // Corresponds to font-medium
   color: #111827; // Corresponds to text-gray-900
   white-space: nowrap; // Corresponds to whitespace-nowrap
-
   .flex-container {
     display: flex;
     align-items: center;
+    gap: 0.5rem; // Space between elements
+  }
+  
+  .card-name-link {
+    color: #111827; // Dark text color (same as card name)
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; // Space between name and icon
+    flex: 1; // Take up available space
+    min-width: 0; // Allow text to truncate if needed
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #3b82f6; // Blue on hover
+      text-decoration: none;
+    }
+    
+    &:focus {
+      outline: none;
+      color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      border-radius: 2px;
+    }
+    
+    .external-link-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.6; // Slightly transparent
+      flex-shrink: 0; // Don't shrink the icon
+      transition: opacity 0.2s ease;
+    }
+    
+    &:hover .external-link-icon {
+      opacity: 1; // Full opacity on hover
+    }
   }
 }
 

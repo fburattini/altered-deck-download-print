@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import APICardSearch from './components/APICardSearch';
 import CardTable from './components/CardTable';
+import CardPreview from './components/CardPreview';
 import { Card } from './types';
 import './styles/App.scss';
 
@@ -16,9 +17,8 @@ const App: React.FC = () => {
 	// Sorting state
 	const [sortBy, setSortBy] = useState<SortOption>('name');
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-
-	// State for hovered/selected card image
-	const [hoveredCardImage, setHoveredCardImage] = useState<string | null>(null);
+	// State for hovered/selected card
+	const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
 
 	// Handle search results from APICardSearch component
 	const handleSearchResults = (cards: Card[], loading: boolean, error?: string) => {
@@ -129,45 +129,14 @@ const App: React.FC = () => {
 								<h3 className="title">No cards found</h3>
 								<p className="message">Try adjusting your search filters to find cards.</p>
 							</div>) : (
-							<>
-								{/* Card Table without Image Preview */}
-								<CardTable
+							<>								{/* Card Table without Image Preview */}								<CardTable
 									cards={sortedResults}
-									hoveredCardImage={null}
-									onCardHover={setHoveredCardImage}
+									hoveredCard={hoveredCard}
+									onCardHover={setHoveredCard}
 								/>
 							</>
-						)}
-					</div>
-
-					{/* Separate Card Preview Sidebar */}
-					<div className="card-preview-sidebar">
-						{hoveredCardImage ? (
-							<div className="card-preview-content">
-								<div className="card-preview-header">
-									<h3>Card Preview</h3>
-								</div>
-								<div className="card-preview-image">
-									<img
-										src={hoveredCardImage}
-										alt="Card preview"
-										onError={(e) => {
-											(e.target as HTMLImageElement).style.display = 'none';
-										}}
-									/>
-								</div>
-							</div>
-						) : (
-							<div className="card-preview-placeholder">
-								<div className="placeholder-content">
-									<svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-									</svg>
-									<p>Hover over a card to preview</p>
-								</div>
-							</div>
-						)}
-					</div>
+						)}					</div>					{/* Separate Card Preview Sidebar */}
+					<CardPreview hoveredCard={hoveredCard} />
 				</div>
 			</div>
 		</div>
