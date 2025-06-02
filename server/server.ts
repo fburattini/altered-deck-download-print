@@ -18,6 +18,7 @@ app.get('/', (req: Request, res: Response) => {
 				description: 'Search for cards with filters',
 				body: {					filters: {
 						mainCost: 'string (e.g., "2" or "1-3")',
+						recallCost: 'string (e.g., "2" or "1-3")',
 						mainEffect: 'string (e.g., "draw" or "draw,boost" or "draw+boost")',
 						echoEffect: 'string (same format as mainEffect)',
 						name: 'string (partial match)',

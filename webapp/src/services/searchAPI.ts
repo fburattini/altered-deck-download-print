@@ -6,6 +6,7 @@
 
 export interface APISearchFilters {
   mainCost?: string;
+  recallCost?: string;
   mainEffect?: string;
   echoEffect?: string;
   name?: string;
@@ -38,6 +39,7 @@ export interface APIScrapeFilters {
   MAIN_EFFECT?: string;
   FACTION?: string;
   MAIN_COST?: string; // e.g., "2" or "1-3"
+  RECALL_COST?: string; // e.g., "2" or "1-3"
   bearerToken?: string; // Added optional bearerToken
   // Add other filters from your backend if needed, e.g., RARITY, ONLY_FOR_SALE
   // For now, we'll only include what the user requested for the webapp

@@ -13,6 +13,7 @@ interface LocalFilters {
 	factions: string[];
 	cardType: string[];
 	mainCostRange: { min?: number; max?: number };
+	recallCostRange: { min?: number; max?: number };
 	priceRange: { min?: number; max?: number };
 	inSaleOnly: boolean;
 }
@@ -23,6 +24,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 		factions: [],
 		cardType: [],
 		mainCostRange: {},
+		recallCostRange: {},
 		priceRange: {},
 		inSaleOnly: true
 	});
@@ -69,9 +71,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			// Convert faction filter 
 			if (currentFilters.factions.length === 1) {
 				apiFilters.faction = currentFilters.factions[0];
-			}
-
-			// Convert main cost range to string
+			}			// Convert main cost range to string
 			if (currentFilters.mainCostRange.min !== undefined || currentFilters.mainCostRange.max !== undefined) {
 				const min = currentFilters.mainCostRange.min;
 				const max = currentFilters.mainCostRange.max;
@@ -82,6 +82,20 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 					apiFilters.mainCost = `${min}`;
 				} else if (max !== undefined) {
 					apiFilters.mainCost = `1-${max}`;
+				}
+			}
+
+			// Convert recall cost range to string
+			if (currentFilters.recallCostRange.min !== undefined || currentFilters.recallCostRange.max !== undefined) {
+				const min = currentFilters.recallCostRange.min;
+				const max = currentFilters.recallCostRange.max;
+
+				if (min !== undefined && max !== undefined) {
+					apiFilters.recallCost = `${min}-${max}`;
+				} else if (min !== undefined) {
+					apiFilters.recallCost = `${min}`;
+				} else if (max !== undefined) {
+					apiFilters.recallCost = `1-${max}`;
 				}
 			}
 
@@ -128,9 +142,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			}
 			if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
 				scrapeFilters.FACTION = filters.factions[0];
-			}
-
-			if (filters.mainCostRange.min !== undefined || filters.mainCostRange.max !== undefined) {
+			}			if (filters.mainCostRange.min !== undefined || filters.mainCostRange.max !== undefined) {
 				const min = filters.mainCostRange.min;
 				const max = filters.mainCostRange.max;
 				if (min !== undefined && max !== undefined && min === max) {
@@ -143,6 +155,20 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 					// If only max is set, backend might need a range like "1-max" or just max depending on its logic.
 					// For now, sending just max. Adjust if backend expects a range.
 					scrapeFilters.MAIN_COST = `${max}`;
+				}
+			}
+
+			if (filters.recallCostRange.min !== undefined || filters.recallCostRange.max !== undefined) {
+				const min = filters.recallCostRange.min;
+				const max = filters.recallCostRange.max;
+				if (min !== undefined && max !== undefined && min === max) {
+					scrapeFilters.RECALL_COST = `${min}`;
+				} else if (min !== undefined && max !== undefined) {
+					scrapeFilters.RECALL_COST = `${min}-${max}`;
+				} else if (min !== undefined) {
+					scrapeFilters.RECALL_COST = `${min}`;
+				} else if (max !== undefined) {
+					scrapeFilters.RECALL_COST = `${max}`;
 				}
 			}
 
@@ -193,6 +219,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			factions: [],
 			cardType: [],
 			mainCostRange: {},
+			recallCostRange: {},
 			priceRange: {},
 			inSaleOnly: true
 		});
@@ -305,9 +332,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 								</button>
 							))}
 						</div>
-					</div>
-
-					{/* Main Cost Range */}
+					</div>					{/* Main Cost Range */}
 					<div className="filter-group">
 						<label className="filter-label">Main Cost</label>
 						<div className="cost-range">
@@ -337,6 +362,38 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 								className="cost-input"
 							/>
 						</div>					</div>
+
+					{/* Recall Cost Range */}
+					<div className="filter-group">
+						<label className="filter-label">Recall Cost</label>
+						<div className="cost-range">
+							<input
+								type="number"
+								placeholder="Min"
+								min="0"
+								max="10"
+								value={filters.recallCostRange.min || ''}
+								onChange={(e) => updateFilter('recallCostRange', {
+									...filters.recallCostRange,
+									min: e.target.value ? parseInt(e.target.value) : undefined
+								})}
+								className="cost-input"
+							/>
+							<span className="cost-separator">to</span>
+							<input
+								type="number"
+								placeholder="Max"
+								min="0"
+								max="10"
+								value={filters.recallCostRange.max || ''}
+								onChange={(e) => updateFilter('recallCostRange', {
+									...filters.recallCostRange,
+									max: e.target.value ? parseInt(e.target.value) : undefined
+								})}
+								className="cost-input"
+							/>
+						</div>
+					</div>
 
 					{/* In Sale Filter */}
 					<div className="filter-group">

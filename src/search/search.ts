@@ -17,6 +17,7 @@ import { CardDetail } from '../market/markte-types';
 
 export interface SearchFilters {
   mainCost?: string;
+  recallCost?: string;
   mainEffect?: string;
   echoEffect?: string;
   name?: string;
@@ -248,6 +249,23 @@ export class CardSearcher {
         const targetCost = parseInt(filters.mainCost);
         costMatches = cardMainCost === targetCost;
         if (costMatches) reasons.push(`Main cost matches ${targetCost}`);
+      }
+        if (!costMatches) matches = false;
+    }
+
+    // Recall cost filter
+    if (filters.recallCost && matches) {
+      const cardRecallCost = parseInt(card.elements.RECALL_COST);
+      let costMatches = false;
+      
+      if (filters.recallCost.includes('-')) {
+        const [min, max] = filters.recallCost.split('-').map(Number);
+        costMatches = cardRecallCost >= min && cardRecallCost <= max;
+        if (costMatches) reasons.push(`Recall cost ${cardRecallCost} in range ${min}-${max}`);
+      } else {
+        const targetCost = parseInt(filters.recallCost);
+        costMatches = cardRecallCost === targetCost;
+        if (costMatches) reasons.push(`Recall cost matches ${targetCost}`);
       }
       
       if (!costMatches) matches = false;

@@ -239,8 +239,8 @@ $border-radius-full: 9999px;
 // Card Preview Sidebar
 .card-preview-sidebar {
   @include card;
-  width: 320px;
-  min-width: 320px;
+  width: 350px;
+  min-width: 350px;
   max-height: calc(100vh - 200px);
   position: sticky;
   top: 2rem;
