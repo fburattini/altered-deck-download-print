@@ -28,7 +28,8 @@ const CardDisplay: React.FC<CardDisplayProps> = ({ card }) => {
   };
 
   return (
-    <>      <td className="card-name-cell">
+    <>      
+    <td className="card-name-cell">
         <div className="flex-container">
           <span
             className="faction-indicator"

@@ -11,37 +11,54 @@ app.use(express.json()); // Add JSON body parsing
 const port: number = 3001;
 
 app.get('/', (req: Request, res: Response) => {
-    res.json({
-        message: 'Altered Card Search API',
-        endpoints: {
-            'POST /api/search': {
-                description: 'Search for cards with filters',
-                body: {
-                    filters: {
-                        mainCost: 'string (e.g., "2" or "1-3")',
-                        mainEffect: 'string (e.g., "draw" or "draw,boost" or "draw+boost")',
-                        echoEffect: 'string (same format as mainEffect)',
-                        name: 'string (partial match)',
-                        faction: 'string (AX, BR, LY, MU, OR, YZ)',
-                        rarity: 'string (COMMON, RARE, UNIQUE)'
-                    },
-                    options: {
-                        resultLimit: 'number (0 = unlimited)',
-                        sortByPrice: 'boolean (default: true)',
-                        inSaleOnly: 'boolean (default: true)'
-                    }
-                }
-            }
-        }
-    });
+	res.json({
+		message: 'Altered Card Search API',
+		endpoints: {
+			'POST /api/search': {
+				description: 'Search for cards with filters',
+				body: {
+					filters: {
+						mainCost: 'string (e.g., "2" or "1-3")',
+						mainEffect: 'string (e.g., "draw" or "draw,boost" or "draw+boost")',
+						echoEffect: 'string (same format as mainEffect)',
+						name: 'string (partial match)',
+						faction: 'string (AX, BR, LY, MU, OR, YZ)',
+						rarity: 'string (COMMON, RARE, UNIQUE)'
+					},
+					options: {
+						resultLimit: 'number (0 = unlimited)',
+						sortByPrice: 'boolean (default: true)',
+						inSaleOnly: 'boolean (default: true)'
+					}
+				}
+			},
+			'POST /api/scrape': {
+				description: 'Scrape cards with filters and save to database',
+				body: {
+					RARITY: 'string (optional)',
+					CARD_SET: 'string (optional)',
+					FACTION: 'string (optional)',
+					MAIN_COST: 'string (optional, e.g., "2" or "1-3")',
+					RECALL_COST: 'string (optional, e.g., "2" or "1-3")',
+					CARD_NAME: 'string (optional)',
+					ONLY_FOR_SALE: 'boolean (default: true)',
+					locale: 'string (default: "en-us")',
+					bearerToken: 'string (optional, uses config if not provided)'
+				}
+			},
+			'GET /api/cards-in-db': {
+				description: 'Get all card name-faction combinations from database'
+			}
+		}
+	});
 });
 
 app.post('/api/search', async (req: Request, res: Response) => {
 	try {
 		// Extract search filters and options from request body
-		const { filters = {}, options = {} }: { 
-			filters?: SearchFilters, 
-			options?: SearchOptions 
+		const { filters = {}, options = {} }: {
+			filters?: SearchFilters,
+			options?: SearchOptions
 		} = req.body;
 
 		// Create searcher instance
@@ -78,7 +95,8 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 			RECALL_COST = '',
 			CARD_NAME = '',
 			ONLY_FOR_SALE = true,
-			locale = 'en-us' // Default locale
+			locale = 'en-us', // Default locale
+			bearerToken
 		}: {
 			RARITY?: string;
 			CARD_SET?: string;
@@ -88,13 +106,14 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 			CARD_NAME?: string;
 			ONLY_FOR_SALE?: boolean;
 			locale?: string;
+			bearerToken?: string;
 		} = req.body;
 
 		// AUTO-CONVERSION TO FILTERS (similar to simple.ts)
 		const filters: any = {};
 
 		filters.inSale = true;
-		if (RARITY) filters.rarity = [RARITY];
+		filters.rarity = ['UNIQUE']
 		if (CARD_SET) filters.cardSet = [CARD_SET];
 		if (FACTION) filters.factions = [FACTION];
 		if (CARD_NAME) filters.cardName = CARD_NAME;
@@ -117,14 +136,15 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 				filters.recallCost = [Number(RECALL_COST)];
 			}
 		}
-		
 		console.log('🚀 Received scrape request with filters:', filters);
 
-		const token = getBearerToken();
+		// Use bearerToken from request body, fallback to getBearerToken() if not provided
+		const token = bearerToken || getBearerToken();
+		console.log('🔑 Using token from:', bearerToken ? 'request body' : 'config/auth');
 		const scraper = createScraper(locale, token);
-		
+
 		console.log('💰 Fetching card data with integrated pricing...');
-		
+
 		// Run filtered scrape with pricing data integration
 		// The result of runFilteredScrapeWithPricing is void, it saves data to files.
 		// We can indicate success if no error is thrown.
@@ -169,5 +189,5 @@ app.get('/api/cards-in-db', async (req: Request, res: Response) => {
 });
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
+	console.log(`Example app listening on port ${port}`);
 });

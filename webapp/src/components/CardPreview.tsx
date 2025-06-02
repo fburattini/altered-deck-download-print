@@ -44,7 +44,16 @@ const CardPreview: React.FC<CardPreviewProps> = ({ hoveredCard }) => {
                     </div>
                     <div className="card-details">
                         <div className="card-detail-section">
-                            <h4 className="card-detail-title">{hoveredCard.name}</h4>
+                            <h4 className="card-detail-title">
+                                {hoveredCard.name} | {' '}
+                                 <a
+                                    href={`https://www.altered.gg/cards/${hoveredCard.reference}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {hoveredCard.reference}
+                                </a>
+                            </h4>
                             <div className="card-detail-subtitle">
                                 <span className="faction-badge" style={{ backgroundColor: getFactionColor(hoveredCard.mainFaction.reference) }}>
                                     {hoveredCard.mainFaction.name}

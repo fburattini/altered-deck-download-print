@@ -46,7 +46,8 @@ const AvailableCardsList: React.FC<AvailableCardsListProps> = ({ cards, loading,
                     <button className="close-button" onClick={onClose} aria-label="Close">
                         ✕
                     </button>
-                </div>        <div className="popup-filters">
+                </div>        
+                <div className="popup-filters">
                     <input
                         type="text"
                         placeholder="Search cards..."
