@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from '../types';
+import { FACTION_COLORS } from '../services/utils';
 
 interface CardPreviewProps {
     hoveredCard: Card | null;
@@ -15,15 +16,7 @@ const CardPreview: React.FC<CardPreviewProps> = ({ hoveredCard }) => {
     };
 
     const getFactionColor = (faction: string) => {
-        const colors: Record<string, string> = {
-            'AX': '#2563eb', // Axiom - Blue
-            'BR': '#c32637', // Bravos - Red
-            'LY': '#16a34a', // Lyra - Green
-            'MU': '#9333ea', // Muna - Purple
-            'OR': '#ea580c', // Ordis - Orange
-            'YZ': '#eab308'  // Yzmir - Yellow
-        };
-        return colors[faction] || '#6b7280'; // Default to gray
+        return FACTION_COLORS[faction] || '#6b7280'; // Default to gray
     };
 
     return (
