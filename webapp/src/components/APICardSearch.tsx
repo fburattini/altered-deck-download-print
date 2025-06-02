@@ -243,7 +243,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 					placeholder="Enter Bearer Token (or leave blank)"
 					value={bearerTokenInput}
 					onChange={(e) => setBearerTokenInput(e.target.value)}
-					className="search-input" // Reuse search-input style or create a new one
+					className="base-input"
 					disabled={isScraping || isSearching}
 				/>
 			</div>
@@ -256,7 +256,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 					placeholder="Search by name, effect, or keyword..."
 					value={filters.searchQuery}
 					onChange={(e) => updateFilter('searchQuery', e.target.value)}
-					className="search-input"
+					className="base-input base-input-icon"
 				/>
 			</div>
 			<div className="filters-section">

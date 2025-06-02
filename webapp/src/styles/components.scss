@@ -1,0 +1,24 @@
+.base-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 0.75rem;
+    border: 1px solid $border-medium;
+    border-radius: $border-radius-sm;
+    font-size: 0.875rem;
+    background: white;
+    color: $text-dark;
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &::placeholder {
+      color: $text-light;
+    }
+}
+
+.base-input-icon {
+    padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+}

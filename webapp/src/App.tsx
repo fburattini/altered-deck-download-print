@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import APICardSearch from './components/APICardSearch';
 import CardDisplay from './components/CardDisplay';
 import { Card } from './types';
-import './styles/App.scss'; // Import the SCSS file
+import './styles/App.scss';
 
 // Sorting options
 type SortOption = 'name' | 'mainCost' | 'price' | 'rarity' | 'faction';
@@ -104,7 +104,6 @@ const App: React.FC = () => {
 							<select
 								value={sortBy}
 								onChange={(e) => handleSortChange(e.target.value as SortOption)}
-							// className removed, will be styled by .control-group select
 							>
 								<option value="name">Name</option>
 								<option value="mainCost">Main Cost</option>
@@ -124,48 +123,48 @@ const App: React.FC = () => {
 
 				{/* Cards Display */}
 				{sortedResults.length === 0 && !isLoading ? (
-					<div className="no-cards-found"> {/* Updated class */}
-						<div className="icon-container"> {/* Updated class */}
+					<div className="no-cards-found">
+						<div className="icon-container">
 							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653-.71-1.46 1.302-2.364 1.748z" />
 							</svg>
 						</div>
-						<h3 className="title">No cards found</h3> {/* Updated class */}
+						<h3 className="title">No cards found</h3>
 						<p className="message">Try adjusting your search filters to find cards.</p> {/* Updated class */}
 					</div>
 				) : (
 					<>
 						{/* Card Table and Image Preview */}
-						<div className='table-image-container'> {/* Updated class */}
+						<div className='table-image-container'>
 							{sortedResults.length > 0 && (
-								<div className="table-container"> {/* Updated class */}
-									<table> {/* Removed min-w-full etc. as it\'s in SCSS now */}
-										<thead> {/* Removed bg-gray-50 as it\'s in SCSS now */}
+								<div className="table-container">
+									<table>
+										<thead>
 											<tr>
-												<th scope="col"> {/* Removed Tailwind classes */}
+												<th scope="col">
 													Name
 												</th>
-												<th scope="col" className="text-center"> {/* Added text-center for SCSS */}
+												<th scope="col" className="text-center">
 													Price
 												</th>
-												<th scope="col" className="text-center"> {/* Added text-center for SCSS */}
+												<th scope="col" className="text-center">
 													Main Cost
 												</th>
-												<th scope="col" className="text-center"> {/* Added text-center for SCSS */}
+												<th scope="col" className="text-center">
 													Recall Cost
 												</th>
-												<th scope="col"> {/* Removed Tailwind classes */}
+												<th scope="col">
 													Attributes
 												</th>
-												<th scope="col"> {/* Removed Tailwind classes */}
+												<th scope="col">
 													Main Effect
 												</th>
-												<th scope="col"> {/* Removed Tailwind classes */}
+												<th scope="col">
 													Echo Effect
 												</th>
 											</tr>
 										</thead>
-										<tbody> {/* Removed bg-white etc. as it\'s in SCSS now */}
+										<tbody>
 											{sortedResults.map((card) => ( // Changed from paginatedCards to sortedResults
 												<tr
 													key={card.id}
@@ -182,12 +181,11 @@ const App: React.FC = () => {
 							)}
 
 							{hoveredCardImage && (
-								<div className="image-preview-container">  {/* Updated class */}
-									<div className="sticky-image-wrapper"> {/* Updated class */}
+								<div className="image-preview-container">
+									<div className="sticky-image-wrapper">
 										<img
 											src={hoveredCardImage}
 											alt="Hovered card"
-											// className removed, will be styled by .sticky-image-wrapper img
 											onError={(e) => {
 												(e.target as HTMLImageElement).style.display = 'none';
 											}}
