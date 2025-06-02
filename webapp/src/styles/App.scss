@@ -95,11 +95,23 @@ $border-radius-full: 9999px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
+  max-width: 1400px; // Increased to accommodate sidebar
   margin: 0 auto;
   padding: 2rem;
   width: 100%;
   box-sizing: border-box;
+}
+
+// Content with preview layout
+.content-with-preview {
+  display: flex;
+  gap: 2rem;
+  min-height: 500px;
+  
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    gap: 1rem;
+  }
 }
 
 // Results area
@@ -107,7 +119,6 @@ $border-radius-full: 9999px;
   @include card;
   padding: 1.5rem;
   min-height: 500px;
-  max-width: 100%;
   overflow: hidden;
   flex: 1;
   
@@ -190,6 +201,81 @@ $border-radius-full: 9999px;
           }
         }
       }
+    }
+  }
+}
+
+// Card Preview Sidebar
+.card-preview-sidebar {
+  @include card;
+  width: 320px;
+  min-width: 320px;
+  max-height: calc(100vh - 200px);
+  position: sticky;
+  top: 2rem;
+  
+  @media (max-width: 1024px) {
+    width: 100%;
+    min-width: unset;
+    max-height: 400px;
+    position: static;
+  }
+}
+
+.card-preview-content {
+  padding: 1rem; // Reduced from 1.5rem
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  .card-preview-header {
+    margin-bottom: 0.75rem; // Reduced from 1rem
+    border-bottom: 1px solid $border-light;
+    padding-bottom: 0.5rem; // Reduced from 0.75rem
+    
+    h3 {
+      margin: 0;
+      font-size: 1rem; // Reduced from 1.125rem
+      font-weight: 600;
+      color: $text-dark;
+    }
+  }
+  
+  .card-preview-image {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: $border-radius-md;
+      box-shadow: $shadow-md;
+      object-fit: contain;
+    }
+  }
+}
+
+.card-preview-placeholder {
+  padding: 1.5rem; // Reduced from 2rem
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .placeholder-content {
+    text-align: center;
+    color: $text-light;
+    
+    svg {
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    
+    p {
+      margin: 0;
+      font-size: 0.875rem;
     }
   }
 }
@@ -470,6 +556,37 @@ $border-radius-full: 9999px;
 }
 
 
+// Table styling for standalone layout
+.table-container-standalone {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  
+  table {
+    width: 100%;
+    border-collapse: collapse; 
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); 
+    border-radius: 0.375rem; 
+    overflow: hidden; 
+    table-layout: fixed;
+    
+    th, td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Column width distribution */
+    th:nth-child(1), td:nth-child(1) { width: 20%; min-width: 150px; } /* Name */
+    th:nth-child(2), td:nth-child(2) { width: 10%; min-width: 80px; }  /* Price */
+    th:nth-child(3), td:nth-child(3) { width: 10%; min-width: 80px; }  /* Main Cost */
+    th:nth-child(4), td:nth-child(4) { width: 10%; min-width: 80px; }  /* Recall Cost */
+    th:nth-child(5), td:nth-child(5) { width: 15%; min-width: 120px; } /* Attributes */
+    th:nth-child(6), td:nth-child(6) { width: 20%; min-width: 150px; } /* Main Effect */
+    th:nth-child(7), td:nth-child(7) { width: 15%; min-width: 120px; } /* Echo Effect */
+  }
+}
+
+// Legacy table-image-container for backward compatibility
 .table-image-container {
   display: flex;
   max-width: 100%;

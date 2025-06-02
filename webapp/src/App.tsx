@@ -77,68 +77,97 @@ const App: React.FC = () => {
 				</div>
 			</div>
 		);
-	}	return (
+	} return (
 		<div className="app-container">
 			{/* Top Search Bar */}
 			<div className="top-search-bar">
 				<div className="search-section">
 					<APICardSearch onSearchResults={handleSearchResults} />
 				</div>
-			</div>
-
-			{/* Main Content Area */}
+			</div>			{/* Main Content Area */}
 			<div className="main-content">
-				<div className="results-area">
-					{/* Controls Bar */}
-					<div className="controls-bar">
-						{/* Results Count */}
-						<div className="results-count">
-							Displaying {sortedResults.length} cards
+				<div className="content-with-preview">
+					<div className="results-area">
+						{/* Controls Bar */}
+						<div className="controls-bar">
+							{/* Results Count */}
+							<div className="results-count">
+								Displaying {sortedResults.length} cards
+							</div>
+
+							{/* View and Sort Controls */}
+							<div className="control-group">
+								{/* Sort Controls */}
+								<select
+									value={sortBy}
+									onChange={(e) => handleSortChange(e.target.value as SortOption)}
+								>
+									<option value="name">Name</option>
+									<option value="mainCost">Main Cost</option>
+									<option value="price">Price</option>
+									<option value="rarity">Rarity</option>
+									<option value="faction">Faction</option>
+								</select>
+
+								<button
+									onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+									className="sort-button-padding"
+								>
+									{sortDirection === 'asc' ? '↑' : '↓'}
+								</button>
+							</div>
 						</div>
 
-						{/* View and Sort Controls */}
-						<div className="control-group">
-							{/* Sort Controls */}
-							<select
-								value={sortBy}
-								onChange={(e) => handleSortChange(e.target.value as SortOption)}
-							>
-								<option value="name">Name</option>
-								<option value="mainCost">Main Cost</option>
-								<option value="price">Price</option>
-								<option value="rarity">Rarity</option>
-								<option value="faction">Faction</option>
-							</select>
-
-							<button
-								onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-								className="sort-button-padding"
-							>
-								{sortDirection === 'asc' ? '↑' : '↓'}
-							</button>
-						</div>
+						{/* Cards Display */}
+						{sortedResults.length === 0 && !isLoading ? (
+							<div className="no-cards-found">
+								<div className="icon-container">
+									<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653-.71-1.46 1.302-2.364 1.748z" />
+									</svg>
+								</div>
+								<h3 className="title">No cards found</h3>
+								<p className="message">Try adjusting your search filters to find cards.</p>
+							</div>) : (
+							<>
+								{/* Card Table without Image Preview */}
+								<CardTable
+									cards={sortedResults}
+									hoveredCardImage={null}
+									onCardHover={setHoveredCardImage}
+								/>
+							</>
+						)}
 					</div>
 
-				{/* Cards Display */}
-				{sortedResults.length === 0 && !isLoading ? (
-					<div className="no-cards-found">
-						<div className="icon-container">
-							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653-.71-1.46 1.302-2.364 1.748z" />
-							</svg>
-						</div>
-						<h3 className="title">No cards found</h3>
-						<p className="message">Try adjusting your search filters to find cards.</p>
-					</div>				) : (
-					<>
-						{/* Card Table and Image Preview */}
-						<CardTable 
-							cards={sortedResults}
-							hoveredCardImage={hoveredCardImage}
-							onCardHover={setHoveredCardImage}
-						/>
-					</>
-				)}
+					{/* Separate Card Preview Sidebar */}
+					<div className="card-preview-sidebar">
+						{hoveredCardImage ? (
+							<div className="card-preview-content">
+								<div className="card-preview-header">
+									<h3>Card Preview</h3>
+								</div>
+								<div className="card-preview-image">
+									<img
+										src={hoveredCardImage}
+										alt="Card preview"
+										onError={(e) => {
+											(e.target as HTMLImageElement).style.display = 'none';
+										}}
+									/>
+								</div>
+							</div>
+						) : (
+							<div className="card-preview-placeholder">
+								<div className="placeholder-content">
+									<svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+									</svg>
+									<p>Hover over a card to preview</p>
+								</div>
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 		</div>
