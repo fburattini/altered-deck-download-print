@@ -1,5 +1,20 @@
 import { AlteredApiClient, CardStatItem, FilterOptions } from './api-client';
 
+export interface CardStatsResult {
+	stats: CardStatItem[];
+	summary: {
+		totalItems: number;
+		cardsWithPricing: number;
+		cardsWithLastSale: number;
+		avgLowerPrice: number;
+		avgLastSale: number;
+		priceRange: {
+			min: number;
+			max: number;
+		};
+	};
+}
+
 export class AlteredScraper {
 	private apiClient: AlteredApiClient;
 
@@ -250,11 +265,10 @@ export class AlteredScraper {
 			throw error;
 		}
 	}
-
 	/**
 	 * Get card statistics (pricing data) for specific filters
 	 */
-	async getCardStatsForFilters(filters: FilterOptions): Promise<any> {
+	async getCardStatsForFilters(filters: FilterOptions): Promise<CardStatsResult> {
 		console.log('📊 Fetching card statistics for filters...');
 		console.log(`Applied filters: ${JSON.stringify(filters, null, 2)}`);
 
@@ -268,8 +282,10 @@ export class AlteredScraper {
 					summary: {
 						totalItems: 0,
 						cardsWithPricing: 0,
+						cardsWithLastSale: 0,
 						avgLowerPrice: 0,
-						avgLastSale: 0
+						avgLastSale: 0,
+						priceRange: { min: 0, max: 0 }
 					}
 				};
 			}

@@ -171,33 +171,70 @@ export class AlteredApiClient {
 			throw error;
 		}
 	}
-
 	/**
-	 * Fetch card statistics (pricing data) for cards matching the filters
-	 * Uses the same parameters as getCards but hits the /cards/stats endpoint
+	 * Fetch a single stats page with retry logic for rate limiting
 	 */
-	async getCardStats(options: FilterOptions = {}, retryCount: number = 0): Promise<CardStats> {
-		const params = this.buildQueryParams(options);
-		const url = `${this.baseUrl}/cards/stats?${params.toString()}`;
+	private async fetchStatsPage(url: string, retryCount: number = 0): Promise<CardStats> {
 		const maxRetries = 3;
 
 		try {
 			const response: AxiosResponse<CardStats> = await axios.get(url, {
 				headers: this.getHeaders()
 			});
-
 			return response.data;
 		} catch (error: any) {
 			// Handle rate limiting (429) with exponential backoff
 			if (error.response?.status === 429 && retryCount < maxRetries) {
 				const waitTime = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
-				console.warn(`Rate limited for stats request, retrying in ${Math.round(waitTime)}ms (attempt ${retryCount + 1}/${maxRetries})`);
+				console.warn(`Rate limited for stats page request, retrying in ${Math.round(waitTime)}ms (attempt ${retryCount + 1}/${maxRetries})`);
 
 				await new Promise(resolve => setTimeout(resolve, waitTime));
-				return this.getCardStats(options, retryCount + 1);
+				return this.fetchStatsPage(url, retryCount + 1);
 			}
 
-			console.error(`Error fetching card stats from ${url}:`, error);
+			console.error(`Error fetching stats page from ${url}:`, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Fetch card statistics (pricing data) for cards matching the filters
+	 * Uses the same parameters as getCards but hits the /cards/stats endpoint
+	 * Automatically handles pagination to get ALL stats for the given filter
+	 */
+	async getCardStats(options: FilterOptions = {}, retryCount: number = 0): Promise<CardStats> {
+		const params = this.buildQueryParams(options);
+		const url = `${this.baseUrl}/cards/stats?${params.toString()}`;
+
+		try {
+			const firstPage = await this.fetchStatsPage(url);
+			let allStats = [...firstPage['hydra:member']];
+			let currentCollection = firstPage;
+
+			// Check if there are more pages to fetch
+			while (currentCollection['hydra:view'] && currentCollection['hydra:view']['hydra:next']) {
+				const nextPageUrl = `${this.baseUrl}${currentCollection['hydra:view']['hydra:next']}`;
+				console.log(`  Fetching next stats page: ${nextPageUrl}`);
+
+				// Add small delay between page requests
+				await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); // 100-200ms
+
+				const nextPage = await this.fetchStatsPage(nextPageUrl);
+				allStats.push(...nextPage['hydra:member']);
+				currentCollection = nextPage;
+			}
+
+			console.log(`  Total stats fetched across all pages: ${allStats.length}`);
+
+			// Return the combined collection with all stats
+			return {
+				...firstPage,
+				'hydra:member': allStats,
+				'hydra:totalItems': allStats.length
+			};
+
+		} catch (error: any) {
+			console.error(`Error in getCardStats for ${url}:`, error);
 			throw error;
 		}
 	}

@@ -1,26 +1,26 @@
+import { getBearerToken } from "../config/auth";
+import { FilterOptions } from "../market/api-client";
+import { createScraper } from "../market/scraper";
+
 const main = async () => {
-    const filters = {
-        name: 'cloth',
+    const filters: FilterOptions = {
+      cardName: 'nisse',
+      rarity: ['UNIQUE'],
+      factions: ['LY'],
+      mainCost: [3],
+      recallCost: [3]
     }
+    //ALT_ALIZE_B_LY_36_U_7398
 
-    const response = await fetch(`http://localhost:3001/api/search`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          filters,
-          options: {
-            resultLimit: 0, // Get all results by default
-            sortByPrice: true,
-            inSaleOnly: true,
-          }
-        })
-      });
+    const token = getBearerToken()
 
-      const payload = await response.json();
+    const scraper = createScraper('en-US', token);
+    // await scraper.runFilteredScrapeWithPricing(filters, false);
 
-      console.log(payload)
+    const ttt = await scraper.getCardStatsForFilters(filters)
+    console.log('Card Stats:', ttt);
+    const ddd = ttt.stats.find(x => x["@id"].includes('ALT_ALIZE_B_LY_36_U_7398'))
+    console.log('Card Stats for specific card:', ddd);
 }
 
 main()
