@@ -1,13 +1,13 @@
 /* Styles for CardDisplay component */
 .card-display-row {
   &:hover {
-    background-color: #f3f4f6; // Corresponds to hover:bg-gray-100
+    background-color: #334155; // Dark mode hover background
   }
   
   &.highlighted {
-    background-color: #dbeafe; // Light blue background for highlighted row
+    background-color: #1e3a8a; // Darker blue background for highlighted row
     border-left: 4px solid #3b82f6; // Blue left border
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1); // Subtle blue shadow
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2); // Enhanced blue shadow for dark mode
   }
   
   cursor: pointer; // Corresponds to cursor-pointer
@@ -21,22 +21,20 @@
   flex-shrink: 0; // Corresponds to flex-shrink-0
 }
 
-.card-name-cell {
-  padding-left: 1rem; // Corresponds to px-4
+.card-name-cell {  padding-left: 1rem; // Corresponds to px-4
   padding-right: 1rem; // Corresponds to px-4
   padding-top: 0.5rem; // Corresponds to py-2
   padding-bottom: 0.5rem; // Corresponds to py-2
   font-weight: 500; // Corresponds to font-medium
-  color: #111827; // Corresponds to text-gray-900
+  color: #f1f5f9; // Dark mode text color
   white-space: nowrap; // Corresponds to whitespace-nowrap
   .flex-container {
     display: flex;
     align-items: center;
     gap: 0.5rem; // Space between elements
   }
-  
-  .card-name-link {
-    color: #111827; // Dark text color (same as card name)
+    .card-name-link {
+    color: #f1f5f9; // Dark mode text color
     text-decoration: none;
     font-weight: 500;
     display: flex;
@@ -93,7 +91,7 @@
   padding-top: 0.5rem; // Corresponds to py-2
   padding-bottom: 0.5rem; // Corresponds to py-2
   font-size: 0.875rem; // Corresponds to text-sm
-  color: #4b5563; // Corresponds to text-gray-600
+  color: #cbd5e1; // Dark mode text color
   max-width: 200px; // Limit width to prevent overflow
   white-space: pre-wrap; // Corresponds to whitespace-pre-wrap
   word-break: break-word; // Allow breaking long words
