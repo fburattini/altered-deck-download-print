@@ -29,7 +29,7 @@ const App: React.FC = () => {
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
 	// View state
-	const [viewType, setViewType] = useState<ViewType>('table');
+	const [viewType, setViewType] = useState<ViewType>('grid');
 
 	// State for hovered/selected card
 	const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
@@ -152,10 +152,24 @@ const App: React.FC = () => {
 				<div className="results-area">
 					{/* Controls Bar */}
 					<div className="controls-bar">
-						{/* Results Count */}
-						<div className="results-count">
-							Displaying {sortedResults.length} cards
-						</div>							{/* View and Sort Controls */}
+						<div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '.5rem' }}>
+							<div className="results-count">
+								{sortedResults.length} cards
+							</div>
+							<div style={{border: '1px solid #334155', height: '1rem'}} />
+							<div className="results-count">
+								Avg. Price: {sortedResults.length > 0 ? `$${(sortedResults.reduce((sum, card) => sum + (card.pricing?.lowerPrice || 0), 0) / sortedResults.length).toFixed(2)}` : 'N/A'}
+							</div>
+							<div style={{border: '1px solid #334155', height: '1rem'}} />
+							<div className="results-count">
+								Min. Price: {sortedResults.length > 0 ? `$${Math.min(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
+							</div>
+							<div style={{border: '1px solid #334155', height: '1rem'}} />
+							<div className="results-count">
+								Max. Price: {sortedResults.length > 0 ? `$${Math.max(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
+							</div>
+						</div>
+						{/* View and Sort Controls */}
 						<div className="control-group">
 							{/* Available Cards Button */}
 							<button
