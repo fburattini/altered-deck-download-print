@@ -834,14 +834,16 @@ export class AlteredApiClient {
 			existing['@id'] === card['@id']
 		);
 
+		let cardWithMetadata: CardDetail;
 		if (duplicateIndex !== -1) {
-			// Card exists, overwrite it with the new card data
-			console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, overwriting with new data.`);
-			existingCards[duplicateIndex] = card;
+			// Card exists, add metadata with existing card reference for comparison
+			cardWithMetadata = this.addScrapeMetadata(card, existingCards[duplicateIndex]);
+			console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, updating with new data.`);
+			existingCards[duplicateIndex] = cardWithMetadata;
 		} else {
-			// Card does not exist, add it
-			// console.log(`Adding new card ${card.name} (${card.id}) to ${filename}.`); // Original log before change
-			existingCards.push(card);
+			// Card does not exist, add it with metadata
+			cardWithMetadata = this.addScrapeMetadata(card);
+			existingCards.push(cardWithMetadata);
 		}
 
 		// Save all cards back to file
@@ -910,13 +912,16 @@ export class AlteredApiClient {
 					existing['@id'] === newCard['@id']
 				);
 
+				let cardWithMetadata: CardDetail;
 				if (duplicateIndex !== -1) {
-					// Card exists, overwrite it with the new card data
-					existingCards[duplicateIndex] = newCard;
+					// Card exists, add metadata with existing card reference for comparison
+					cardWithMetadata = this.addScrapeMetadata(newCard, existingCards[duplicateIndex]);
+					existingCards[duplicateIndex] = cardWithMetadata;
 					updatedCount++;
 				} else {
-					// Card does not exist, add it to the list
-					existingCards.push(newCard);
+					// Card does not exist, add it to the list with metadata
+					cardWithMetadata = this.addScrapeMetadata(newCard);
+					existingCards.push(cardWithMetadata);
 					addedCount++;
 				}
 			}
@@ -930,5 +935,92 @@ export class AlteredApiClient {
 				console.log(`No new cards to add or update in ${filename}`);
 			}
 		}
+	}
+
+	/**
+	 * Compare pricing data to determine if it has changed
+	 */
+	private hasPricingChanged(oldPricing?: any, newPricing?: any): boolean {
+		if (!oldPricing && !newPricing) return false;
+		if (!oldPricing || !newPricing) return true;
+
+		// Compare key pricing fields that matter for updates
+		return (
+			oldPricing.lowerPrice !== newPricing.lowerPrice ||
+			oldPricing.lastSale !== newPricing.lastSale ||
+			oldPricing.inSale !== newPricing.inSale ||
+			oldPricing.numberCopyAvailable !== newPricing.numberCopyAvailable
+		);
+	}
+
+	/**
+	 * Add or update scrape metadata for a card
+	 */
+	private addScrapeMetadata(card: CardDetail, existingCard?: CardDetail): CardDetail {
+		const now = new Date().toISOString();
+		
+		let scrapeMetadata: {
+			firstScrapedAt: string;
+			lastUpdatedAt: string;
+			pricingLastUpdatedAt?: string;
+			priceHistory?: {
+				date: string;
+				lowerPrice: number;
+				lastSale: number;
+				inSale: number;
+				numberCopyAvailable: number;
+			}[];
+		} = {
+			firstScrapedAt: now,
+			lastUpdatedAt: now
+		};
+
+		// If card already exists, preserve firstScrapedAt and existing price history
+		if (existingCard?.scrapeMetadata) {
+			scrapeMetadata.firstScrapedAt = existingCard.scrapeMetadata.firstScrapedAt;
+			scrapeMetadata.priceHistory = existingCard.scrapeMetadata.priceHistory || [];
+			
+			// Check if pricing data changed
+			if (this.hasPricingChanged(existingCard.pricing, card.pricing)) {
+				scrapeMetadata.pricingLastUpdatedAt = now;
+				console.log(`  💰 Pricing data changed for ${card.name} (${card.id})`);
+				
+				// Add new price history entry
+				if (card.pricing) {
+					scrapeMetadata.priceHistory.push({
+						date: now,
+						lowerPrice: card.pricing.lowerPrice || 0,
+						lastSale: card.pricing.lastSale || 0,
+						inSale: card.pricing.inSale || 0,
+						numberCopyAvailable: card.pricing.numberCopyAvailable || 0
+					});
+					
+					// Limit history to last 50 entries to prevent file bloat
+					if (scrapeMetadata.priceHistory.length > 50) {
+						scrapeMetadata.priceHistory = scrapeMetadata.priceHistory.slice(-50);
+					}
+				}
+			} else {
+				// Preserve existing pricing update time if no changes
+				scrapeMetadata.pricingLastUpdatedAt = existingCard.scrapeMetadata.pricingLastUpdatedAt;
+			}
+		} else {
+			// New card - if it has pricing data, mark pricing as updated and create initial history entry
+			if (card.pricing && (card.pricing.lowerPrice > 0 || card.pricing.inSale > 0)) {
+				scrapeMetadata.pricingLastUpdatedAt = now;
+				scrapeMetadata.priceHistory = [{
+					date: now,
+					lowerPrice: card.pricing.lowerPrice || 0,
+					lastSale: card.pricing.lastSale || 0,
+					inSale: card.pricing.inSale || 0,
+					numberCopyAvailable: card.pricing.numberCopyAvailable || 0
+				}];
+			}
+		}
+
+		return {
+			...card,
+			scrapeMetadata
+		};
 	}
 }
