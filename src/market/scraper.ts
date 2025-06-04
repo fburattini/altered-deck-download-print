@@ -180,7 +180,7 @@ export class AlteredScraper {
 		try {
 			// First get the card data
 			console.log('📋 Fetching card details...');
-			const cardResult = await this.apiClient.scrapeWithFilters(filters, resumeFromCheckpoint);
+			const cardResult = await this.apiClient.scrapeWithFilters(filters, resumeFromCheckpoint, 'filtered', true);
 
 			// Then get the pricing data
 			console.log('💰 Fetching pricing data...');

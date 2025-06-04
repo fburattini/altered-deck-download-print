@@ -562,7 +562,8 @@ export class AlteredApiClient {
 	async scrapeWithFilters(
 		filters: FilterOptions,
 		resumeFromCheckpoint: boolean = true,
-		checkpointPrefix: string = 'filtered'
+		checkpointPrefix: string = 'filtered',
+		dontSave: boolean = false
 	): Promise<{ cards: CardDetail[], summary: any }> {
 		let allCards = new Map<string, CardDetail>();
 		let processedCombinations = new Set<string>();
@@ -629,12 +630,13 @@ export class AlteredApiClient {
 			processedCombinations.add(filterKey);
 			summary.processedCombinations = 1;
 			summary.uniqueCards = allCards.size;      // Save cards using new name+faction approach
-			const cardsArray = Array.from(allCards.values());
-			await this.saveCardsByNameAndFaction(cardsArray);
 
-			// Save checkpoint for resume functionality
-			await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
-
+			if (!dontSave) {
+				const cardsArray = Array.from(allCards.values());
+				await this.saveCardsByNameAndFaction(cardsArray);
+				// Save checkpoint for resume functionality
+				await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
+			}
 		} catch (error: any) {
 			const errorMsg = `Failed to process filtered scrape: ${error}`;
 			console.error(errorMsg);
@@ -650,7 +652,9 @@ export class AlteredApiClient {
 			try {
 				const cardsArray = Array.from(allCards.values());
 				if (cardsArray.length > 0) {
-					await this.saveCardsByNameAndFaction(cardsArray);
+					if(!dontSave) {
+						await this.saveCardsByNameAndFaction(cardsArray);
+					}
 				}
 			} catch (saveError) {
 				console.error(`Failed to save cards after error: ${saveError}`);
@@ -660,10 +664,12 @@ export class AlteredApiClient {
 
 		// Final saves
 		summary.endTime = new Date().toISOString();
-		const cardsArray = Array.from(allCards.values());
-		await this.saveCardsByNameAndFaction(cardsArray);
-		await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
-
+		if (!dontSave) {
+			const cardsArray = Array.from(allCards.values());
+			await this.saveCardsByNameAndFaction(cardsArray);
+			await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
+		}
+		
 		console.log(`Filtered scraping completed. Found ${allCards.size} unique cards.`);
 
 		return {
@@ -901,6 +907,9 @@ export class AlteredApiClient {
 				}
 			}
 
+			console.log(existingCards.map(x => x.pricing), cards.map(x => x.pricing))
+			console.log('OIAOAOAOOo')
+
 			let addedCount = 0;
 			let updatedCount = 0;
 
@@ -969,8 +978,6 @@ export class AlteredApiClient {
 	private addScrapeMetadata(card: CardDetail, existingCard?: CardDetail): CardDetail {
 		const now = new Date().toISOString();
 
-		console.log('AJAJAJAJ', card?.pricing, existingCard?.pricing)
-		
 		let scrapeMetadata: {
 			firstScrapedAt: string;
 			lastUpdatedAt: string;
@@ -991,12 +998,12 @@ export class AlteredApiClient {
 		if (existingCard?.scrapeMetadata) {
 			scrapeMetadata.firstScrapedAt = existingCard.scrapeMetadata.firstScrapedAt;
 			scrapeMetadata.priceHistory = existingCard.scrapeMetadata.priceHistory || [];
-			
+
 			// Check if pricing data changed
 			if (this.hasPricingChanged(existingCard.pricing, card.pricing)) {
 				scrapeMetadata.pricingLastUpdatedAt = now;
 				console.log(`  💰 Pricing data changed for ${card.name} (${card.id})`);
-				
+
 				// Add new price history entry
 				if (card.pricing) {
 					scrapeMetadata.priceHistory.push({
@@ -1006,7 +1013,7 @@ export class AlteredApiClient {
 						inSale: card.pricing.inSale || 0,
 						numberCopyAvailable: card.pricing.numberCopyAvailable || 0
 					});
-					
+
 					// Limit history to last 50 entries to prevent file bloat
 					if (scrapeMetadata.priceHistory.length > 50) {
 						scrapeMetadata.priceHistory = scrapeMetadata.priceHistory.slice(-50);
