@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { CardCollection, CardDetail } from './markte-types';
+import { CardCollection, CardDetail, CardDetailPricing, ScrapeMetadataPriceHistory } from './market-types';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -940,20 +940,10 @@ export class AlteredApiClient {
 	/**
 	 * Compare pricing data to determine if it has changed
 	 */
-	private hasPricingChanged(oldPricing?: any, newPricing?: any): boolean {
+	private hasPricingChanged(oldPricing?: CardDetailPricing, newPricing?: CardDetailPricing): boolean {
 		// If both are null/undefined, no change
 		if (!oldPricing && !newPricing) return false;
-		
-		// If only one is null/undefined, only consider it a change if the existing one has meaningful pricing data
-		if (!oldPricing && newPricing) {
-			// New pricing data appeared - only consider it a change if it has meaningful values
-			return newPricing.lowerPrice > 0 || newPricing.lastSale > 0 || newPricing.inSale > 0 || newPricing.numberCopyAvailable > 0;
-		}
-		
-		if (oldPricing && !newPricing) {
-			// Pricing data disappeared - only consider it a change if the old one had meaningful values
-			return oldPricing.lowerPrice > 0 || oldPricing.lastSale > 0 || oldPricing.inSale > 0 || oldPricing.numberCopyAvailable > 0;
-		}
+		if (!oldPricing || !newPricing) return true;
 
 		// Both exist, compare the actual values (handle undefined/null as 0)
 		const oldLower = oldPricing.lowerPrice || 0;
@@ -978,6 +968,8 @@ export class AlteredApiClient {
 	 */
 	private addScrapeMetadata(card: CardDetail, existingCard?: CardDetail): CardDetail {
 		const now = new Date().toISOString();
+
+		console.log('AJAJAJAJ', card?.pricing, existingCard?.pricing)
 		
 		let scrapeMetadata: {
 			firstScrapedAt: string;

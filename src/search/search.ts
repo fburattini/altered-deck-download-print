@@ -9,7 +9,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { CardDetail } from '../market/markte-types';
+import { CardDetail } from '../market/market-types';
 
 // ============================================
 // 🔧 SEARCH INTERFACE

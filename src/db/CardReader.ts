@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { CardDetail } from '../market/markte-types';
+import { CardDetail } from '../market/market-types';
 
 export class CardReader {
     private cardDbPath: string;

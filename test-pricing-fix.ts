@@ -1,5 +1,5 @@
 import { AlteredApiClient } from './src/market/api-client';
-import { CardDetail } from './src/market/markte-types';
+import { CardDetail } from './src/market/market-types';
 
 /**
  * Test the pricing change detection fix
