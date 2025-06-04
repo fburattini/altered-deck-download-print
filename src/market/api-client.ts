@@ -941,15 +941,35 @@ export class AlteredApiClient {
 	 * Compare pricing data to determine if it has changed
 	 */
 	private hasPricingChanged(oldPricing?: any, newPricing?: any): boolean {
+		// If both are null/undefined, no change
 		if (!oldPricing && !newPricing) return false;
-		if (!oldPricing || !newPricing) return true;
+		
+		// If only one is null/undefined, only consider it a change if the existing one has meaningful pricing data
+		if (!oldPricing && newPricing) {
+			// New pricing data appeared - only consider it a change if it has meaningful values
+			return newPricing.lowerPrice > 0 || newPricing.lastSale > 0 || newPricing.inSale > 0 || newPricing.numberCopyAvailable > 0;
+		}
+		
+		if (oldPricing && !newPricing) {
+			// Pricing data disappeared - only consider it a change if the old one had meaningful values
+			return oldPricing.lowerPrice > 0 || oldPricing.lastSale > 0 || oldPricing.inSale > 0 || oldPricing.numberCopyAvailable > 0;
+		}
 
-		// Compare key pricing fields that matter for updates
+		// Both exist, compare the actual values (handle undefined/null as 0)
+		const oldLower = oldPricing.lowerPrice || 0;
+		const newLower = newPricing.lowerPrice || 0;
+		const oldLastSale = oldPricing.lastSale || 0;
+		const newLastSale = newPricing.lastSale || 0;
+		const oldInSale = oldPricing.inSale || 0;
+		const newInSale = newPricing.inSale || 0;
+		const oldAvailable = oldPricing.numberCopyAvailable || 0;
+		const newAvailable = newPricing.numberCopyAvailable || 0;
+
 		return (
-			oldPricing.lowerPrice !== newPricing.lowerPrice ||
-			oldPricing.lastSale !== newPricing.lastSale ||
-			oldPricing.inSale !== newPricing.inSale ||
-			oldPricing.numberCopyAvailable !== newPricing.numberCopyAvailable
+			oldLower !== newLower ||
+			oldLastSale !== newLastSale ||
+			oldInSale !== newInSale ||
+			oldAvailable !== newAvailable
 		);
 	}
 
