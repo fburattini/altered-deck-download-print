@@ -72,6 +72,22 @@ export interface Card {
 		foiled: boolean;
 		isExclusive: boolean;
 	};
+	scrapeMetadata?: CardDetailScrapeMetadata
+}
+
+export type CardDetailScrapeMetadata = {
+  firstScrapedAt: string; // ISO 8601 date string
+    lastUpdatedAt: string; // ISO 8601 date string
+    pricingLastUpdatedAt?: string; // ISO 8601 date string - only when pricing changes
+    priceHistory?: ScrapeMetadataPriceHistory[];
+}
+
+export type ScrapeMetadataPriceHistory = {
+  date: string; // ISO 8601 date string
+  lowerPrice: number;
+  lastSale: number;
+  inSale: number;
+  numberCopyAvailable: number;
 }
 
 export interface SearchFilters {

@@ -33,6 +33,37 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 		return `$${price.toFixed(2)}`;
 	};
 
+	const formatDate = (dateString?: string) => {
+		if (!dateString) return 'N/A';
+		return new Date(dateString).toLocaleDateString();
+	};
+
+	const formatDateTime = (dateString?: string) => {
+		if (!dateString) return 'N/A';
+		const date = new Date(dateString);
+		return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+	};
+
+	const getPriceChangeIndicator = () => {
+		if (!card.scrapeMetadata?.priceHistory || card.scrapeMetadata.priceHistory.length < 2) {
+			return null;
+		}
+
+		const history = card.scrapeMetadata.priceHistory;
+		const currentPrice = history[history.length - 1]?.lowerPrice || 0;
+		const previousPrice = history[history.length - 2]?.lowerPrice || 0;
+
+		if (currentPrice === previousPrice) {
+			return { icon: '→', color: '#6b7280', text: 'No change' };
+		} else if (currentPrice > previousPrice) {
+			return { icon: '↗', color: '#ef4444', text: `+$${(currentPrice - previousPrice).toFixed(2)}` };
+		} else {
+			return { icon: '↘', color: '#10b981', text: `-$${(previousPrice - currentPrice).toFixed(2)}` };
+		}
+	};
+
+	const priceChange = getPriceChangeIndicator();
+
 	const copyLinkToClipboard = async () => {
 		if (!card) return;
 
@@ -98,7 +129,49 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 							<span className="price-value">
 								{formatPrice(card.pricing?.lowerPrice)}
 							</span>
+							{priceChange && (
+								<span
+									className="price-change"
+									style={{
+										color: priceChange.color,
+										marginLeft: '8px',
+										fontSize: '12px',
+										fontWeight: 'bold'
+									}}
+									title={`Price ${priceChange.text}`}
+								>
+									{priceChange.icon} {priceChange.text}
+								</span>
+							)}
 						</div>
+
+						{/* Scrape Date Information */}
+						{card.scrapeMetadata && (
+							<div className="grid-card-scrape-info" style={{
+								fontSize: '11px',
+								color: '#9ca3af',
+								marginTop: '8px',
+								borderTop: '1px solid rgba(156, 163, 175, 0.2)',
+								paddingTop: '6px'
+							}}>
+								<div style={{ marginBottom: '3px' }}>
+									<span>First scraped: {formatDate(card.scrapeMetadata.firstScrapedAt)}</span>
+								</div>
+								<div style={{ marginBottom: '3px' }}>
+									<span>Last updated: {formatDateTime(card.scrapeMetadata.lastUpdatedAt)}</span>
+								</div>
+								{card.scrapeMetadata.pricingLastUpdatedAt && (
+									<div style={{ marginBottom: '3px' }}>
+										<span>Price updated: {formatDateTime(card.scrapeMetadata.pricingLastUpdatedAt)}</span>
+									</div>
+								)}
+								{card.scrapeMetadata.priceHistory && card.scrapeMetadata.priceHistory.length > 0 && (
+									<div style={{ fontSize: '10px', opacity: 0.8 }}>
+										<span>Price history: {card.scrapeMetadata.priceHistory.length} entries</span>
+									</div>
+								)}
+							</div>
+						)}
 
 						<div className="grid-card-actions">
 							<a
@@ -161,10 +234,32 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 				<div className="footer-left">
 					<span className="footer-name">{card.name}</span>
 					<span className="footer-rarity">{card.cardSet.reference}</span>
+					{card.scrapeMetadata?.lastUpdatedAt && (
+						<div style={{ 
+							fontSize: '10px', 
+							color: '#9ca3af',
+							marginTop: '2px'
+						}}>
+							Updated: {formatDateTime(card.scrapeMetadata.lastUpdatedAt)}
+						</div>
+					)}
 				</div>
 				<div className="footer-right">
 					<span className="footer-price">
 						{formatPrice(card.pricing?.lowerPrice)}
+						{priceChange && (
+							<span
+								style={{
+									color: priceChange.color,
+									marginLeft: '6px',
+									fontSize: '11px',
+									fontWeight: 'bold'
+								}}
+								title={`Price ${priceChange.text}`}
+							>
+								{priceChange.icon}
+							</span>
+						)}
 					</span>
 				</div>
 			</div>
