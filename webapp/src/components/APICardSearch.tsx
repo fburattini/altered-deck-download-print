@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Card } from '../types';
 import { searchAPI, APISearchFilters, APISearchOptions, APIScrapeFilters } from '../services/searchAPI';
 import { MagnifyingGlassIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'; // Added CloudArrowDownIcon
+import ConfirmationPopup from './ConfirmationPopup';
 
 interface APICardSearchProps {
 	onSearchResults: (cards: Card[], isLoading: boolean, error?: string) => void;
@@ -35,6 +36,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 	const [isScraping, setIsScraping] = useState(false);
 	const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
 	const [scrapeError, setScrapeError] = useState<string | null>(null);
+	const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
 	const [bearerTokenInput, setBearerTokenInput] = useState<string>(''); // State for the token input
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
@@ -211,6 +213,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 				}
 				
 				setScrapeMessage(baseMessage + countMessage);
+				setShowConfirmationPopup(true);
 			} else {
 				throw new Error(response.error || 'Scrape failed');
 			}
@@ -259,7 +262,14 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 	const handleFormSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		handleSearch();
-	}; return (
+	};
+
+	const handleCloseConfirmationPopup = () => {
+		setShowConfirmationPopup(false);
+		setScrapeMessage(null);
+	};
+
+	return (
 		<div className="top-search-layout">
 			<form onSubmit={handleFormSubmit} className="search-form">
 				<div className="search-header">
@@ -286,12 +296,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 					</div>
 				)}
 
-				{/* Scrape Status/Error Messages */}
-				{scrapeMessage && (
-					<div className="status-success">
-						{scrapeMessage}
-					</div>
-				)}
+				{/* Scrape Error Messages */}
 				{scrapeError && (
 					<div className="status-error">
 						<strong>Scrape Error:</strong> {scrapeError}
@@ -481,6 +486,14 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 					</div>
 				</div>
 			</form>
+
+			{/* Confirmation Popup */}
+			{showConfirmationPopup && scrapeMessage && (
+				<ConfirmationPopup
+					message={scrapeMessage}
+					onClose={handleCloseConfirmationPopup}
+				/>
+			)}
 		</div>
 	);
 };

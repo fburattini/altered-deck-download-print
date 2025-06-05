@@ -1051,3 +1051,6 @@ $border-radius-full: 9999px;
     transform: rotate(360deg);
   }
 }
+
+// Import component styles
+@import './ConfirmationPopup.scss';
