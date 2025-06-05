@@ -22,6 +22,7 @@
 }
 
 .grid-card-item {
+  position: relative; /* Added for bookmark button positioning */
   background: #1e293b;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -350,5 +351,22 @@
   
   .view-card-btn {
     display: none;
+  }
+}
+
+/* Bookmark styles */
+.bookmark-btn-corner {
+  &:hover {
+    transform: scale(1.1);
+    background: #f59e0b !important;
+  }
+}
+
+.grid-card-item.bookmarked {
+  outline: 2px solid #f59e0b !important;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.4) !important;
+  
+  &:hover {
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3) !important;
   }
 }

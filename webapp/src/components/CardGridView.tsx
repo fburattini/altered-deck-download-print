@@ -117,8 +117,39 @@ const CardTile: React.FC<CardTileProps> = ({
 	return (
 		<div
 			key={card.id}
-			className="grid-card-item"
+			className={`grid-card-item ${isBookmarked ? 'bookmarked' : ''}`}
 		>
+			{/* Bookmark button - positioned in top-right corner */}
+			{onToggleBookmark && (
+				<button
+					onClick={handleBookmarkToggle}
+					className="bookmark-btn-corner"
+					title={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+					style={{
+						position: 'absolute',
+						top: '8px',
+						right: '8px',
+						zIndex: 10,
+						background: isBookmarked ? '#f59e0b' : 'rgba(107, 114, 128, 0.8)',
+						color: 'white',
+						border: 'none',
+						borderRadius: '50%',
+						width: '32px',
+						height: '32px',
+						cursor: 'pointer',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						transition: 'all 0.2s',
+						backdropFilter: 'blur(4px)'
+					}}
+				>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+						<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+					</svg>
+				</button>
+			)}
+
 			{/* Card Image */}
 			<div className="grid-card-image">
 				<img
@@ -261,32 +292,6 @@ const CardTile: React.FC<CardTileProps> = ({
 									</>
 								)}
 							</button>
-							{onToggleBookmark && (
-								<button
-									onClick={handleBookmarkToggle}
-									className="bookmark-btn"
-									title={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-									style={{
-										marginLeft: '8px',
-										background: isBookmarked ? '#f59e0b' : '#6b7280',
-										color: 'white',
-										border: 'none',
-										borderRadius: '4px',
-										padding: '4px 8px',
-										cursor: 'pointer',
-										fontSize: '11px',
-										display: 'inline-flex',
-										alignItems: 'center',
-										gap: '4px',
-										transition: 'background-color 0.2s'
-									}}
-								>
-									<svg width="12" height="12" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-										<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
-									</svg>
-									{isBookmarked ? 'Saved' : 'Save'}
-								</button>
-							)}
 						</div>
 					</div>
 				</div>
