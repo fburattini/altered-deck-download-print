@@ -4,6 +4,7 @@ import { CardSearcher, SearchFilters, SearchOptions } from '../src/search/search
 import { createScraper } from '../src/market/scraper';
 import { getBearerToken } from '../src/config/auth';
 import { CardReader } from '../src/db/CardReader'; // Added import for CardReader
+import { BookmarkManager } from '../src/db/BookmarkManager'; // Added import for BookmarkManager
 
 const app = express();
 app.use(cors());
@@ -49,6 +50,18 @@ app.get('/', (req: Request, res: Response) => {
 			},
 			'GET /api/cards-in-db': {
 				description: 'Get all card name-faction combinations from database'
+			},
+			'POST /api/bookmarks/toggle': {
+				description: 'Toggle bookmark status for a card',
+				body: {
+					userId: 'string (required)',
+					cardId: 'string (required)',
+					cardName: 'string (required)',
+					faction: 'string (required)'
+				}
+			},
+			'GET /api/bookmarks/:userId': {
+				description: 'Get all bookmarks for a user'
 			}
 		}
 	});
@@ -184,6 +197,88 @@ app.get('/api/cards-in-db', async (req: Request, res: Response) => {
 			error: error instanceof Error ? error.message : 'Unknown error occurred while fetching card name-factions',
 			count: 0,
 			data: []
+		});
+	}
+});
+
+// Bookmark toggle endpoint
+app.post('/api/bookmarks/toggle', async (req: Request, res: Response) => {
+	try {
+		const { userId, cardId, cardName, faction }: {
+			userId: string;
+			cardId: string;
+			cardName: string;
+			faction: string;
+		} = req.body;
+
+		// Validate required fields
+		if (!userId || !cardId || !cardName || !faction) {
+			res.status(400).json({
+				success: false,
+				error: 'Missing required fields: userId, cardId, cardName, and faction are required'
+			});
+			return
+		}
+
+		const bookmarkManager = new BookmarkManager();
+
+		// Create a minimal card object for the toggle operation
+		const cardDetail = {
+			id: cardId,
+			name: cardName,
+			mainFaction: {
+				reference: faction
+			}
+		} as any; // Using 'as any' since we only need these specific fields
+
+		// Toggle the bookmark
+		const isNowBookmarked = await bookmarkManager.toggleBookmark(userId, cardDetail);
+
+		res.json({
+			success: true,
+			isBookmarked: isNowBookmarked,
+			message: isNowBookmarked 
+				? `Added bookmark for ${cardName}` 
+				: `Removed bookmark for ${cardName}`
+		});
+
+	} catch (error) {
+		console.error('Bookmark toggle API error:', error);
+		res.status(500).json({
+			success: false,
+			error: error instanceof Error ? error.message : 'Unknown error occurred while toggling bookmark'
+		});
+	}
+});
+
+// Get user bookmarks endpoint
+app.get('/api/bookmarks/:userId', async (req: Request, res: Response) => {
+	try {
+		const { userId } = req.params;
+
+		if (!userId) {
+			res.status(400).json({
+				success: false,
+				error: 'Missing userId parameter'
+			});
+			return
+		}
+
+		const bookmarkManager = new BookmarkManager();
+		const bookmarks = await bookmarkManager.getUserBookmarks(userId);
+
+		res.json({
+			success: true,
+			userId,
+			count: bookmarks.length,
+			bookmarks
+		});
+
+	} catch (error) {
+		console.error('Get bookmarks API error:', error);
+		res.status(500).json({
+			success: false,
+			error: error instanceof Error ? error.message : 'Unknown error occurred while fetching bookmarks'
 		});
 	}
 });

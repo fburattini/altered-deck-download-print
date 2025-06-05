@@ -66,6 +66,37 @@ export interface APICardsInDBResponse {
   error?: string;
 }
 
+// Bookmark interfaces
+export interface BookmarkEntry {
+  userId: string;
+  cardId: string;
+  cardName: string;
+  faction: string;
+  bookmarkedAt: string; // ISO 8601 timestamp
+}
+
+export interface APIBookmarksResponse {
+  success: boolean;
+  userId: string;
+  count: number;
+  bookmarks: BookmarkEntry[];
+  error?: string;
+}
+
+export interface APIBookmarkToggleRequest {
+  userId: string;
+  cardId: string;
+  cardName: string;
+  faction: string;
+}
+
+export interface APIBookmarkToggleResponse {
+  success: boolean;
+  isBookmarked: boolean;
+  message: string;
+  error?: string;
+}
+
 class SearchAPIService {
   private baseUrl: string;
 
@@ -193,6 +224,73 @@ class SearchAPIService {
         count: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown error fetching available cards'
+      };
+    }
+  }
+
+  /**
+   * Get user bookmarks
+   */
+  async getUserBookmarks(userId: string): Promise<APIBookmarksResponse> {
+    try {
+      console.log(`🔖 Fetching bookmarks for user: ${userId}`);
+      
+      const response = await fetch(`${this.baseUrl}/api/bookmarks/${encodeURIComponent(userId)}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Bookmarks API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ User bookmarks fetched: ${data.count} bookmarks`);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Bookmarks API error:', error);
+      
+      return {
+        success: false,
+        userId,
+        count: 0,
+        bookmarks: [],
+        error: error instanceof Error ? error.message : 'Unknown error fetching bookmarks'
+      };
+    }
+  }
+
+  /**
+   * Toggle bookmark for a card
+   */
+  async toggleBookmark(request: APIBookmarkToggleRequest): Promise<APIBookmarkToggleResponse> {
+    try {
+      console.log('🔖 Toggling bookmark:', request);
+
+      const response = await fetch(`${this.baseUrl}/api/bookmarks/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Toggle bookmark API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ Bookmark toggled: ${data.message}`);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Toggle bookmark API error:', error);
+      
+      return {
+        success: false,
+        isBookmarked: false,
+        message: '',
+        error: error instanceof Error ? error.message : 'Unknown error toggling bookmark'
       };
     }
   }

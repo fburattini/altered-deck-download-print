@@ -22,6 +22,7 @@
 }
 
 .grid-card-item {
+  position: relative; /* Added for bookmark button positioning */
   background: #1e293b;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -265,6 +266,13 @@
   border: 1px solid #d1fae5;
 }
 
+.footer-price-changed {
+  box-shadow: 
+    0 0 40px rgba(243, 178, 83, 1), 
+    0 0 30px rgba(243, 178, 83, 1),
+    0 0 10px rgba(243, 178, 83, 1);
+}
+
 /* Loading and empty states */
 .grid-view-empty {
   grid-column: 1 / -1;
@@ -343,5 +351,22 @@
   
   .view-card-btn {
     display: none;
+  }
+}
+
+/* Bookmark styles */
+.bookmark-btn-corner {
+  &:hover {
+    transform: scale(1.1);
+    background: #f59e0b !important;
+  }
+}
+
+.grid-card-item.bookmarked {
+  outline: 2px solid #f59e0b !important;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.4) !important;
+  
+  &:hover {
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3) !important;
   }
 }

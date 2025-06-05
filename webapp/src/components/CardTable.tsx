@@ -1,17 +1,24 @@
 import React from 'react';
 import { Card } from '../types';
+import { BookmarkEntry } from '../services/searchAPI';
 import CardDisplay from './CardDisplay';
 
 interface CardTableProps {
 	cards: Card[];
 	hoveredCard: Card | null;
 	onCardHover: (card: Card | null) => void;
+	userBookmarks?: BookmarkEntry[];
+	onToggleBookmark?: (card: Card) => Promise<void>;
+	isCardBookmarked?: (cardId: string) => boolean;
 }
 
 const CardTable: React.FC<CardTableProps> = ({
 	cards,
 	hoveredCard,
-	onCardHover
+	onCardHover,
+	userBookmarks,
+	onToggleBookmark,
+	isCardBookmarked
 }) => {
 	return (
 		<div className='table-container-standalone'>
@@ -40,6 +47,11 @@ const CardTable: React.FC<CardTableProps> = ({
 							<th scope="col">
 								Echo Effect
 							</th>
+							{onToggleBookmark && (
+								<th scope="col">
+									📚
+								</th>
+							)}
 						</tr>
 					</thead>
 					<tbody>
@@ -49,7 +61,12 @@ const CardTable: React.FC<CardTableProps> = ({
 								className={`card-display-row ${hoveredCard?.id === card.id ? 'highlighted' : ''}`}
 								onMouseEnter={() => onCardHover(card)}
 							>
-								<CardDisplay card={card} />
+								<CardDisplay 
+									card={card} 
+									userBookmarks={userBookmarks}
+									onToggleBookmark={onToggleBookmark}
+									isCardBookmarked={isCardBookmarked}
+								/>
 							</tr>
 						))}
 					</tbody>

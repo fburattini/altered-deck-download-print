@@ -1,13 +1,30 @@
 import React from 'react';
 import { Card } from '../types';
+import { BookmarkEntry } from '../services/searchAPI';
 import '../styles/CardDisplay.scss';
 import { FACTION_COLORS } from '../services/utils';
 
 interface CardDisplayProps {
   card: Card;
+  userBookmarks?: BookmarkEntry[];
+  onToggleBookmark?: (card: Card) => Promise<void>;
+  isCardBookmarked?: (cardId: string) => boolean;
 }
 
-const CardDisplay: React.FC<CardDisplayProps> = ({ card }) => {
+const CardDisplay: React.FC<CardDisplayProps> = ({ 
+  card, 
+  userBookmarks, 
+  onToggleBookmark, 
+  isCardBookmarked 
+}) => {
+  // Check if this card is bookmarked
+  const isBookmarked = isCardBookmarked ? isCardBookmarked(card.id) : false;
+
+  const handleBookmarkToggle = async () => {
+    if (onToggleBookmark) {
+      await onToggleBookmark(card);
+    }
+  };
   const getFactionColor = (faction: string) => {
     return FACTION_COLORS[faction] || '#6b7280'; // Default to gray
   };
@@ -68,6 +85,16 @@ const CardDisplay: React.FC<CardDisplayProps> = ({ card }) => {
       </td>
       <td className="effect-cell">
         {formatEffect(card.elements.ECHO_EFFECT)}
+      </td>
+      <td className="centered-cell">
+        <button
+          className={`bookmark-btn ${isBookmarked ? 'bookmarked' : ''}`}
+          onClick={handleBookmarkToggle}
+          title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+          disabled={!onToggleBookmark}
+        >
+          {isBookmarked ? '★' : '☆'}
+        </button>
       </td>
     </>
   );
