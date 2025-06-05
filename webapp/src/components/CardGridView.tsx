@@ -30,7 +30,7 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 
 	const formatPrice = (price?: number) => {
 		if (!price) return 'N/A';
-		return `$${price.toFixed(2)}`;
+		return `€${price.toFixed(2)}`;
 	};
 
 	const formatDate = (dateString?: string) => {
@@ -56,9 +56,9 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 		if (currentPrice === previousPrice) {
 			return { icon: '→', color: '#6b7280', text: 'No change' };
 		} else if (currentPrice > previousPrice) {
-			return { icon: '↗', color: '#ef4444', text: `+$${(currentPrice - previousPrice).toFixed(2)}` };
+			return { icon: '↗', color: '#ef4444', text: `+€${(currentPrice - previousPrice).toFixed(2)} (€${previousPrice.toFixed(2)})` };
 		} else {
-			return { icon: '↘', color: '#10b981', text: `-$${(previousPrice - currentPrice).toFixed(2)}` };
+			return { icon: '↘', color: '#10b981', text: `-€${(previousPrice - currentPrice).toFixed(2)} (€${previousPrice.toFixed(2)})` };
 		}
 	};
 
@@ -245,7 +245,7 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 					)}
 				</div>
 				<div className="footer-right">
-					<span className="footer-price">
+					<span className={`footer-price${priceChange ? ' footer-price-changed' : ''}`}>
 						{formatPrice(card.pricing?.lowerPrice)}
 						{priceChange && (
 							<span

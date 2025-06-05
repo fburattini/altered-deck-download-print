@@ -265,6 +265,13 @@
   border: 1px solid #d1fae5;
 }
 
+.footer-price-changed {
+  box-shadow: 
+    0 0 40px rgba(243, 178, 83, 1), 
+    0 0 30px rgba(243, 178, 83, 1),
+    0 0 10px rgba(243, 178, 83, 1);
+}
+
 /* Loading and empty states */
 .grid-view-empty {
   grid-column: 1 / -1;
