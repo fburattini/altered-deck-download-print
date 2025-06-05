@@ -16,17 +16,27 @@ type SortOption = 'name' | 'mainCost' | 'price' | 'rarity' | 'faction';
 type SortDirection = 'asc' | 'desc';
 type ViewType = 'table' | 'grid';
 
-// For demo purposes, using a hardcoded user ID. In a real app, this would come from authentication
-const DEFAULT_USER_ID = 'demo-user';
+// Key for localStorage
+const USER_ID_STORAGE_KEY = 'altered-deck-user-id';
 
 const App: React.FC = () => {
 	const [searchResults, setSearchResults] = useState<Card[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
 	
-	// User ID state
-	const [currentUserId, setCurrentUserId] = useState<string>(DEFAULT_USER_ID);
-	const [userIdValid, setUserIdValid] = useState<boolean>(true);
+	// Initialize user ID from localStorage or empty string
+	const [currentUserId, setCurrentUserId] = useState<string>(() => {
+		try {
+			return localStorage.getItem(USER_ID_STORAGE_KEY) || '';
+		} catch (error) {
+			console.warn('Failed to read user ID from localStorage:', error);
+			return '';
+		}
+	});
+	const [userIdValid, setUserIdValid] = useState<boolean>(() => {
+		const storedUserId = localStorage.getItem(USER_ID_STORAGE_KEY) || '';
+		return storedUserId.length > 0 && /^[a-zA-Z0-9_-]+$/.test(storedUserId);
+	});
 	
 	// Available cards state
 	const [availableCards, setAvailableCards] = useState<CardNameFaction[]>([]);
@@ -76,9 +86,17 @@ const App: React.FC = () => {
 		fetchAvailableCards();
 	}, []);
 
-	// Fetch user bookmarks on app startup
+	// Fetch user bookmarks when user ID changes and is valid
 	useEffect(() => {
 		const fetchUserBookmarks = async () => {
+			// Only fetch if we have a valid user ID
+			if (!userIdValid || !currentUserId.trim()) {
+				setUserBookmarks([]);
+				setBookmarksLoading(false);
+				setBookmarksError(null);
+				return;
+			}
+
 			setBookmarksLoading(true);
 			setBookmarksError(null);
 
@@ -99,7 +117,7 @@ const App: React.FC = () => {
 		};
 
 		fetchUserBookmarks();
-	}, [currentUserId]); // Re-fetch when user ID changes
+	}, [currentUserId, userIdValid]); // Re-fetch when user ID or validity changes
 
 	// Handle user ID change with validation
 	const handleUserIdChange = (newUserId: string) => {
@@ -109,6 +127,17 @@ const App: React.FC = () => {
 		// Basic validation - ensure user ID is not empty and contains valid characters
 		const isValid = trimmedId.length > 0 && /^[a-zA-Z0-9_-]+$/.test(trimmedId);
 		setUserIdValid(isValid);
+
+		// Save to localStorage
+		try {
+			if (trimmedId) {
+				localStorage.setItem(USER_ID_STORAGE_KEY, trimmedId);
+			} else {
+				localStorage.removeItem(USER_ID_STORAGE_KEY);
+			}
+		} catch (error) {
+			console.warn('Failed to save user ID to localStorage:', error);
+		}
 	};
 
 	// Handle search results from APICardSearch component
@@ -345,7 +374,7 @@ const App: React.FC = () => {
 							{/* Bookmarks Button */}
 							<button
 								onClick={() => setShowBookmarks(!showBookmarks)}
-								className="bookmarks-button"
+								className={`bookmarks-button ${!userIdValid ? 'needs-setup' : ''}`}
 								disabled={bookmarksLoading || !userIdValid}
 								title={!userIdValid ? "Enter a valid user ID to view bookmarks" : "View your bookmarks"}
 							>
@@ -357,6 +386,7 @@ const App: React.FC = () => {
 								) : (
 									<>
 										🔖 Bookmarks ({userBookmarks.length})
+										{!userIdValid && <span className="setup-indicator"></span>}
 									</>
 								)}
 							</button>
