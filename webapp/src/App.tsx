@@ -5,7 +5,7 @@ import CardGridView from './components/CardGridView';
 import CardPreview from './components/CardPreview';
 import AvailableCardsList from './components/AvailableCardsList';
 import { Card } from './types';
-import { searchAPI, CardNameFaction } from './services/searchAPI';
+import { searchAPI, CardNameFaction, BookmarkEntry } from './services/searchAPI';
 import './styles/App.scss';
 import './styles/AvailableCardsList.scss';
 
@@ -14,15 +14,24 @@ type SortOption = 'name' | 'mainCost' | 'price' | 'rarity' | 'faction';
 type SortDirection = 'asc' | 'desc';
 type ViewType = 'table' | 'grid';
 
+// For demo purposes, using a hardcoded user ID. In a real app, this would come from authentication
+const CURRENT_USER_ID = 'demo-user';
+
 const App: React.FC = () => {
 	const [searchResults, setSearchResults] = useState<Card[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
+	
 	// Available cards state
 	const [availableCards, setAvailableCards] = useState<CardNameFaction[]>([]);
 	const [availableCardsLoading, setAvailableCardsLoading] = useState(true);
 	const [availableCardsError, setAvailableCardsError] = useState<string | null>(null);
 	const [showAvailableCards, setShowAvailableCards] = useState(false);
+
+	// Bookmark state
+	const [userBookmarks, setUserBookmarks] = useState<BookmarkEntry[]>([]);
+	const [bookmarksLoading, setBookmarksLoading] = useState(true);
+	const [bookmarksError, setBookmarksError] = useState<string | null>(null);
 
 	// Sorting state
 	const [sortBy, setSortBy] = useState<SortOption>('name');
@@ -58,11 +67,75 @@ const App: React.FC = () => {
 		fetchAvailableCards();
 	}, []);
 
+	// Fetch user bookmarks on app startup
+	useEffect(() => {
+		const fetchUserBookmarks = async () => {
+			setBookmarksLoading(true);
+			setBookmarksError(null);
+
+			try {
+				const response = await searchAPI.getUserBookmarks(CURRENT_USER_ID);
+
+				if (response.success) {
+					setUserBookmarks(response.bookmarks);
+					console.log(`📚 Loaded ${response.bookmarks.length} bookmarks for user ${CURRENT_USER_ID}`);
+				} else {
+					setBookmarksError(response.error || 'Failed to fetch bookmarks');
+				}
+			} catch (error) {
+				setBookmarksError(error instanceof Error ? error.message : 'Unknown error');
+			} finally {
+				setBookmarksLoading(false);
+			}
+		};
+
+		fetchUserBookmarks();
+	}, []);
+
 	// Handle search results from APICardSearch component
 	const handleSearchResults = (cards: Card[], loading: boolean, error?: string) => {
 		setSearchResults(cards);
 		setIsLoading(loading);
 		setSearchError(error || null);
+	};
+
+	// Bookmark helper functions
+	const isCardBookmarked = (cardId: string): boolean => {
+		return userBookmarks.some(bookmark => bookmark.cardId === cardId);
+	};
+
+	const toggleBookmark = async (card: Card): Promise<void> => {
+		try {
+			const response = await searchAPI.toggleBookmark({
+				userId: CURRENT_USER_ID,
+				cardId: card.id,
+				cardName: card.name,
+				faction: card.mainFaction.reference
+			});
+
+			if (response.success) {
+				// Update local bookmark state
+				if (response.isBookmarked) {
+					// Add bookmark
+					const newBookmark: BookmarkEntry = {
+						userId: CURRENT_USER_ID,
+						cardId: card.id,
+						cardName: card.name,
+						faction: card.mainFaction.reference,
+						bookmarkedAt: new Date().toISOString()
+					};
+					setUserBookmarks(prev => [...prev, newBookmark]);
+				} else {
+					// Remove bookmark
+					setUserBookmarks(prev => prev.filter(bookmark => bookmark.cardId !== card.id));
+				}
+				console.log(`🔖 ${response.message}`);
+			} else {
+				console.error('Failed to toggle bookmark:', response.error);
+			}
+		} catch (error) {
+			console.error('Error toggling bookmark:', error);
+		}
 	};
 	// Sort cards function
 	const sortCards = (cards: Card[]) => {
@@ -168,6 +241,10 @@ const App: React.FC = () => {
 							<div className="results-count">
 								Max. Price: {sortedResults.length > 0 ? `$${Math.max(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
 							</div>
+							<div style={{border: '1px solid #334155', height: '1rem'}} />
+							<div className="results-count">
+								📚 Bookmarks: {userBookmarks.length}
+							</div>
 						</div>
 						{/* View and Sort Controls */}
 						<div className="control-group">
@@ -243,10 +320,16 @@ const App: React.FC = () => {
 								cards={sortedResults}
 								hoveredCard={hoveredCard}
 								onCardHover={setHoveredCard}
+								userBookmarks={userBookmarks}
+								onToggleBookmark={toggleBookmark}
+								isCardBookmarked={isCardBookmarked}
 							/>) : (
 							<CardGridView
 								cards={sortedResults}
 								onCardHover={setHoveredCard}
+								userBookmarks={userBookmarks}
+								onToggleBookmark={toggleBookmark}
+								isCardBookmarked={isCardBookmarked}
 							/>
 						)}</>
 					)}

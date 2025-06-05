@@ -1,17 +1,36 @@
 import React, { memo, useState } from 'react';
 import { Card } from '../types';
+import { BookmarkEntry } from '../services/searchAPI';
 import { FACTION_COLORS } from '../services/utils';
 import '../styles/CardGridView.scss';
 
 interface CardGridViewProps {
 	cards: Card[];
 	onCardHover?: (card: Card | null) => void;
+	userBookmarks?: BookmarkEntry[];
+	onToggleBookmark?: (card: Card) => Promise<void>;
+	isCardBookmarked?: (cardId: string) => boolean;
 }
 
-const CardGridView: React.FC<CardGridViewProps> = ({ cards, onCardHover }) => {
+const CardGridView: React.FC<CardGridViewProps> = ({ 
+	cards, 
+	onCardHover, 
+	userBookmarks, 
+	onToggleBookmark, 
+	isCardBookmarked 
+}) => {
 	return (
 		<div className="card-grid-view">
-			{cards.map((card) => <CardTile key={card.id} card={card} onCardHover={onCardHover} />)}
+			{cards.map((card) => (
+				<CardTile 
+					key={card.id} 
+					card={card} 
+					onCardHover={onCardHover}
+					userBookmarks={userBookmarks}
+					onToggleBookmark={onToggleBookmark}
+					isCardBookmarked={isCardBookmarked}
+				/>
+			))}
 		</div>
 	);
 };
@@ -19,10 +38,22 @@ const CardGridView: React.FC<CardGridViewProps> = ({ cards, onCardHover }) => {
 interface CardTileProps {
 	card: Card;
 	onCardHover?: (card: Card | null) => void;
+	userBookmarks?: BookmarkEntry[];
+	onToggleBookmark?: (card: Card) => Promise<void>;
+	isCardBookmarked?: (cardId: string) => boolean;
 }
 
-const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
+const CardTile: React.FC<CardTileProps> = ({ 
+	card, 
+	onCardHover, 
+	userBookmarks, 
+	onToggleBookmark, 
+	isCardBookmarked 
+}) => {
 	const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
+
+	// Check if this card is bookmarked
+	const isBookmarked = isCardBookmarked ? isCardBookmarked(card.id) : false;
 
 	const getFactionColor = (faction: string) => {
 		return FACTION_COLORS[faction] || '#6b7280';
@@ -74,6 +105,12 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 			setTimeout(() => setCopyLinkSuccess(false), 2000);
 		} catch (error) {
 			console.error('Failed to copy link:', error);
+		}
+	};
+
+	const handleBookmarkToggle = async () => {
+		if (onToggleBookmark) {
+			await onToggleBookmark(card);
 		}
 	};
 
@@ -188,42 +225,68 @@ const CardTile: React.FC<CardTileProps> = ({ card, onCardHover }) => {
 								</svg>
 								View Original
 							</a>
+							<button
+								onClick={copyLinkToClipboard}
+								className="copy-link-btn"
+								title="Copy card link to clipboard"
+								style={{
+									marginLeft: '8px',
+									background: copyLinkSuccess ? '#10b981' : '#6b7280',
+									color: 'white',
+									border: 'none',
+									borderRadius: '4px',
+									padding: '4px 8px',
+									cursor: 'pointer',
+									fontSize: '11px',
+									display: 'inline-flex',
+									alignItems: 'center',
+									gap: '4px',
+									transition: 'background-color 0.2s'
+								}}
+							>
+								{copyLinkSuccess ? (
+									<>
+										<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+											<polyline points="20,6 9,17 4,12"/>
+										</svg>
+										Copied!
+									</>
+								) : (
+									<>
+										<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+											<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+											<path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.72-1.71"/>
+										</svg>
+										Copy Link
+									</>
+								)}
+							</button>
+							{onToggleBookmark && (
 								<button
-                                    onClick={copyLinkToClipboard}
-                                    className="copy-link-btn"
-                                    title="Copy card link to clipboard"
-                                    style={{
-                                        marginLeft: '8px',
-                                        background: copyLinkSuccess ? '#10b981' : '#6b7280',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        padding: '4px 8px',
-                                        cursor: 'pointer',
-                                        fontSize: '11px',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        transition: 'background-color 0.2s'
-                                    }}
-                                >
-                                    {copyLinkSuccess ? (
-                                        <>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <polyline points="20,6 9,17 4,12"/>
-                                            </svg>
-                                            Copied!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-                                                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.72-1.71"/>
-                                            </svg>
-                                            Copy Link
-                                        </>
-                                    )}
-                                </button>
+									onClick={handleBookmarkToggle}
+									className="bookmark-btn"
+									title={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+									style={{
+										marginLeft: '8px',
+										background: isBookmarked ? '#f59e0b' : '#6b7280',
+										color: 'white',
+										border: 'none',
+										borderRadius: '4px',
+										padding: '4px 8px',
+										cursor: 'pointer',
+										fontSize: '11px',
+										display: 'inline-flex',
+										alignItems: 'center',
+										gap: '4px',
+										transition: 'background-color 0.2s'
+									}}
+								>
+									<svg width="12" height="12" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+										<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+									</svg>
+									{isBookmarked ? 'Saved' : 'Save'}
+								</button>
+							)}
 						</div>
 					</div>
 				</div>
