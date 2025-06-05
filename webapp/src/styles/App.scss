@@ -175,6 +175,38 @@ $border-radius-full: 9999px;
       align-items: center;
       gap: 1rem;
 
+      // Available cards and bookmarks buttons
+      .available-cards-button,
+      .bookmarks-button {
+        @extend %btn-base;
+        background: $background-light;
+        color: $text-dark;
+        border: 1px solid $border-medium;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+
+        &:hover:not(:disabled) {
+          background: $border-medium;
+          border-color: $border-light;
+        }
+
+        &:disabled {
+          background: $background-light;
+          color: $text-light;
+          opacity: 0.6;
+        }
+
+        .mini-spinner {
+          width: 12px;
+          height: 12px;
+          border: 1px solid $border-medium;
+          border-top: 1px solid $primary-color;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+      }
+
       .view-type-controls {
         display: flex;
         background: $background-light;

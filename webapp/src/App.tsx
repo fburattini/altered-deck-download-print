@@ -4,10 +4,12 @@ import CardTable from './components/CardTable';
 import CardGridView from './components/CardGridView';
 import CardPreview from './components/CardPreview';
 import AvailableCardsList from './components/AvailableCardsList';
+import BookmarksList from './components/BookmarksList';
 import { Card } from './types';
 import { searchAPI, CardNameFaction, BookmarkEntry } from './services/searchAPI';
 import './styles/App.scss';
 import './styles/AvailableCardsList.scss';
+import './styles/BookmarksList.scss';
 
 // Sorting options
 type SortOption = 'name' | 'mainCost' | 'price' | 'rarity' | 'faction';
@@ -15,18 +17,25 @@ type SortDirection = 'asc' | 'desc';
 type ViewType = 'table' | 'grid';
 
 // For demo purposes, using a hardcoded user ID. In a real app, this would come from authentication
-const CURRENT_USER_ID = 'demo-user';
+const DEFAULT_USER_ID = 'demo-user';
 
 const App: React.FC = () => {
 	const [searchResults, setSearchResults] = useState<Card[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
 	
+	// User ID state
+	const [currentUserId, setCurrentUserId] = useState<string>(DEFAULT_USER_ID);
+	const [userIdValid, setUserIdValid] = useState<boolean>(true);
+	
 	// Available cards state
 	const [availableCards, setAvailableCards] = useState<CardNameFaction[]>([]);
 	const [availableCardsLoading, setAvailableCardsLoading] = useState(true);
 	const [availableCardsError, setAvailableCardsError] = useState<string | null>(null);
 	const [showAvailableCards, setShowAvailableCards] = useState(false);
+
+	// Bookmarks popup state
+	const [showBookmarks, setShowBookmarks] = useState(false);
 
 	// Bookmark state
 	const [userBookmarks, setUserBookmarks] = useState<BookmarkEntry[]>([]);
@@ -74,11 +83,11 @@ const App: React.FC = () => {
 			setBookmarksError(null);
 
 			try {
-				const response = await searchAPI.getUserBookmarks(CURRENT_USER_ID);
+				const response = await searchAPI.getUserBookmarks(currentUserId);
 
 				if (response.success) {
 					setUserBookmarks(response.bookmarks);
-					console.log(`📚 Loaded ${response.bookmarks.length} bookmarks for user ${CURRENT_USER_ID}`);
+					console.log(`📚 Loaded ${response.bookmarks.length} bookmarks for user ${currentUserId}`);
 				} else {
 					setBookmarksError(response.error || 'Failed to fetch bookmarks');
 				}
@@ -90,7 +99,17 @@ const App: React.FC = () => {
 		};
 
 		fetchUserBookmarks();
-	}, []);
+	}, [currentUserId]); // Re-fetch when user ID changes
+
+	// Handle user ID change with validation
+	const handleUserIdChange = (newUserId: string) => {
+		const trimmedId = newUserId.trim();
+		setCurrentUserId(trimmedId);
+		
+		// Basic validation - ensure user ID is not empty and contains valid characters
+		const isValid = trimmedId.length > 0 && /^[a-zA-Z0-9_-]+$/.test(trimmedId);
+		setUserIdValid(isValid);
+	};
 
 	// Handle search results from APICardSearch component
 	const handleSearchResults = (cards: Card[], loading: boolean, error?: string) => {
@@ -105,9 +124,15 @@ const App: React.FC = () => {
 	};
 
 	const toggleBookmark = async (card: Card): Promise<void> => {
+		// Don't allow bookmark operations with invalid user ID
+		if (!userIdValid || !currentUserId.trim()) {
+			console.error('Cannot toggle bookmark: Invalid user ID');
+			return;
+		}
+
 		try {
 			const response = await searchAPI.toggleBookmark({
-				userId: CURRENT_USER_ID,
+				userId: currentUserId,
 				cardId: card.id,
 				cardName: card.name,
 				faction: card.mainFaction.reference
@@ -118,7 +143,7 @@ const App: React.FC = () => {
 				if (response.isBookmarked) {
 					// Add bookmark
 					const newBookmark: BookmarkEntry = {
-						userId: CURRENT_USER_ID,
+						userId: currentUserId,
 						cardId: card.id,
 						cardName: card.name,
 						faction: card.mainFaction.reference,
@@ -128,6 +153,47 @@ const App: React.FC = () => {
 				} else {
 					// Remove bookmark
 					setUserBookmarks(prev => prev.filter(bookmark => bookmark.cardId !== card.id));
+				}
+				console.log(`🔖 ${response.message}`);
+			} else {
+				console.error('Failed to toggle bookmark:', response.error);
+			}
+		} catch (error) {
+			console.error('Error toggling bookmark:', error);
+		}
+	};
+
+	// Bookmark toggle function for BookmarksList component (different signature)
+	const toggleBookmarkById = async (cardId: string, cardName: string, faction: string): Promise<void> => {
+		// Don't allow bookmark operations with invalid user ID
+		if (!userIdValid || !currentUserId.trim()) {
+			console.error('Cannot toggle bookmark: Invalid user ID');
+			return;
+		}
+
+		try {
+			const response = await searchAPI.toggleBookmark({
+				userId: currentUserId,
+				cardId: cardId,
+				cardName: cardName,
+				faction: faction
+			});
+
+			if (response.success) {
+				// Update local bookmark state
+				if (response.isBookmarked) {
+					// Add bookmark
+					const newBookmark: BookmarkEntry = {
+						userId: currentUserId,
+						cardId: cardId,
+						cardName: cardName,
+						faction: faction,
+						bookmarkedAt: new Date().toISOString()
+					};
+					setUserBookmarks(prev => [...prev, newBookmark]);
+				} else {
+					// Remove bookmark
+					setUserBookmarks(prev => prev.filter(bookmark => bookmark.cardId !== cardId));
 				}
 				console.log(`🔖 ${response.message}`);
 			} else {
@@ -211,13 +277,27 @@ const App: React.FC = () => {
 			<div className="search-section">
 				<APICardSearch onSearchResults={handleSearchResults} />
 			</div>
-		</div>{/* Available Cards List - Popup */}
+		</div>		{/* Available Cards List - Popup */}
 		{showAvailableCards && (
 			<AvailableCardsList
 				cards={availableCards}
 				loading={availableCardsLoading}
 				error={availableCardsError}
 				onClose={() => setShowAvailableCards(false)}
+			/>
+		)}
+
+		{/* Bookmarks List - Popup */}
+		{showBookmarks && (
+			<BookmarksList
+				bookmarks={userBookmarks}
+				loading={bookmarksLoading}
+				error={bookmarksError}
+				currentUserId={currentUserId}
+				userIdValid={userIdValid}
+				onClose={() => setShowBookmarks(false)}
+				onUserIdChange={handleUserIdChange}
+				onToggleBookmark={toggleBookmarkById}
 			/>
 		)}{/* Main Content Area */}
 		<div className="main-content">
@@ -241,10 +321,6 @@ const App: React.FC = () => {
 							<div className="results-count">
 								Max. Price: {sortedResults.length > 0 ? `$${Math.max(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
 							</div>
-							<div style={{border: '1px solid #334155', height: '1rem'}} />
-							<div className="results-count">
-								📚 Bookmarks: {userBookmarks.length}
-							</div>
 						</div>
 						{/* View and Sort Controls */}
 						<div className="control-group">
@@ -262,6 +338,25 @@ const App: React.FC = () => {
 								) : (
 									<>
 										📋 Cards ({availableCards.length})
+									</>
+								)}
+							</button>
+
+							{/* Bookmarks Button */}
+							<button
+								onClick={() => setShowBookmarks(!showBookmarks)}
+								className="bookmarks-button"
+								disabled={bookmarksLoading || !userIdValid}
+								title={!userIdValid ? "Enter a valid user ID to view bookmarks" : "View your bookmarks"}
+							>
+								{bookmarksLoading ? (
+									<>
+										<div className="mini-spinner"></div>
+										Loading...
+									</>
+								) : (
+									<>
+										🔖 Bookmarks ({userBookmarks.length})
 									</>
 								)}
 							</button>
@@ -321,14 +416,14 @@ const App: React.FC = () => {
 								hoveredCard={hoveredCard}
 								onCardHover={setHoveredCard}
 								userBookmarks={userBookmarks}
-								onToggleBookmark={toggleBookmark}
+								onToggleBookmark={userIdValid ? toggleBookmark : undefined}
 								isCardBookmarked={isCardBookmarked}
 							/>) : (
 							<CardGridView
 								cards={sortedResults}
 								onCardHover={setHoveredCard}
 								userBookmarks={userBookmarks}
-								onToggleBookmark={toggleBookmark}
+								onToggleBookmark={userIdValid ? toggleBookmark : undefined}
 								isCardBookmarked={isCardBookmarked}
 							/>
 						)}</>
