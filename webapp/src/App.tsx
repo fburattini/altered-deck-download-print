@@ -375,7 +375,7 @@ const App: React.FC = () => {
 							<button
 								onClick={() => setShowBookmarks(!showBookmarks)}
 								className={`bookmarks-button ${!userIdValid ? 'needs-setup' : ''}`}
-								disabled={bookmarksLoading || !userIdValid}
+								disabled={bookmarksLoading}
 								title={!userIdValid ? "Enter a valid user ID to view bookmarks" : "View your bookmarks"}
 							>
 								{bookmarksLoading ? (
