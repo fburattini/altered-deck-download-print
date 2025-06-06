@@ -204,17 +204,30 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 			const response = await searchAPI.scrapeCards(scrapeFilters, bearerTokenInput || undefined);
 			if (response.success) {
 				const baseMessage = response.message || 'Scrape completed successfully.';
-				let countMessage = '';
+				let detailedMessage = baseMessage;
 
 				if (response.cardsFound !== undefined) {
-					countMessage = ` Found ${response.cardsFound} card${response.cardsFound !== 1 ? 's' : ''}`;
+					detailedMessage += `\n\n📊 Results Summary:`;
+					detailedMessage += `\n• Total cards found: ${response.cardsFound}`;
+					
+					// Add pricing data info
 					if (response.cardsWithPricing !== undefined) {
-						countMessage += ` (${response.cardsWithPricing} with pricing data)`;
+						detailedMessage += `\n• Cards with pricing data: ${response.cardsWithPricing}`;
 					}
-					countMessage += '.';
+
+					// Add detailed breakdown of changes
+					if (response.newCards !== undefined && response.newCards > 0) {
+						detailedMessage += `\n• New cards added: ${response.newCards}`;
+					}
+					if (response.cardsWithPricingChanges !== undefined) {
+						detailedMessage += `\n• Pricing updates: ${response.cardsWithPricingChanges}`;
+					}
+					if (response.cardsWithoutChanges !== undefined && response.cardsWithoutChanges > 0) {
+						detailedMessage += `\n• Unchanged cards: ${response.cardsWithoutChanges}`;
+					}
 				}
 
-				setScrapeMessage(baseMessage + countMessage);
+				setScrapeMessage(detailedMessage);
 				setShowConfirmationPopup(true);
 			} else {
 				throw new Error(response.error || 'Scrape failed');
