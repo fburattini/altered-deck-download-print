@@ -5,15 +5,13 @@ import CardGridView from './components/CardGridView';
 import CardPreview from './components/CardPreview';
 import AvailableCardsList from './components/AvailableCardsList';
 import BookmarksList from './components/BookmarksList';
+import SortControls, { SortOption, SortDirection, sortCards } from './components/SortControls';
 import { Card } from './types';
 import { searchAPI, CardNameFaction, BookmarkEntry } from './services/searchAPI';
 import './styles/App.scss';
 import './styles/AvailableCardsList.scss';
 import './styles/BookmarksList.scss';
 
-// Sorting options
-type SortOption = 'name' | 'mainCost' | 'price' | 'rarity' | 'faction';
-type SortDirection = 'asc' | 'desc';
 type ViewType = 'table' | 'grid';
 
 // Key for localStorage
@@ -232,50 +230,7 @@ const App: React.FC = () => {
 			console.error('Error toggling bookmark:', error);
 		}
 	};
-	// Sort cards function
-	const sortCards = (cards: Card[]) => {
-		return [...cards].sort((a, b) => {
-			let valueA: string | number;
-			let valueB: string | number;
-
-			switch (sortBy) {
-				case 'name':
-					valueA = a.name.toLowerCase();
-					valueB = b.name.toLowerCase();
-					break;
-				case 'mainCost':
-					valueA = parseInt(a.elements?.MAIN_COST || '0');
-					valueB = parseInt(b.elements?.MAIN_COST || '0');
-					break;
-				case 'price':
-					valueA = a.pricing?.lowerPrice || 0;
-					valueB = b.pricing?.lowerPrice || 0;
-					break;
-				case 'rarity':
-					valueA = a.rarity?.name?.toLowerCase() || '';
-					valueB = b.rarity?.name?.toLowerCase() || '';
-					break;
-				case 'faction':
-					valueA = a.mainFaction?.name?.toLowerCase() || '';
-					valueB = b.mainFaction?.name?.toLowerCase() || '';
-					break;
-				default:
-					valueA = a.name.toLowerCase();
-					valueB = b.name.toLowerCase();
-			}
-
-			if (typeof valueA === 'string' && typeof valueB === 'string') {
-				return sortDirection === 'asc'
-					? valueA.localeCompare(valueB)
-					: valueB.localeCompare(valueA);
-			} else {
-				return sortDirection === 'asc'
-					? (valueA as number) - (valueB as number)
-					: (valueB as number) - (valueA as number);
-			}
-		});
-	};
-
+	
 	const handleSort = (column: SortOption) => {
 		if (sortBy === column) {
 			setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -290,7 +245,11 @@ const App: React.FC = () => {
 		setSortDirection('asc');
 	};
 
-	const sortedResults = sortCards(searchResults);
+	const handleDirectionToggle = () => {
+		setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+	};
+
+	const sortedResults = sortCards(searchResults, sortBy, sortDirection);
 
 	if (isLoading && searchResults.length === 0) {
 		return (
@@ -392,23 +351,12 @@ const App: React.FC = () => {
 							</button>
 
 							{/* Sort Controls */}
-							<select
-								value={sortBy}
-								onChange={(e) => handleSortChange(e.target.value as SortOption)}
-							>
-								<option value="name">Name</option>
-								<option value="mainCost">Main Cost</option>
-								<option value="price">Price</option>
-								<option value="rarity">Rarity</option>
-								<option value="faction">Faction</option>
-							</select>
-
-							<button
-								onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-								className="sort-button-padding"
-							>
-								{sortDirection === 'asc' ? '↑' : '↓'}
-							</button>
+							<SortControls
+								sortBy={sortBy}
+								sortDirection={sortDirection}
+								onSortChange={handleSortChange}
+								onDirectionToggle={handleDirectionToggle}
+							/>
 
 							{/* View Type Controls */}
 							<div className="view-type-controls">
