@@ -24,7 +24,8 @@ export class CardReader {
                 const filePath = path.join(this.cardDbPath, file);
                 try {
                     const content = await fs.readFile(filePath, 'utf8');
-                    const lines = content.trim().split('\\n').filter(line => line.length > 0);
+                    const lines = content.trim().split('\n').filter(line => line.length > 0);
+                    
                     for (const line of lines) {
                         try {
                             const card = JSON.parse(line) as CardDetail;

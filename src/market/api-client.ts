@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { CardCollection, CardDetail, CardDetailPricing, ScrapeMetadataPriceHistory } from './market-types';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { CardReader } from '../db/CardReader';
 
 export interface FilterOptions {
 	rarity?: string[];
@@ -578,6 +579,21 @@ export class AlteredApiClient {
 			filters: filters
 		};
 
+		// Load all existing cards once at the beginning for efficient lookups
+		console.log('Loading existing cards from local storage...');
+		const cardReader = new CardReader();
+		const existingCards = await cardReader.loadAllCards();
+		const existingCardsMap = new Map<string, CardDetail>();
+		
+		// Create lookup maps for efficient searching
+		existingCards.forEach(card => {
+			existingCardsMap.set(card.id, card);
+			if (card.reference) existingCardsMap.set(card.reference, card);
+			if (card['@id']) existingCardsMap.set(card['@id'], card);
+		});
+		
+		console.log(`Loaded ${existingCards.length} cards from local storage for efficient lookups`);
+
 		// Create a unique checkpoint name based on the filters
 		const filterKey = this.getFilterKey(filters); const checkpointPath = path.join(process.cwd(), 'checkpoints_db', `${checkpointPrefix}-scrape-checkpoint-${filterKey}.json`);
 		const cardsDataPath = path.join(process.cwd(), 'checkpoints_db', `${checkpointPrefix}-cards-latest-${filterKey}.jsonl`);
@@ -600,31 +616,41 @@ export class AlteredApiClient {
 
 			const collection = await this.getCards(filters);
 			console.log(`  Found ${collection['hydra:member'].length} cards matching filters`);
-
-			// Fetch detailed information for each card
-			for (const card of collection['hydra:member']) {
-				if (!allCards.has(card.id)) {
-					try {
+		// Fetch detailed information for each card
+		for (const card of collection['hydra:member']) {
+			if (!allCards.has(card.id)) {
+				try {
+					// Check if card exists in our pre-loaded local cards first
+					const existingCard = existingCardsMap.get(card.id) || 
+										existingCardsMap.get(card.reference) || 
+										existingCardsMap.get(card['@id']);
+					
+					if (existingCard) {
+						allCards.set(card.id, existingCard);
+						console.log(`    Loaded from local storage: ${existingCard.name} (${existingCard.id})`);
+					} else {
+						// Card not found locally, fetch from API
 						const detail = await this.getCardDetail(card['@id']);
 						allCards.set(card.id, detail);
-						console.log(`    Added card: ${detail.name} (${detail.id})`);
+						console.log(`    Fetched from API: ${detail.name} (${detail.id})`);
 
 						// Small delay between card detail requests
 						await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); // 100-200ms
+					}
 
-					} catch (error: any) {
-						const errorMsg = `Failed to fetch detail for card ${card.id} (@id: ${card['@id']}): ${error}`;
-						console.error(`    ${errorMsg}`);
-						summary.errors.push(errorMsg);
+				} catch (error: any) {
+					const errorMsg = `Failed to fetch detail for card ${card.id} (@id: ${card['@id']}): ${error}`;
+					console.error(`    ${errorMsg}`);
+					summary.errors.push(errorMsg);
 
-						// If it's a rate limit error that couldn't be resolved with retries, wait before continuing
-						if (error.response?.status === 429) {
-							console.warn('Rate limit error on card detail, waiting 2 seconds before continuing...');
-							await new Promise(resolve => setTimeout(resolve, 2000));
-						}
+					// If it's a rate limit error that couldn't be resolved with retries, wait before continuing
+					if (error.response?.status === 429) {
+						console.warn('Rate limit error on card detail, waiting 2 seconds before continuing...');
+						await new Promise(resolve => setTimeout(resolve, 2000));
 					}
 				}
 			}
+		}
 
 			// Mark as processed
 			processedCombinations.add(filterKey);
@@ -906,9 +932,6 @@ export class AlteredApiClient {
 					console.warn(`Failed to read existing cards from ${filename}: ${error}`);
 				}
 			}
-
-			console.log(existingCards.map(x => x.pricing), cards.map(x => x.pricing))
-			console.log('OIAOAOAOOo')
 
 			let addedCount = 0;
 			let updatedCount = 0;
