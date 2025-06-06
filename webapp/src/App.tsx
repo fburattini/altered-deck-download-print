@@ -5,6 +5,7 @@ import CardGridView from './components/CardGridView';
 import CardPreview from './components/CardPreview';
 import AvailableCardsList from './components/AvailableCardsList';
 import BookmarksList from './components/BookmarksList';
+import FilterControls from './components/FilterControls';
 import SortControls, { SortOption, SortDirection, sortCards } from './components/SortControls';
 import { Card } from './types';
 import { searchAPI, CardNameFaction, BookmarkEntry } from './services/searchAPI';
@@ -19,6 +20,7 @@ const USER_ID_STORAGE_KEY = 'altered-deck-user-id';
 
 const App: React.FC = () => {
 	const [searchResults, setSearchResults] = useState<Card[]>([]);
+	const [filteredResults, setFilteredResults] = useState<Card[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
 
@@ -141,8 +143,13 @@ const App: React.FC = () => {
 	// Handle search results from APICardSearch component
 	const handleSearchResults = (cards: Card[], loading: boolean, error?: string) => {
 		setSearchResults(cards);
+		setFilteredResults(cards); // Initialize filtered results with all search results
 		setIsLoading(loading);
 		setSearchError(error || null);
+	};
+
+	const handleFilteredCards = (cards: Card[]) => {
+		setFilteredResults(cards);
 	};
 
 	// Bookmark helper functions
@@ -249,7 +256,7 @@ const App: React.FC = () => {
 		setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
 	};
 
-	const sortedResults = sortCards(searchResults, sortBy, sortDirection);
+	const sortedResults = sortCards(filteredResults, sortBy, sortDirection);
 
 	if (isLoading && searchResults.length === 0) {
 		return (
@@ -287,13 +294,13 @@ const App: React.FC = () => {
 				onUserIdChange={handleUserIdChange}
 				onToggleBookmark={toggleBookmarkById}
 			/>
-		)}{/* Main Content Area */}
+		)}		{/* Main Content Area */}
 		<div className="main-content">
 			<div className="content-with-preview">
 				<div className="results-area">
-					{/* Controls Bar */}
-					<div className="controls-bar">
-						<div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '.5rem' }}>
+					{/* Statistics Section */}
+					<div className="statistics-section">
+						<div className="statistics-bar">
 							<div className="results-count">
 								{sortedResults.length} cards
 							</div>
@@ -310,7 +317,21 @@ const App: React.FC = () => {
 								Max. Price: {sortedResults.length > 0 ? `$${Math.max(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
 							</div>
 						</div>
-						{/* View and Sort Controls */}
+					</div>
+
+					{/* Controls Bar */}
+					<div className="controls-bar">
+						{/* Left Section - Filter Controls */}
+						<div className="control-group">
+							<FilterControls
+								cards={searchResults}
+								onFilteredCards={handleFilteredCards}
+								userBookmarks={userBookmarks}
+								isCardBookmarked={isCardBookmarked}
+							/>
+						</div>
+						
+						{/* Right Section - View and Sort Controls */}
 						<div className="control-group">
 							{/* Available Cards Button */}
 							<button

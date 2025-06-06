@@ -157,6 +157,28 @@ $border-radius-full: 9999px;
   height: 100%;
   /* Use full height instead of min-height */
 
+  // Statistics section (moved from controls bar)
+  .statistics-section {
+    margin-bottom: 1rem;
+    
+    .statistics-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: $background-light;
+      border-radius: $border-radius-sm;
+      border: 1px solid $border-medium;
+
+      .results-count {
+        font-size: 0.875rem;
+        color: $text-light;
+        white-space: nowrap;
+      }
+    }
+  }
+
   // User setup section
   .user-setup-section {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -242,6 +264,7 @@ $border-radius-full: 9999px;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid $border-light;
+    gap: 1rem;
 
     .results-count {
       font-size: 0.875rem;
