@@ -892,9 +892,13 @@ export class AlteredApiClient {
 
 	/**
 	 * Save multiple cards to their respective files based on name and faction
-	 * Groups cards and checks for duplicates
+	 * Groups cards and checks for duplicates, returns detailed statistics
 	 */
-	async saveCardsByNameAndFaction(cards: CardDetail[]): Promise<void> {
+	async saveCardsByNameAndFaction(cards: CardDetail[]): Promise<{
+		newCards: number,
+		cardsWithPricingChanges: number,
+		cardsWithoutChanges: number
+	}> {
 		// Group cards by their filename
 		const cardsByFile = new Map<string, CardDetail[]>();
 
@@ -905,6 +909,11 @@ export class AlteredApiClient {
 			}
 			cardsByFile.get(filename)!.push(card);
 		}
+
+		// Track statistics across all files
+		let totalNewCards = 0;
+		let totalCardsWithPricingChanges = 0;
+		let totalCardsWithoutChanges = 0;
 
 		// Save each group to its respective file
 		for (const [filename, cardsForFile] of cardsByFile) {
@@ -935,6 +944,8 @@ export class AlteredApiClient {
 
 			let addedCount = 0;
 			let updatedCount = 0;
+			let pricingChangedCount = 0;
+			let noChangesCount = 0;
 
 			// Process each card from the input `cardsForFile`
 			for (const newCard of cardsForFile) {
@@ -946,17 +957,33 @@ export class AlteredApiClient {
 
 				let cardWithMetadata: CardDetail;
 				if (duplicateIndex !== -1) {
-					// Card exists, add metadata with existing card reference for comparison
-					cardWithMetadata = this.addScrapeMetadata(newCard, existingCards[duplicateIndex]);
+					// Card exists, check for pricing changes before updating
+					const existingCard = existingCards[duplicateIndex];
+					const pricingChanged = this.hasPricingChanged(existingCard.pricing, newCard.pricing);
+					
+					cardWithMetadata = this.addScrapeMetadata(newCard, existingCard);
 					existingCards[duplicateIndex] = cardWithMetadata;
 					updatedCount++;
+
+					if (pricingChanged) {
+						pricingChangedCount++;
+						console.log(`  💰 Pricing changed for: ${newCard.name} (${newCard.id})`);
+					} else {
+						noChangesCount++;
+					}
 				} else {
 					// Card does not exist, add it to the list with metadata
 					cardWithMetadata = this.addScrapeMetadata(newCard);
 					existingCards.push(cardWithMetadata);
 					addedCount++;
+					console.log(`  🆕 New card: ${newCard.name} (${newCard.id})`);
 				}
 			}
+
+			// Update totals
+			totalNewCards += addedCount;
+			totalCardsWithPricingChanges += pricingChangedCount;
+			totalCardsWithoutChanges += noChangesCount;
 
 			// Only save if there were actual changes
 			if (addedCount > 0 || updatedCount > 0) {
@@ -967,6 +994,17 @@ export class AlteredApiClient {
 				console.log(`No new cards to add or update in ${filename}`);
 			}
 		}
+
+		console.log(`📊 Saving statistics:`);
+		console.log(`  - New cards: ${totalNewCards}`);
+		console.log(`  - Cards with pricing changes: ${totalCardsWithPricingChanges}`);
+		console.log(`  - Cards without changes: ${totalCardsWithoutChanges}`);
+
+		return {
+			newCards: totalNewCards,
+			cardsWithPricingChanges: totalCardsWithPricingChanges,
+			cardsWithoutChanges: totalCardsWithoutChanges
+		};
 	}
 
 	/**

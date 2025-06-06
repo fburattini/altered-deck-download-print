@@ -19,7 +19,8 @@ interface LocalFilters {
 	inSaleOnly: boolean;
 }
 
-const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	const [filters, setFilters] = useState<LocalFilters>({
+const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
+	const [filters, setFilters] = useState<LocalFilters>({
 		searchQuery: '',
 		mainEffect: '',
 		factions: [],
@@ -162,7 +163,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			scrapeFilters.CARD_NAME = filters.searchQuery.trim();
 			if (filters.mainEffect.trim()) {
 				scrapeFilters.MAIN_EFFECT = filters.mainEffect.trim();
-			}			if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
+			} if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
 				scrapeFilters.FACTION = filters.factions[0];
 			}
 
@@ -200,10 +201,11 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 			// scrapeFilters.ONLY_FOR_SALE = true;
 
 			console.log('🚀 Performing API scrape with filters:', scrapeFilters, 'and token:', bearerTokenInput || '(using backend default)');
-			const response = await searchAPI.scrapeCards(scrapeFilters, bearerTokenInput || undefined);			if (response.success) {
+			const response = await searchAPI.scrapeCards(scrapeFilters, bearerTokenInput || undefined);
+			if (response.success) {
 				const baseMessage = response.message || 'Scrape completed successfully.';
 				let countMessage = '';
-				
+
 				if (response.cardsFound !== undefined) {
 					countMessage = ` Found ${response.cardsFound} card${response.cardsFound !== 1 ? 's' : ''}`;
 					if (response.cardsWithPricing !== undefined) {
@@ -211,7 +213,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 					}
 					countMessage += '.';
 				}
-				
+
 				setScrapeMessage(baseMessage + countMessage);
 				setShowConfirmationPopup(true);
 			} else {
@@ -245,7 +247,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 				[key]: newArray
 			};
 		});
-	};	const clearAllFilters = () => {
+	}; const clearAllFilters = () => {
 		setFilters({
 			searchQuery: '',
 			mainEffect: '',
@@ -303,7 +305,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 					</div>
 				)}				{/* Bearer Token Input for Scrape */}
 				<div className="filter-group">
-					<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token <span style={{fontSize: '0.75rem'}}>(required for scraping)</span></label>					<input
+					<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token <span style={{ fontSize: '0.75rem' }}>(required for scraping)</span></label>					<input
 						id="bearerTokenInput"
 						type="text"
 						placeholder="Enter Bearer Token"
@@ -315,7 +317,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 				</div>
 				<div className="search-inputs-row">
 					<div className="search-input-container">
-						<label htmlFor="searchQuery" className="filter-label">Card Name <span style={{fontSize: '0.75rem'}}>(required)</span></label>
+						<label htmlFor="searchQuery" className="filter-label">Card Name <span style={{ fontSize: '0.75rem' }}>(required)</span></label>
 						<MagnifyingGlassIcon className="search-icon" />
 						<input
 							id="searchQuery"
@@ -326,7 +328,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 							className="base-input base-input-icon"
 						/>
 					</div>
-					
+
 					<div className="search-input-container">
 						<label htmlFor="mainEffect" className="filter-label">Main Effect</label>
 						<input
@@ -366,7 +368,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 						</div>
 					</div>					{/* Main Cost Range */}
 					<div className="filter-group">
-						<label className="filter-label">Main Cost <span style={{fontSize: '0.75rem'}}>(required for scraping)</span></label>
+						<label className="filter-label">Main Cost <span style={{ fontSize: '0.75rem' }}>(required for scraping)</span></label>
 						<div className="cost-range">
 							<input
 								type="number"
@@ -443,12 +445,12 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 							</label>
 						</div>
 					</div>					<div className="action-buttons">
-						<button 
-							type="submit" 
-							className="search-button" 
+						<button
+							type="submit"
+							className="search-button"
 							disabled={
-								isSearching || 
-								isScraping || 
+								isSearching ||
+								isScraping ||
 								!filters.searchQuery.trim()
 							}
 							title={
@@ -457,24 +459,24 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {	c
 						>
 							<MagnifyingGlassIcon />
 							{isSearching ? 'Searching...' : 'Search Cards'}
-						</button>						<button 
-							type="button" 
-							onClick={handleScrape} 
-							className="scrape-button" 
+						</button>						<button
+							type="button"
+							onClick={handleScrape}
+							className="scrape-button"
 							disabled={
-								isSearching || 
-								isScraping || 
-								!filters.searchQuery.trim() || 
+								isSearching ||
+								isScraping ||
+								!filters.searchQuery.trim() ||
 								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ||
 								filters.factions.length === 0 ||
 								!bearerTokenInput.trim()
 							}
 							title={
 								!filters.searchQuery.trim() ? 'Card name is required for scraping' :
-								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ? 'Main cost range is required for scraping' :
-								filters.factions.length === 0 ? 'A faction must be selected for scraping' :
-								!bearerTokenInput.trim() ? 'Bearer token is required for scraping' :
-								''
+									(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ? 'Main cost range is required for scraping' :
+										filters.factions.length === 0 ? 'A faction must be selected for scraping' :
+											!bearerTokenInput.trim() ? 'Bearer token is required for scraping' :
+												''
 							}
 						>
 							<CloudArrowDownIcon />

@@ -1,4 +1,5 @@
 import { AlteredApiClient, CardStatItem, FilterOptions } from './api-client';
+import { CardDetail, CardDetailPricing } from './market-types';
 
 export interface CardStatsResult {
 	stats: CardStatItem[];
@@ -167,7 +168,13 @@ export class AlteredScraper {
 	/**
 	 * Run a filtered scrape with pricing data integrated into card details
 	 */
-	async runFilteredScrapeWithPricing(filters: FilterOptions, resumeFromCheckpoint: boolean = true): Promise<{ totalCards: number, cardsWithPricing: number }> {
+	async runFilteredScrapeWithPricing(filters: FilterOptions, resumeFromCheckpoint: boolean = true): Promise<{ 
+		totalCards: number, 
+		cardsWithPricing: number,
+		newCards: number,
+		cardsWithPricingChanges: number,
+		cardsWithoutChanges: number 
+	}> {
 		console.log('Starting filtered scrape with pricing data integration...');
 		console.log(`Applied filters: ${JSON.stringify(filters, null, 2)}`);
 
@@ -228,9 +235,10 @@ export class AlteredScraper {
 				};
 			});
 
-			// Save the enriched cards using the new name+faction based saving system
+			// Save the enriched cards using the name+faction based saving system
+			// which now returns detailed statistics about what was saved
 			console.log('💾 Saving enriched cards with pricing data...');
-			await this.apiClient.saveCardsByNameAndFaction(enrichedCards);
+			const savingStats = await this.apiClient.saveCardsByNameAndFaction(enrichedCards);
 
 			// Calculate pricing stats for summary
 			const pricingStats = this.calculatePricingStats(enrichedCards);
@@ -243,7 +251,10 @@ export class AlteredScraper {
 			// Log summary
 			console.log('\n=== Filtered Scrape with Pricing Summary ===');
 			console.log(`Applied filters: ${JSON.stringify(enhancedSummary.filters, null, 2)}`);
-			console.log(`Unique cards found: ${enhancedSummary.uniqueCards}`);
+			console.log(`Total cards processed: ${enhancedSummary.uniqueCards}`);
+			console.log(`New cards (not tracked before): ${savingStats.newCards}`);
+			console.log(`Cards with pricing changes: ${savingStats.cardsWithPricingChanges}`);
+			console.log(`Cards without changes: ${savingStats.cardsWithoutChanges}`);
 			console.log(`Cards with pricing data: ${enhancedSummary.cardsWithPricing}`);
 			console.log(`Price range: €${pricingStats.minPrice.toFixed(2)} - €${pricingStats.maxPrice.toFixed(2)}`);
 			console.log(`Average price: €${pricingStats.avgPrice.toFixed(2)}`);
@@ -259,7 +270,10 @@ export class AlteredScraper {
 
 			return {
 				totalCards: enhancedSummary.uniqueCards,
-				cardsWithPricing: enhancedSummary.cardsWithPricing
+				cardsWithPricing: enhancedSummary.cardsWithPricing,
+				newCards: savingStats.newCards,
+				cardsWithPricingChanges: savingStats.cardsWithPricingChanges,
+				cardsWithoutChanges: savingStats.cardsWithoutChanges
 			};
 
 		} catch (error) {

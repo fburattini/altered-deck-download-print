@@ -52,6 +52,9 @@ export interface APIScrapeResponse {
   error?: string;
   cardsFound?: number;
   cardsWithPricing?: number;
+  cardsWithPricingChanges?: number;
+  cardsWithoutChanges?: number;
+  newCards?: number;
 }
 
 export interface CardNameFaction {

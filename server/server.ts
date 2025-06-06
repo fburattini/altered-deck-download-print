@@ -166,7 +166,10 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 			message: 'Scrape completed successfully. Data saved to file system.',
 			filtersApplied: filters,
 			cardsFound: scrapeResult.totalCards,
-			cardsWithPricing: scrapeResult.cardsWithPricing
+			cardsWithPricing: scrapeResult.cardsWithPricing,
+			cardsWithPricingChanges: scrapeResult.cardsWithPricingChanges,
+			cardsWithoutChanges: scrapeResult.cardsWithoutChanges,
+			newCards: scrapeResult.newCards
 		});
 
 	} catch (error) {
