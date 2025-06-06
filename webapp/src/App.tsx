@@ -23,7 +23,7 @@ const App: React.FC = () => {
 	const [searchResults, setSearchResults] = useState<Card[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
-	
+
 	// Initialize user ID from localStorage or empty string
 	const [currentUserId, setCurrentUserId] = useState<string>(() => {
 		try {
@@ -37,7 +37,7 @@ const App: React.FC = () => {
 		const storedUserId = localStorage.getItem(USER_ID_STORAGE_KEY) || '';
 		return storedUserId.length > 0 && /^[a-zA-Z0-9_-]+$/.test(storedUserId);
 	});
-	
+
 	// Available cards state
 	const [availableCards, setAvailableCards] = useState<CardNameFaction[]>([]);
 	const [availableCardsLoading, setAvailableCardsLoading] = useState(true);
@@ -123,7 +123,7 @@ const App: React.FC = () => {
 	const handleUserIdChange = (newUserId: string) => {
 		const trimmedId = newUserId.trim();
 		setCurrentUserId(trimmedId);
-		
+
 		// Basic validation - ensure user ID is not empty and contains valid characters
 		const isValid = trimmedId.length > 0 && /^[a-zA-Z0-9_-]+$/.test(trimmedId);
 		setUserIdValid(isValid);
@@ -338,15 +338,15 @@ const App: React.FC = () => {
 							<div className="results-count">
 								{sortedResults.length} cards
 							</div>
-							<div style={{border: '1px solid #334155', height: '1rem'}} />
+							<div style={{ border: '1px solid #334155', height: '1rem' }} />
 							<div className="results-count">
 								Avg. Price: {sortedResults.length > 0 ? `$${(sortedResults.reduce((sum, card) => sum + (card.pricing?.lowerPrice || 0), 0) / sortedResults.length).toFixed(2)}` : 'N/A'}
 							</div>
-							<div style={{border: '1px solid #334155', height: '1rem'}} />
+							<div style={{ border: '1px solid #334155', height: '1rem' }} />
 							<div className="results-count">
 								Min. Price: {sortedResults.length > 0 ? `$${Math.min(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
 							</div>
-							<div style={{border: '1px solid #334155', height: '1rem'}} />
+							<div style={{ border: '1px solid #334155', height: '1rem' }} />
 							<div className="results-count">
 								Max. Price: {sortedResults.length > 0 ? `$${Math.max(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
 							</div>
@@ -438,28 +438,29 @@ const App: React.FC = () => {
 							<h3 className="title">No cards found</h3>
 							<p className="message">Try adjusting your search filters to find cards.</p>
 						</div>) : (
-						<>								
-						{/* Card Table or Grid View */}								
-						{viewType === 'table' ? (
-							<CardTable
-								cards={sortedResults}
-								hoveredCard={hoveredCard}
-								onCardHover={setHoveredCard}
-								userBookmarks={userBookmarks}
-								onToggleBookmark={userIdValid ? toggleBookmark : undefined}
-								isCardBookmarked={isCardBookmarked}
-							/>) : (
-							<CardGridView
-								cards={sortedResults}
-								onCardHover={setHoveredCard}
-								userBookmarks={userBookmarks}
-								onToggleBookmark={userIdValid ? toggleBookmark : undefined}
-								isCardBookmarked={isCardBookmarked}
-							/>
-						)}</>
+						<>
+							{/* Card Table or Grid View */}
+							{viewType === 'table' ? (
+								<CardTable
+									cards={sortedResults}
+									hoveredCard={hoveredCard}
+									onCardHover={setHoveredCard}
+									userBookmarks={userBookmarks}
+									onToggleBookmark={userIdValid ? toggleBookmark : undefined}
+									isCardBookmarked={isCardBookmarked}
+								/>) : (
+								<CardGridView
+									cards={sortedResults}
+									onCardHover={setHoveredCard}
+									userBookmarks={userBookmarks}
+									onToggleBookmark={userIdValid ? toggleBookmark : undefined}
+									isCardBookmarked={isCardBookmarked}
+								/>
+							)}
+						</>
 					)}
 				</div>
-				{viewType === 'table' && 
+				{viewType === 'table' &&
 					<CardPreview hoveredCard={hoveredCard} />}
 			</div>
 		</div>
