@@ -10,6 +10,10 @@ interface RefreshProgress {
     errors: string[];
     completedItems: number;
     startTime?: Date;
+    newCardsCount?: number;
+    priceUpdatesCount?: number;
+    noChangesCount?: number;
+    isComplete?: boolean;
 }
 
 interface WatchlistRefreshProps {
@@ -30,7 +34,11 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
         totalItems: 0,
         isRefreshing: false,
         errors: [],
-        completedItems: 0
+        completedItems: 0,
+        newCardsCount: 0,
+        priceUpdatesCount: 0,
+        noChangesCount: 0,
+        isComplete: false
     });
 
     const refreshWatchlistData = useCallback(async () => {
@@ -46,10 +54,17 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
             isRefreshing: true,
             errors: [],
             completedItems: 0,
-            startTime
+            startTime,
+            newCardsCount: 0,
+            priceUpdatesCount: 0,
+            noChangesCount: 0,
+            isComplete: false
         });
 
         let completedCount = 0;
+        let newCardsCount = 0;
+        let priceUpdatesCount = 0;
+        let noChangesCount = 0;
         const errors: string[] = [];
 
         try {
@@ -79,7 +94,36 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
 
                     if (response.success) {
                         completedCount++;
-                        console.log(`✅ Successfully refreshed: ${item.cardName}`);
+                        
+                        // Analyze the response to determine if there are new cards or price updates
+                        if (response.message) {
+                            const message = response.message.toLowerCase();
+                            if (message.includes('new cards added') || message.includes('cards added')) {
+                                // Extract number of new cards if mentioned in message
+                                const newCardsMatch = response.message.match(/(\d+)\s+(?:new\s+)?cards?\s+added/i);
+                                if (newCardsMatch) {
+                                    const count = parseInt(newCardsMatch[1], 10);
+                                    newCardsCount += count;
+                                } else {
+                                    newCardsCount++; // Default to 1 if can't parse
+                                }
+                                console.log(`🆕 New cards found for: ${item.cardName}`);
+                            } else if (message.includes('price') || message.includes('updated')) {
+                                priceUpdatesCount++;
+                                console.log(`💰 Price updates found for: ${item.cardName}`);
+                            } else if (message.includes('no changes') || message.includes('already up to date')) {
+                                noChangesCount++;
+                                console.log(`✅ No changes for: ${item.cardName}`);
+                            } else {
+                                // Default to successful update if we can't categorize
+                                priceUpdatesCount++;
+                                console.log(`✅ Successfully refreshed: ${item.cardName}`);
+                            }
+                        } else {
+                            // No message, assume successful update
+                            priceUpdatesCount++;
+                            console.log(`✅ Successfully refreshed: ${item.cardName}`);
+                        }
                     } else {
                         const errorMsg = `Failed to refresh ${item.cardName}: ${response.error || 'Unknown error'}`;
                         errors.push(errorMsg);
@@ -94,11 +138,15 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                 setProgress(prev => ({
                     ...prev,
                     completedItems: completedCount,
-                    errors: [...errors]
+                    errors: [...errors],
+                    newCardsCount,
+                    priceUpdatesCount,
+                    noChangesCount
                 }));
             }
 
             console.log(`🎉 Watchlist refresh complete! Successfully refreshed ${completedCount}/${watchlist.length} items`);
+            console.log(`📊 Summary: ${newCardsCount} new cards, ${priceUpdatesCount} price updates, ${noChangesCount} no changes`);
 
             if (errors.length > 0) {
                 console.warn(`⚠️ Encountered ${errors.length} errors during refresh`);
@@ -116,7 +164,11 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
             setProgress(prev => ({
                 ...prev,
                 isRefreshing: false,
-                currentCard: undefined
+                currentCard: undefined,
+                isComplete: true,
+                newCardsCount,
+                priceUpdatesCount,
+                noChangesCount
             }));
         }
     }, [watchlist, bearerToken, onRefreshComplete]);
@@ -228,6 +280,69 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 ... and {progress.errors.length - 3} more errors
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {progress.isComplete && !progress.isRefreshing && (
+                <div className="refresh-summary">
+                    <div className="summary-header">
+                        <span className="success-icon">✅</span>
+                        <span className="summary-title">Refresh Complete!</span>
+                        <button 
+                            className="dismiss-summary"
+                            onClick={() => setProgress(prev => ({ ...prev, isComplete: false }))}
+                            title="Dismiss summary"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <div className="summary-stats">
+                        <div className="summary-grid">
+                            <div className="stat-item new-cards">
+                                <div className="stat-icon">🆕</div>
+                                <div className="stat-content">
+                                    <div className="stat-number">{progress.newCardsCount || 0}</div>
+                                    <div className="stat-label">New Cards</div>
+                                </div>
+                            </div>
+                            
+                            <div className="stat-item price-updates">
+                                <div className="stat-icon">💰</div>
+                                <div className="stat-content">
+                                    <div className="stat-number">{progress.priceUpdatesCount || 0}</div>
+                                    <div className="stat-label">Price Updates</div>
+                                </div>
+                            </div>
+                            
+                            <div className="stat-item no-changes">
+                                <div className="stat-icon">📊</div>
+                                <div className="stat-content">
+                                    <div className="stat-number">{progress.noChangesCount || 0}</div>
+                                    <div className="stat-label">No Changes</div>
+                                </div>
+                            </div>
+                            
+                            {progress.errors.length > 0 && (
+                                <div className="stat-item errors">
+                                    <div className="stat-icon">⚠️</div>
+                                    <div className="stat-content">
+                                        <div className="stat-number">{progress.errors.length}</div>
+                                        <div className="stat-label">Errors</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="summary-footer">
+                            <div className="completion-time">
+                                Completed in {formatElapsedTime()}
+                            </div>
+                            <div className="total-processed">
+                                {progress.completedItems}/{progress.totalItems} items processed
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
