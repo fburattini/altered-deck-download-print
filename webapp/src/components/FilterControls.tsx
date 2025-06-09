@@ -1,12 +1,10 @@
 import React from 'react';
 import { Card } from '../types';
-import { BookmarkEntry } from '../services/searchAPI';
 import '../styles/FilterControls.scss';
 
 export interface FilterControlsProps {
 	cards: Card[];
 	onFilteredCards: (cards: Card[]) => void;
-	userBookmarks?: BookmarkEntry[];
 	isCardBookmarked?: (cardId: string) => boolean;
 }
 
@@ -18,7 +16,6 @@ export interface FilterOptions {
 const FilterControls: React.FC<FilterControlsProps> = ({
 	cards,
 	onFilteredCards,
-	userBookmarks,
 	isCardBookmarked
 }) => {
 	const [filters, setFilters] = React.useState<FilterOptions>({

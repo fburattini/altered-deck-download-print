@@ -123,12 +123,15 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 			setIsSearching(false);
 		}
 	}, [onSearchResults]);
+	
 	// Manual search trigger
 	const handleSearch = () => {
 		if (!isSearching) {
 			performSearch(filters);
 		}
-	};	// Function to handle scrape request
+	};	
+	
+	// Function to handle scrape request
 	const handleScrape = useCallback(async () => {
 		if (isScraping) return;
 
@@ -230,6 +233,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 
 				setScrapeMessage(detailedMessage);
 				setShowConfirmationPopup(true);
+				handleSearch();
 			} else {
 				throw new Error(response.error || 'Scrape failed');
 			}

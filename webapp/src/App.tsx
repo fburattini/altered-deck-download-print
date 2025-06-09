@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import APICardSearch from './components/APICardSearch';
-import CardTable from './components/CardTable';
 import CardGridView from './components/CardGridView';
-import CardPreview from './components/CardPreview';
 import AvailableCardsList from './components/AvailableCardsList';
 import BookmarksList from './components/BookmarksList';
 import FilterControls from './components/FilterControls';
@@ -16,8 +14,6 @@ import './styles/AvailableCardsList.scss';
 import './styles/BookmarksList.scss';
 import './styles/LeftMenu.scss';
 import './styles/SettingsModal.scss';
-
-type ViewType = 'table' | 'grid';
 
 // Key for localStorage
 const USER_ID_STORAGE_KEY = 'altered-deck-user-id';
@@ -187,9 +183,9 @@ const App: React.FC = () => {
 		setSearchError(error || null);
 	};
 
-	const handleFilteredCards = (cards: Card[]) => {
+	const handleFilteredCards = useCallback((cards: Card[]) => {
 		setFilteredResults(cards);
-	};
+	}, []);
 
 	// Bookmark helper functions
 	const isCardBookmarked = useCallback((cardId: string): boolean => {
@@ -416,7 +412,6 @@ const App: React.FC = () => {
 									<FilterControls
 										cards={searchResults}
 										onFilteredCards={handleFilteredCards}
-										userBookmarks={userBookmarks}
 										isCardBookmarked={isCardBookmarked}
 									/>
 								</div>
