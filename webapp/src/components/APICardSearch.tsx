@@ -476,6 +476,10 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 							<CloudArrowDownIcon />
 							{isScraping ? 'Scraping...' : 'Scrape Cards'}
 						</button>
+						{isScraping && 
+							<div style={{ display: 'flex', alignItems: 'center' }}>
+								<div className="spinner"></div>
+							</div>}
 						<button type="button" onClick={clearAllFilters} className="clear-button" disabled={isSearching || isScraping}>
 							Clear Filters
 						</button>
