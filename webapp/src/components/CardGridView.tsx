@@ -40,6 +40,7 @@ const CardTile: React.FC<CardTileProps> = ({
 	isCardBookmarked,
 }) => {
 	const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
+	const [showPriceHistory, setShowPriceHistory] = useState(false);
 
 	// Check if this card is bookmarked
 	const isBookmarked = isCardBookmarked ? isCardBookmarked(card.id) : false;
@@ -204,12 +205,15 @@ const CardTile: React.FC<CardTileProps> = ({
 
 						{/* Scrape Date Information */}
 						{card.scrapeMetadata && (
-							<div className="grid-card-scrape-info" style={{
+							<div style={{
 								fontSize: '11px',
 								color: '#9ca3af',
 								marginTop: '8px',
 								borderTop: '1px solid rgba(156, 163, 175, 0.2)',
-								paddingTop: '6px'
+								paddingTop: '6px',
+								backgroundColor: 'rgba(0,0,0,.8)',
+								padding: '8px',
+								borderRadius: '6px'
 							}}>
 								<div style={{ marginBottom: '3px' }}>
 									<span>First scraped: {formatDate(card.scrapeMetadata.firstScrapedAt)}</span>
@@ -223,7 +227,11 @@ const CardTile: React.FC<CardTileProps> = ({
 									</div>
 								)}
 								{card.scrapeMetadata.priceHistory && card.scrapeMetadata.priceHistory.length > 0 && (
-									<div style={{ fontSize: '10px', opacity: 0.8 }}>
+									<div
+										style={{ cursor: 'pointer', textDecoration: 'underline' }}
+										onClick={() => setShowPriceHistory(true)}
+										title="Click to view detailed price history"
+									>
 										<span>Price history: {card.scrapeMetadata.priceHistory.length} entries</span>
 									</div>
 								)}
@@ -320,6 +328,156 @@ const CardTile: React.FC<CardTileProps> = ({
 					</span>
 				</div>
 			</div>
+
+			{/* Price History Modal */}
+			{showPriceHistory && card.scrapeMetadata?.priceHistory && (
+				<div 
+					style={{
+						position: 'fixed',
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						backgroundColor: 'rgba(0, 0, 0, 0.75)',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						zIndex: 1000,
+						padding: '10px'
+					}}
+					onClick={() => setShowPriceHistory(false)}
+				>
+					<div 
+						style={{
+							backgroundColor: 'white',
+							borderRadius: '12px',
+							padding: '18px',
+							maxWidth: '600px',
+							maxHeight: '80vh',
+							overflow: 'auto',
+							position: 'relative'
+						}}
+						onClick={(e) => e.stopPropagation()}
+					>
+						{/* Modal Header */}
+						<div style={{
+							display: 'flex',
+							justifyContent: 'space-between',
+							alignItems: 'center',
+							marginBottom: '10px',
+							borderBottom: '1px solid #e5e7eb',
+							paddingBottom: '8px'
+						}}>
+							<h3 style={{
+								margin: 0,
+								fontSize: '14px',
+								fontWeight: 'bold',
+								color: '#1f2937'
+							}}>
+								Price History - {card.name}
+							</h3>
+							<button
+								onClick={() => setShowPriceHistory(false)}
+								style={{
+									background: 'none',
+									border: 'none',
+									fontSize: '18px',
+									cursor: 'pointer',
+									padding: '4px',
+									borderRadius: '4px',
+									color: '#6b7280'
+								}}
+								title="Close"
+							>
+								×
+							</button>
+						</div>
+
+						{/* Price History List */}
+						<div style={{ maxHeight: '400px', overflow: 'auto' }}>
+							{card.scrapeMetadata.priceHistory
+								.slice()
+								.reverse() // Show most recent first
+								.map((entry, index) => (
+									<div
+										key={index}
+										style={{
+											display: 'flex',
+											justifyContent: 'space-between',
+											alignItems: 'center',
+											padding: '6px',
+											backgroundColor: index % 2 === 0 ? '#f9fafb' : 'white',
+											borderRadius: '6px',
+											marginBottom: '8px',
+											border: '1px solid #e5e7eb'
+										}}
+									>
+										<div style={{ flex: 1 }}>
+											<div style={{
+												fontSize: '12px',
+												fontWeight: 'bold',
+												color: '#1f2937',
+												marginBottom: '4px'
+											}}>
+												{formatDateTime(entry.date)}
+											</div>
+											<div style={{
+												fontSize: '12px',
+												color: '#6b7280'
+											}}>
+												{entry.inSale > 0 && <span>In Sale: {entry.inSale} • </span>}
+												{entry.numberCopyAvailable > 0 && <span>Available: {entry.numberCopyAvailable}</span>}
+											</div>
+										</div>
+										<div style={{ 
+											textAlign: 'right',
+											minWidth: '120px'
+										}}>
+											<div style={{
+												fontSize: '14px',
+												fontWeight: 'bold',
+												color: '#059669',
+												marginBottom: '2px'
+											}}>
+												{formatPrice(entry.lowerPrice)}
+											</div>
+											{entry.lastSale > 0 && (
+												<div style={{
+													fontSize: '12px',
+													color: '#6b7280'
+												}}>
+													Last sale: {formatPrice(entry.lastSale)}
+												</div>
+											)}
+										</div>
+									</div>
+								))}
+						</div>
+
+						{/* Summary Info */}
+						{card.scrapeMetadata.priceHistory.length > 1 && (
+							<div style={{
+								marginTop: '16px',
+								padding: '12px',
+								backgroundColor: '#f3f4f6',
+								borderRadius: '6px',
+								fontSize: '12px',
+								color: '#6b7280'
+							}}>
+								<div style={{ marginBottom: '4px' }}>
+									<strong>Total entries:</strong> {card.scrapeMetadata.priceHistory.length}
+								</div>
+								<div style={{ marginBottom: '4px' }}>
+									<strong>First tracked:</strong> {formatDateTime(card.scrapeMetadata.priceHistory[0].date)}
+								</div>
+								<div>
+									<strong>Last updated:</strong> {formatDateTime(card.scrapeMetadata.priceHistory[card.scrapeMetadata.priceHistory.length - 1].date)}
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 		</div>
 	)
 }
