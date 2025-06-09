@@ -2,12 +2,10 @@ import { getBearerToken } from "../config/auth";
 import { CardReader } from "../db/CardReader";
 import { FilterOptions } from "../market/api-client";
 import { createScraper } from "../market/scraper";
+import CardAnalyzer from '../../analysis/CardAnalyzer'
 
 const main = async () => {
-    const cardReader = new CardReader();
-		const existingCards = await cardReader.loadAllCards();
-
-    console.log(existingCards.length)
+    await CardAnalyzer.analyze()
 }
 
 main()
