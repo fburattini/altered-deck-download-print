@@ -1,1 +1,1 @@
-- [ ] get all available cards from altered
+- [ ] get all available (distinct) cards from altered
