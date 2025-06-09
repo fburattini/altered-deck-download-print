@@ -479,7 +479,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 							}
 						>
 							<CloudArrowDownIcon />
-							{isScraping ? 'Scraping...' : 'Fetch Cards'}
+							{isScraping ? 'Scraping...' : 'Scrape Cards'}
 						</button>
 						<button type="button" onClick={clearAllFilters} className="clear-button" disabled={isSearching || isScraping}>
 							Clear Filters
