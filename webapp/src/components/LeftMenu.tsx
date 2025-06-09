@@ -68,16 +68,6 @@ const LeftMenu: React.FC<LeftMenuProps> = ({
 				setActiveSection('watchlist');
                 onMenuItemClick('watchlist');
 			}
-		},
-		{
-			id: 'stats',
-			icon: '📊',
-			label: 'Statistics',
-			onClick: () => {
-				setActiveSection('stats');
-				// TODO: Show statistics view
-				console.log('Statistics view coming soon!');
-			}
 		}
 	];
 
