@@ -316,7 +316,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 					<div className="status-error">
 						<strong>Scrape Error:</strong> {scrapeError}
 					</div>
-				)}				{/* Bearer Token Input for Scrape */}
+				)}
+				{/* Bearer Token Input for Scrape */}
 				<div className="filter-group">
 					<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token <span style={{ fontSize: '0.75rem' }}>(required for scraping)</span></label>					<input
 						id="bearerTokenInput"
@@ -408,7 +409,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 								})}
 								className="cost-input"
 							/>
-						</div>					</div>
+						</div>
+					</div>
 
 					{/* Recall Cost Range */}
 					<div className="filter-group">
