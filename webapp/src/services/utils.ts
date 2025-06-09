@@ -6,3 +6,12 @@ export const FACTION_COLORS: Record<string, string> = {
     'OR': '#0f6593', // Ordis - Orange
     'YZ': '#764891'  // Yzmir - Yellow
 }
+
+export const FACTIONS = [
+    { ref: 'AX', name: 'Axiom', color: FACTION_COLORS['AX'] },
+    { ref: 'BR', name: 'Bravos', color: FACTION_COLORS['BR'] },
+    { ref: 'LY', name: 'Lyra', color: FACTION_COLORS['LY'] },
+    { ref: 'MU', name: 'Muna', color: FACTION_COLORS['MU'] },
+    { ref: 'OR', name: 'Ordis', color: FACTION_COLORS['OR'] },
+    { ref: 'YZ', name: 'Yzmir', color: FACTION_COLORS['YZ'] },
+]

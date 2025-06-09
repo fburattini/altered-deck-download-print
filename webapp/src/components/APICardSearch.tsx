@@ -3,6 +3,7 @@ import { Card } from '../types';
 import { searchAPI, APISearchFilters, APISearchOptions, APIScrapeFilters } from '../services/searchAPI';
 import { MagnifyingGlassIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'; // Added CloudArrowDownIcon
 import ConfirmationPopup from './ConfirmationPopup';
+import { FACTIONS } from '../services/utils';
 
 interface APICardSearchProps {
 	onSearchResults: (cards: Card[], isLoading: boolean, error?: string) => void;
@@ -354,25 +355,25 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 					<div className="filter-group">
 						<label className="filter-label">Faction</label>
 						<div className="filter-buttons">
-							{[
-								{ ref: 'AX', name: 'Axiom' },
-								{ ref: 'BR', name: 'Bravos' },
-								{ ref: 'LY', name: 'Lyra' },
-								{ ref: 'MU', name: 'Muna' },
-								{ ref: 'OR', name: 'Ordis' },
-								{ ref: 'YZ', name: 'Yzmir' }
-							].map(faction => (
-								<button
-									key={faction.ref}
-									type="button"
-									onClick={() => toggleArrayFilter('factions', faction.ref)}
-									className={`filter-button ${filters.factions.includes(faction.ref) ? 'active' : ''}`}
-									// Disable multi-select for factions if scrape only supports one
-									disabled={isScraping && filters.factions.length > 0 && !filters.factions.includes(faction.ref)}
-								>
-									{faction.name}
-								</button>
-							))}
+							{FACTIONS.map(faction => {
+								const isSelected = filters.factions.includes(faction.ref)
+								return (
+									<button
+										key={faction.ref}
+										type="button"
+										onClick={() => toggleArrayFilter('factions', faction.ref)}
+										className={`filter-button ${isSelected ? 'active' : ''}`}
+										style={{
+											backgroundColor: `${isSelected ? faction.color : ''}`,
+											border: `${isSelected ? `1px solid ${faction.color}` : ''}`,
+										}}
+										// Disable multi-select for factions if scrape only supports one
+										disabled={isScraping && filters.factions.length > 0 && !isSelected}
+									>
+										{faction.name}
+									</button>
+								)
+							})}
 						</div>
 					</div>					{/* Main Cost Range */}
 					<div className="filter-group">
