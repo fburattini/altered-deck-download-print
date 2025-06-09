@@ -8,6 +8,39 @@
         2
       ],
       "lastRefresh": "2025-06-09T12:46:08.537Z"
+    },
+    {
+      "cardName": "Paper Herald",
+      "faction": "LY",
+      "mainCost": [
+        1
+      ],
+      "lastRefresh": "2025-06-09T14:04:57.120Z"
+    },
+    {
+      "cardName": "Yzmir Nurse",
+      "faction": "YZ",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-09T14:23:18.037Z"
+    },
+    {
+      "cardName": "Anubis",
+      "faction": "YZ",
+      "mainCost": [
+        4
+      ],
+      "lastRefresh": "2025-06-09T14:23:43.745Z"
+    },
+    {
+      "cardName": "Yzmir Stargazer",
+      "faction": "YZ",
+      "mainCost": [
+        2
+      ],
+      "lastRefresh": "2025-06-09T14:27:25.589Z"
     }
   ]
 }
