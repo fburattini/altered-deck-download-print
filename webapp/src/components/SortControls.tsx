@@ -89,8 +89,8 @@ const SortControls: React.FC<SortControlsProps> = ({
 					onChange={(e) => onSortChange(e.target.value as SortOption)}
 					className="sort-dropdown"
 				>
-					<option value="mainCost">⚡ Main Cost</option>
 					<option value="price">💰 Price</option>
+					<option value="mainCost">⚡ Main Cost</option>
 					<option value="faction">⚔️ Faction</option>
 					<option value="priceChange">📈 Price Change</option>
 				</select>
