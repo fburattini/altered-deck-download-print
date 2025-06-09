@@ -527,9 +527,28 @@ const App: React.FC = () => {
 						error={watchlistError}
 						currentUserId={currentUserId}
 						userIdValid={userIdValid}
+						bearerToken={bearerToken}
 						onClose={() => setShowWatchlist(false)}
 						onUserIdChange={handleUserIdChange}
 						onToggleWatchlist={toggleWatchlistById}
+						onRefreshComplete={() => {
+							// Refresh watchlist data after scraping is complete
+							const fetchUserWatchlist = async () => {
+								if (!userIdValid || !currentUserId.trim()) return;
+								
+								try {
+									const response = await searchAPI.getUserWatchlist(currentUserId);
+									if (response.success) {
+										setUserWatchlist(response.watchlist);
+										console.log(`📋 Refreshed ${response.watchlist.length} watchlist items for user ${currentUserId}`);
+									}
+								} catch (error) {
+									console.error('Error refreshing watchlist after scrape:', error);
+								}
+							};
+							
+							fetchUserWatchlist();
+						}}
 					/>
 				)}
 

@@ -42,11 +42,61 @@
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #334155;
 
-  h2 {
-    color: #f1f5f9;
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    h3 {
+      color: #f1f5f9;
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .card-count {
+      color: #94a3b8;
+      font-size: 0.875rem;
+      background: #374151;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+}
+
+.refresh-button {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+
+  &:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: #6b7280;
+    cursor: not-allowed;
+    transform: none;
   }
 }
 
@@ -67,24 +117,29 @@
 }
 
 /* User ID Section */
-.user-id-section {
+.popup-user-section {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #334155;
 }
 
-.user-id-input {
+.user-id-input-group {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
 
   label {
     color: #cbd5e1;
     font-size: 0.875rem;
     font-weight: 500;
-    min-width: fit-content;
   }
 
-  .user-id-field {
+  .user-id-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .user-id-input {
     flex: 1;
     padding: 0.5rem 0.75rem;
     background: #374151;
@@ -112,7 +167,7 @@
     }
   }
 
-  .submit-button {
+  .apply-user-id-button {
     padding: 0.5rem 1rem;
     background: #3b82f6;
     color: white;
@@ -122,6 +177,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
+    white-space: nowrap;
 
     &:hover:not(:disabled) {
       background: #2563eb;
@@ -133,16 +189,15 @@
       opacity: 0.6;
     }
   }
-}
 
-.validation-error {
-  color: #ef4444;
-  font-size: 0.75rem;
-  margin-top: 0.5rem;
+  .user-id-error {
+    color: #ef4444;
+    font-size: 0.75rem;
+  }
 }
 
 /* Search Section */
-.search-section {
+.popup-filters {
   padding: 1rem 1.5rem;
 
   .search-input {
@@ -167,17 +222,17 @@
 }
 
 /* Watchlist Content */
-.watchlist-content {
+.popup-cards-content {
   flex: 1;
   overflow-y: auto;
   padding: 1rem 1.5rem;
 }
 
-.no-user-id, .no-watchlist-items {
+.no-cards-message {
   text-align: center;
   color: #94a3b8;
   padding: 2rem;
-  
+
   p {
     margin: 0;
     font-size: 0.875rem;
@@ -190,10 +245,14 @@
   gap: 0.75rem;
 }
 
-.watchlist-item {
+.watchlist-card-item {
   background: #334155;
   border-radius: 8px;
   padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   transition: all 0.2s;
 
   &:hover {
@@ -201,14 +260,7 @@
   }
 }
 
-.item-main-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.card-info {
+.watchlist-card-info {
   flex: 1;
 
   .card-name {
@@ -216,32 +268,36 @@
     font-size: 1rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
+    text-transform: capitalize;
   }
 
-  .card-details {
+  .watchlist-meta {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
     font-size: 0.75rem;
+    margin-top: .2rem;
   }
 }
 
-.faction-badge {
+.card-faction {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-weight: 500;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+  color: white;
 }
 
-.cost-info, .date-info {
+.main-cost,
+.last-refresh {
   color: #94a3b8;
   font-size: 0.75rem;
 }
 
-.remove-button {
+.remove-watchlist-button {
   background: #dc2626;
   border: none;
   color: white;
@@ -319,6 +375,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -346,33 +403,33 @@
     padding: 0.75rem 1rem;
   }
 
-  .user-id-section, .search-section, .watchlist-content {
+  .popup-user-section,
+  .popup-filters,
+  .popup-cards-content {
     padding: 0.75rem 1rem;
   }
 
-  .user-id-input {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-
-    label {
-      min-width: auto;
+  .user-id-input-group {
+    .user-id-controls {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
     }
   }
 
-  .card-details {
+  .watchlist-meta {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .item-main-content {
+  .watchlist-card-item {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
   }
 
-  .remove-button {
+  .remove-watchlist-button {
     align-self: flex-end;
   }
 }

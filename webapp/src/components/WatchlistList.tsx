@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { WatchlistEntry } from '../services/searchAPI';
 import { FACTION_COLORS } from '../services/utils';
+import WatchlistRefresh from './WatchlistRefresh';
 
 interface WatchlistListProps {
     watchlist: WatchlistEntry[];
@@ -8,28 +9,33 @@ interface WatchlistListProps {
     error: string | null;
     currentUserId: string;
     userIdValid: boolean;
+    bearerToken?: string;
     onClose: () => void;
     onUserIdChange: (userId: string) => void;
     onToggleWatchlist: (cardName: string, faction: string, mainCost: number[]) => Promise<void>;
+    onRefreshComplete?: () => void;
 }
 
-const WatchlistList: React.FC<WatchlistListProps> = ({ 
-    watchlist, 
-    loading, 
-    error, 
+const WatchlistList: React.FC<WatchlistListProps> = ({
+    watchlist,
+    loading,
+    error,
     currentUserId,
     userIdValid,
-    onClose, 
+    bearerToken,
+    onClose,
     onUserIdChange,
-    onToggleWatchlist 
+    onToggleWatchlist,
+    onRefreshComplete
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [localUserId, setLocalUserId] = useState(currentUserId);
-    
+    const [showRefresh, setShowRefresh] = useState(false);
+
     // Filter watchlist based on search term
     const filteredWatchlist = watchlist.filter(item => {
         const matchesSearch = item.cardName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             item.faction?.toLowerCase().includes(searchTerm.toLowerCase());
+            item.faction?.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesSearch;
     });
 
@@ -80,11 +86,13 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                         <h3>My Watchlist</h3>
                         <span className="card-count">{watchlist.length} cards</span>
                     </div>
-                    <button className="close-button" onClick={onClose} aria-label="Close">
-                        ✕
-                    </button>
-                </div>        
-                
+                    <div className="header-actions">
+                        <button className="close-button" onClick={onClose} aria-label="Close">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
                 <div className="popup-user-section">
                     <div className="user-id-input-group">
                         <label htmlFor="watchlist-user-id">User ID:</label>
@@ -99,7 +107,7 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                                 className={`user-id-input ${isUserIdInputValid(localUserId) ? 'valid' : 'invalid'}`}
                             />
                             {localUserId !== currentUserId && (
-                                <button 
+                                <button
                                     onClick={handleUserIdSubmit}
                                     disabled={!isUserIdInputValid(localUserId)}
                                     className="apply-user-id-button"
@@ -121,6 +129,20 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
+                    />
+                </div>
+
+                <div className="popup-filters">
+                    {/* Watchlist Refresh Component */}
+                    <WatchlistRefresh
+                        watchlist={watchlist}
+                        bearerToken={bearerToken}
+                        onRefreshComplete={() => {
+                            setShowRefresh(false);
+                            if (onRefreshComplete) {
+                                onRefreshComplete();
+                            }
+                        }}
                     />
                 </div>
 
@@ -179,6 +201,7 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                         Showing {filteredWatchlist.length} of {watchlist.length} watchlist items
                     </div>
                 )}
+
             </div>
         </div>
     );
