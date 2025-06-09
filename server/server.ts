@@ -5,6 +5,7 @@ import { createScraper } from '../src/market/scraper';
 import { getBearerToken } from '../src/config/auth';
 import { CardReader } from '../src/db/CardReader'; // Added import for CardReader
 import { BookmarkManager } from '../src/db/BookmarkManager'; // Added import for BookmarkManager
+import { UserManager } from '../src/db/UserManager'; // Added import for UserManager
 
 const app = express();
 app.use(cors());
@@ -62,6 +63,18 @@ app.get('/', (req: Request, res: Response) => {
 			},
 			'GET /api/bookmarks/:userId': {
 				description: 'Get all bookmarks for a user'
+			},
+			'GET /api/watchlist/:userId': {
+				description: 'Get all watchlist items for a user'
+			},
+			'POST /api/watchlist/toggle': {
+				description: 'Toggle watchlist status for a card',
+				body: {
+					userId: 'string (required)',
+					cardName: 'string (required)',
+					faction: 'string (required)',
+					mainCost: 'number[] (required)'
+				}
 			}
 		}
 	});
@@ -282,6 +295,99 @@ app.get('/api/bookmarks/:userId', async (req: Request, res: Response) => {
 		res.status(500).json({
 			success: false,
 			error: error instanceof Error ? error.message : 'Unknown error occurred while fetching bookmarks'
+		});
+	}
+});
+
+// Get user watchlist endpoint
+app.get('/api/watchlist/:userId', async (req: Request, res: Response) => {
+	try {
+		const { userId } = req.params;
+
+		if (!userId) {
+			res.status(400).json({
+				success: false,
+				error: 'Missing userId parameter'
+			});
+			return;
+		}
+
+		const userManager = new UserManager();
+		const watchlist = await userManager.getUserWatchlist(userId);
+
+		res.json({
+			success: true,
+			userId,
+			count: watchlist.length,
+			watchlist
+		});
+
+	} catch (error) {
+		console.error('Get watchlist API error:', error);
+		res.status(500).json({
+			success: false,
+			error: error instanceof Error ? error.message : 'Unknown error occurred while fetching watchlist'
+		});
+	}
+});
+
+// Watchlist toggle endpoint
+app.post('/api/watchlist/toggle', async (req: Request, res: Response) => {
+	try {
+		const { userId, cardName, faction, mainCost }: {
+			userId: string;
+			cardName: string;
+			faction: string;
+			mainCost: number[];
+		} = req.body;
+
+		// Validate required fields
+		if (!userId || !cardName || !faction || !mainCost) {
+			res.status(400).json({
+				success: false,
+				error: 'Missing required fields: userId, cardName, faction, and mainCost are required'
+			});
+			return;
+		}
+
+		const userManager = new UserManager();
+
+		// Create watchlist entry object
+		const watchlistEntry = {
+			cardName,
+			faction,
+			mainCost
+		};
+
+		// Check current status before toggling
+		const wasInWatchlist = await userManager.isCardInWatchlist(userId, cardName, faction);
+
+		// Toggle the watchlist
+		const updatedUser = await userManager.toggleWatchlist(userId, watchlistEntry);
+
+		if (!updatedUser) {
+			res.status(500).json({
+				success: false,
+				error: 'Failed to toggle watchlist item'
+			});
+			return;
+		}
+
+		const isNowInWatchlist = !wasInWatchlist;
+
+		res.json({
+			success: true,
+			isInWatchlist: isNowInWatchlist,
+			message: isNowInWatchlist 
+				? `Added ${cardName} to watchlist` 
+				: `Removed ${cardName} from watchlist`
+		});
+
+	} catch (error) {
+		console.error('Watchlist toggle API error:', error);
+		res.status(500).json({
+			success: false,
+			error: error instanceof Error ? error.message : 'Unknown error occurred while toggling watchlist'
 		});
 	}
 });

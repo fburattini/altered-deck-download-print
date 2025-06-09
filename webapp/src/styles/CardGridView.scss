@@ -370,3 +370,10 @@
     box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3) !important;
   }
 }
+
+.watchlist-btn-corner {
+  &:hover {
+    transform: scale(1.1);
+    background: #10b981 !important;
+  }
+}

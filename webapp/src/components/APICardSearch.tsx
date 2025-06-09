@@ -1,13 +1,18 @@
 import React, { useState, useCallback } from 'react';
 import { Card } from '../types';
 import { searchAPI, APISearchFilters, APISearchOptions, APIScrapeFilters } from '../services/searchAPI';
-import { MagnifyingGlassIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'; // Added CloudArrowDownIcon
+import { MagnifyingGlassIcon, CloudArrowDownIcon, EyeIcon } from '@heroicons/react/24/outline';
 import ConfirmationPopup from './ConfirmationPopup';
 import { FACTIONS } from '../services/utils';
 
 interface APICardSearchProps {
 	onSearchResults: (cards: Card[], isLoading: boolean, error?: string) => void;
 	bearerToken?: string;
+	// Watchlist props
+	currentUserId?: string;
+	userIdValid?: boolean;
+	onToggleWatchlist?: (cardName: string, faction: string, mainCost: number[]) => Promise<void>;
+	isCardInWatchlist: (cardName: string, faction: string) => boolean
 }
 
 interface LocalFilters {
@@ -21,7 +26,7 @@ interface LocalFilters {
 	inSaleOnly: boolean;
 }
 
-const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerToken }) => {
+const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerToken, currentUserId, userIdValid, onToggleWatchlist, isCardInWatchlist }) => {
 	const [filters, setFilters] = useState<LocalFilters>({
 		searchQuery: '',
 		mainEffect: '',
@@ -40,7 +45,11 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 	const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
 	const [scrapeError, setScrapeError] = useState<string | null>(null);
 	const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
-	
+	const [searchResults, setSearchResults] = useState<Card[]>([]);
+
+	const sample = searchResults?.[0]
+	const isInWatchlist = isCardInWatchlist(sample?.name, sample?.mainFaction.reference)
+
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
 		// Validate required fields for search
@@ -110,6 +119,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 			const response = await searchAPI.searchCards(apiFilters, apiOptions);
 			if (response.success) {
 				const cards = response.data.map(result => result.card);
+				setSearchResults(cards); // Store results locally
 				onSearchResults(cards, false);
 				setHasSearched(true);
 			} else {
@@ -124,14 +134,14 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 			setIsSearching(false);
 		}
 	}, [onSearchResults]);
-	
+
 	// Manual search trigger
 	const handleSearch = () => {
 		if (!isSearching) {
 			performSearch(filters);
 		}
-	};	
-	
+	};
+
 	// Function to handle scrape request
 	const handleScrape = useCallback(async () => {
 		if (isScraping) return;
@@ -290,6 +300,50 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 		setScrapeMessage(null);
 	};
 
+	// Function to add current search to watchlist
+	const handleAddSearchToWatchlist = async () => {
+		if (!onToggleWatchlist || !currentUserId || !userIdValid) return;
+
+		// Validate that we have search results with actual card names
+		if (searchResults.length === 0) return;
+
+		// Validate required fields for watchlist entry
+		if (filters.factions.length !== 1) return;
+		if (filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) return;
+
+		try {
+			// Build main cost array based on the range
+			const mainCostArray: number[] = [];
+			const min = filters.mainCostRange.min;
+			const max = filters.mainCostRange.max;
+
+			if (min !== undefined && max !== undefined) {
+				// Add all values in range
+				for (let i = min; i <= max; i++) {
+					mainCostArray.push(i);
+				}
+			} else if (min !== undefined) {
+				// Only min specified
+				mainCostArray.push(min);
+			} else if (max !== undefined) {
+				// Only max specified
+				mainCostArray.push(max);
+			}
+
+			// Add all cards from search results to watchlist
+			const sample = searchResults[0]
+			if (sample && sample.name) {
+				await onToggleWatchlist(
+					sample.name,
+					filters.factions[0],
+					mainCostArray
+				);
+			}
+		} catch (error) {
+			console.error('Failed to add search results to watchlist:', error);
+		}
+	};
+
 	return (
 		<div className="top-search-layout">
 			<form onSubmit={handleFormSubmit} className="search-form">
@@ -375,7 +429,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 								)
 							})}
 						</div>
-					</div>					{/* Main Cost Range */}
+					</div>
+					{/* Main Cost Range */}
 					<div className="filter-group">
 						<label className="filter-label">Main Cost <span style={{ fontSize: '0.75rem' }}>(required for scraping)</span></label>
 						<div className="cost-range">
@@ -453,7 +508,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 						>
 							<MagnifyingGlassIcon />
 							{isSearching ? 'Searching...' : 'Search Cards'}
-						</button>						<button
+						</button>
+						<button
 							type="button"
 							onClick={handleScrape}
 							className="scrape-button"
@@ -476,10 +532,29 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 							<CloudArrowDownIcon />
 							{isScraping ? 'Scraping...' : 'Scrape Cards'}
 						</button>
-						{isScraping && 
+						{isScraping &&
 							<div style={{ display: 'flex', alignItems: 'center' }}>
 								<div className="spinner"></div>
 							</div>}
+						<button
+							type="button"
+							onClick={handleAddSearchToWatchlist}
+							className="watchlist-button"
+							disabled={
+								isSearching ||
+								isScraping ||
+								filters.factions.length !== 1 ||
+								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined)
+							}
+							title={
+								filters.factions.length !== 1 ? 'Exactly one faction must be selected' :
+									(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ? 'Main cost range is required' :
+										`${!isInWatchlist ? 'Add' : 'Remove'} card in Watchlist`
+							}
+						>
+							<EyeIcon />
+							{!isInWatchlist ? 'Add' : 'Remove'} card in Watchlist
+						</button>
 						<button type="button" onClick={clearAllFilters} className="clear-button" disabled={isSearching || isScraping}>
 							Clear Filters
 						</button>

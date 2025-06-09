@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import '../styles/LeftMenu.scss';
-import { BookmarkEntry, CardNameFaction } from '../services/searchAPI';
+import { BookmarkEntry, CardNameFaction, WatchlistEntry } from '../services/searchAPI';
 
 interface LeftMenuProps {
 	isCollapsed?: boolean;
 	currentView?: string;
     bookmarks: BookmarkEntry[]
     database: CardNameFaction[]
+    watchlist: WatchlistEntry[]
 	onToggleCollapse?: () => void;
     onMenuItemClick: (menu: string) => void;
 }
@@ -16,6 +17,7 @@ const LeftMenu: React.FC<LeftMenuProps> = ({
 	currentView = 'search',
     bookmarks,
     database,
+    watchlist,
 	onToggleCollapse,
     onMenuItemClick,
 }) => {
@@ -59,13 +61,12 @@ const LeftMenu: React.FC<LeftMenuProps> = ({
 			}
 		},
 		{
-			id: 'decks',
-			icon: '🃏',
-			label: 'Decks',
+			id: 'watchlist',
+			icon: '📋',
+			label: `Watchlist (${watchlist?.length ?? 0})`,
 			onClick: () => {
-				setActiveSection('decks');
-				// TODO: Implement deck management
-				console.log('Deck management coming soon!');
+				setActiveSection('watchlist');
+                onMenuItemClick('watchlist');
 			}
 		},
 		{

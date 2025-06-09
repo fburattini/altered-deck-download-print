@@ -78,6 +78,36 @@ export interface BookmarkEntry {
   bookmarkedAt: string; // ISO 8601 timestamp
 }
 
+// Watchlist interfaces
+export interface WatchlistEntry {
+  cardName: string;
+  faction: string;
+  mainCost: number[];
+  lastRefresh: string; // ISO 8601 timestamp
+}
+
+export interface APIWatchlistResponse {
+  success: boolean;
+  userId: string;
+  count: number;
+  watchlist: WatchlistEntry[];
+  error?: string;
+}
+
+export interface APIWatchlistToggleRequest {
+  userId: string;
+  cardName: string;
+  faction: string;
+  mainCost: number[];
+}
+
+export interface APIWatchlistToggleResponse {
+  success: boolean;
+  isInWatchlist: boolean;
+  message: string;
+  error?: string;
+}
+
 export interface APIBookmarksResponse {
   success: boolean;
   userId: string;
@@ -294,6 +324,73 @@ class SearchAPIService {
         isBookmarked: false,
         message: '',
         error: error instanceof Error ? error.message : 'Unknown error toggling bookmark'
+      };
+    }
+  }
+
+  /**
+   * Get user watchlist
+   */
+  async getUserWatchlist(userId: string): Promise<APIWatchlistResponse> {
+    try {
+      console.log(`📋 Fetching watchlist for user: ${userId}`);
+      
+      const response = await fetch(`${this.baseUrl}/api/watchlist/${encodeURIComponent(userId)}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Watchlist API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ User watchlist fetched: ${data.count} items`);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Watchlist API error:', error);
+      
+      return {
+        success: false,
+        userId,
+        count: 0,
+        watchlist: [],
+        error: error instanceof Error ? error.message : 'Unknown error fetching watchlist'
+      };
+    }
+  }
+
+  /**
+   * Toggle watchlist for a card
+   */
+  async toggleWatchlist(request: APIWatchlistToggleRequest): Promise<APIWatchlistToggleResponse> {
+    try {
+      console.log('📋 Toggling watchlist:', request);
+
+      const response = await fetch(`${this.baseUrl}/api/watchlist/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Toggle watchlist API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ Watchlist toggled: ${data.message}`);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Toggle watchlist API error:', error);
+      
+      return {
+        success: false,
+        isInWatchlist: false,
+        message: '',
+        error: error instanceof Error ? error.message : 'Unknown error toggling watchlist'
       };
     }
   }

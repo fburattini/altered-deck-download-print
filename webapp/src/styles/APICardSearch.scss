@@ -403,3 +403,26 @@
   //   background-color: $some-disabled-grey-for-clear-button;
   // }
 }
+
+.watchlist-button {
+  @extend %btn-base;
+  color: white;
+  background: #10b981; // Green color for watchlist
+  border: none; // Override base border
+
+  &:hover {
+    background: #059669; // Darker green on hover
+    // transform and box-shadow are inherited from %btn-base
+  }
+
+  &:disabled {
+    background: $text-light; // Specific disabled background
+    // opacity from %btn-base also applies
+  }
+
+  // Icon sizing for consistency
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+}

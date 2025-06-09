@@ -12,7 +12,7 @@ interface CardGridViewProps {
 const CardGridView: React.FC<CardGridViewProps> = ({
 	cards,
 	onToggleBookmark,
-	isCardBookmarked
+	isCardBookmarked,
 }) => {
 	return (
 		<div className="card-grid-view">
@@ -37,7 +37,7 @@ interface CardTileProps {
 const CardTile: React.FC<CardTileProps> = ({
 	card,
 	onToggleBookmark,
-	isCardBookmarked
+	isCardBookmarked,
 }) => {
 	const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
 

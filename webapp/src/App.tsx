@@ -3,15 +3,17 @@ import APICardSearch from './components/APICardSearch';
 import CardGridView from './components/CardGridView';
 import AvailableCardsList from './components/AvailableCardsList';
 import BookmarksList from './components/BookmarksList';
+import WatchlistList from './components/WatchlistList';
 import FilterControls from './components/FilterControls';
 import SortControls, { SortOption, SortDirection, sortCards } from './components/SortControls';
 import LeftMenu from './components/LeftMenu';
 import SettingsModal from './components/SettingsModal';
 import { Card } from './types';
-import { searchAPI, CardNameFaction, BookmarkEntry } from './services/searchAPI';
+import { searchAPI, CardNameFaction, BookmarkEntry, WatchlistEntry } from './services/searchAPI';
 import './styles/App.scss';
 import './styles/AvailableCardsList.scss';
 import './styles/BookmarksList.scss';
+import './styles/WatchlistList.scss';
 import './styles/LeftMenu.scss';
 import './styles/SettingsModal.scss';
 
@@ -65,6 +67,14 @@ const App: React.FC = () => {
 	const [userBookmarks, setUserBookmarks] = useState<BookmarkEntry[]>([]);
 	const [bookmarksLoading, setBookmarksLoading] = useState(true);
 	const [bookmarksError, setBookmarksError] = useState<string | null>(null);
+
+	// Watchlist popup state
+	const [showWatchlist, setShowWatchlist] = useState(false);
+
+	// Watchlist state
+	const [userWatchlist, setUserWatchlist] = useState<WatchlistEntry[]>([]);
+	const [watchlistLoading, setWatchlistLoading] = useState(true);
+	const [watchlistError, setWatchlistError] = useState<string | null>(null);
 
 	// Sorting state
 	const [sortBy, setSortBy] = useState<SortOption>('name');
@@ -137,6 +147,39 @@ const App: React.FC = () => {
 		fetchUserBookmarks();
 	}, [currentUserId, userIdValid]); // Re-fetch when user ID or validity changes
 
+	// Fetch user watchlist when user ID changes and is valid
+	useEffect(() => {
+		const fetchUserWatchlist = async () => {
+			// Only fetch if we have a valid user ID
+			if (!userIdValid || !currentUserId.trim()) {
+				setUserWatchlist([]);
+				setWatchlistLoading(false);
+				setWatchlistError(null);
+				return;
+			}
+
+			setWatchlistLoading(true);
+			setWatchlistError(null);
+
+			try {
+				const response = await searchAPI.getUserWatchlist(currentUserId);
+
+				if (response.success) {
+					setUserWatchlist(response.watchlist);
+					console.log(`📋 Loaded ${response.watchlist.length} watchlist items for user ${currentUserId}`);
+				} else {
+					setWatchlistError(response.error || 'Failed to fetch watchlist');
+				}
+			} catch (error) {
+				setWatchlistError(error instanceof Error ? error.message : 'Unknown error');
+			} finally {
+				setWatchlistLoading(false);
+			}
+		};
+
+		fetchUserWatchlist();
+	}, [currentUserId, userIdValid]); // Re-fetch when user ID or validity changes
+
 	// Handle user ID change with validation
 	const handleUserIdChange = (newUserId: string) => {
 		const trimmedId = newUserId.trim();
@@ -192,6 +235,19 @@ const App: React.FC = () => {
 		return userBookmarks.some(bookmark => bookmark.cardId === cardId);
 	}, [userBookmarks])
 
+	// Watchlist helper functions
+	const isCardInWatchlist = useCallback((cardName: string, faction: string): boolean => {
+		return userWatchlist.some(item => item.cardName === cardName && item.faction === faction);
+	}, [userWatchlist])
+
+	// Wrapper function for CardGridView compatibility
+	const isCardInWatchlistById = useCallback((cardId: string): boolean => {
+		// Find the card by ID to get name and faction
+		const card = searchResults.find(c => c.id === cardId);
+		if (!card) return false;
+		return isCardInWatchlist(card.name, card.mainFaction.reference);
+	}, [searchResults, isCardInWatchlist])
+
 	const toggleBookmark = async (card: Card): Promise<void> => {
 		// Don't allow bookmark operations with invalid user ID
 		if (!userIdValid || !currentUserId.trim()) {
@@ -229,6 +285,51 @@ const App: React.FC = () => {
 			}
 		} catch (error) {
 			console.error('Error toggling bookmark:', error);
+		}
+	};
+
+	// Watchlist toggle function for CardGridView component
+	const toggleWatchlist = async (card: Card): Promise<void> => {
+		// Don't allow watchlist operations with invalid user ID
+		if (!userIdValid || !currentUserId.trim()) {
+			console.error('Cannot toggle watchlist: Invalid user ID');
+			return;
+		}
+
+		try {
+			// Convert string MAIN_COST to number array
+			const mainCostArray = card.elements.MAIN_COST ? [parseInt(card.elements.MAIN_COST, 10)] : [];
+			
+			const response = await searchAPI.toggleWatchlist({
+				userId: currentUserId,
+				cardName: card.name,
+				faction: card.mainFaction.reference,
+				mainCost: mainCostArray
+			});
+
+			if (response.success) {
+				// Update local watchlist state
+				if (response.isInWatchlist) {
+					// Add to watchlist
+					const newWatchlistItem: WatchlistEntry = {
+						cardName: card.name,
+						faction: card.mainFaction.reference,
+						mainCost: mainCostArray,
+						lastRefresh: new Date().toISOString()
+					};
+					setUserWatchlist(prev => [...prev, newWatchlistItem]);
+				} else {
+					// Remove from watchlist
+					setUserWatchlist(prev => prev.filter(item => 
+						!(item.cardName === card.name && item.faction === card.mainFaction.reference)
+					));
+				}
+				console.log(`📋 ${response.message}`);
+			} else {
+				console.error('Failed to toggle watchlist:', response.error);
+			}
+		} catch (error) {
+			console.error('Error toggling watchlist:', error);
 		}
 	};
 
@@ -273,6 +374,48 @@ const App: React.FC = () => {
 		}
 	};
 
+	// Watchlist toggle function for WatchlistList component
+	const toggleWatchlistById = async (cardName: string, faction: string, mainCost: number[]): Promise<void> => {
+		// Don't allow watchlist operations with invalid user ID
+		if (!userIdValid || !currentUserId.trim()) {
+			console.error('Cannot toggle watchlist: Invalid user ID');
+			return;
+		}
+
+		try {
+			const response = await searchAPI.toggleWatchlist({
+				userId: currentUserId,
+				cardName: cardName,
+				faction: faction,
+				mainCost: mainCost
+			});
+
+			if (response.success) {
+				// Update local watchlist state
+				if (response.isInWatchlist) {
+					// Add to watchlist
+					const newWatchlistItem: WatchlistEntry = {
+						cardName: cardName,
+						faction: faction,
+						mainCost: mainCost,
+						lastRefresh: new Date().toISOString()
+					};
+					setUserWatchlist(prev => [...prev, newWatchlistItem]);
+				} else {
+					// Remove from watchlist
+					setUserWatchlist(prev => prev.filter(item => 
+						!(item.cardName === cardName && item.faction === faction)
+					));
+				}
+				console.log(`📋 ${response.message}`);
+			} else {
+				console.error('Failed to toggle watchlist:', response.error);
+			}
+		} catch (error) {
+			console.error('Error toggling watchlist:', error);
+		}
+	};
+
 	const handleSortChange = (option: SortOption) => {
 		setSortBy(option);
 		setSortDirection('asc');
@@ -297,6 +440,10 @@ const App: React.FC = () => {
 			}
 			case 'bookmarks': {
 				setShowBookmarks(true)
+				break;
+			}
+			case 'watchlist': {
+				setShowWatchlist(true)
 				break;
 			}
 			case 'settings': {
@@ -327,6 +474,7 @@ const App: React.FC = () => {
 				currentView="search"
 				bookmarks={userBookmarks}
 				database={availableCards}
+				watchlist={userWatchlist}
 				onToggleCollapse={handleToggleMenu}
 				onMenuItemClick={onLeftMenuItemClick}
 			/>
@@ -339,6 +487,10 @@ const App: React.FC = () => {
 						<APICardSearch 
 							onSearchResults={handleSearchResults} 
 							bearerToken={bearerToken}
+							currentUserId={currentUserId}
+							userIdValid={userIdValid}
+							onToggleWatchlist={userIdValid ? toggleWatchlistById : undefined}
+							isCardInWatchlist={isCardInWatchlist}
 						/>
 					</div>
 				</div>
@@ -364,6 +516,20 @@ const App: React.FC = () => {
 						onClose={() => setShowBookmarks(false)}
 						onUserIdChange={handleUserIdChange}
 						onToggleBookmark={toggleBookmarkById}
+					/>
+				)}
+
+				{/* Watchlist List - Popup */}
+				{showWatchlist && (
+					<WatchlistList
+						watchlist={userWatchlist}
+						loading={watchlistLoading}
+						error={watchlistError}
+						currentUserId={currentUserId}
+						userIdValid={userIdValid}
+						onClose={() => setShowWatchlist(false)}
+						onUserIdChange={handleUserIdChange}
+						onToggleWatchlist={toggleWatchlistById}
 					/>
 				)}
 
