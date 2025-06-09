@@ -209,7 +209,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 				if (response.cardsFound !== undefined) {
 					detailedMessage += `\n\n📊 Results Summary:`;
 					detailedMessage += `\n• Total cards found: ${response.cardsFound}`;
-					
+
 					// Add pricing data info
 					if (response.cardsWithPricing !== undefined) {
 						detailedMessage += `\n• Cards with pricing data: ${response.cardsWithPricing}`;
@@ -441,23 +441,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 							/>
 						</div>
 					</div>
-
-					{/* In Sale Filter */}
-					<div className="filter-group">
-						<label className="filter-label">Availability</label>
-						<div className="checkbox-container">
-							<label className="checkbox-label">
-								<input
-									type="checkbox"
-									checked={filters.inSaleOnly}
-									onChange={(e) => updateFilter('inSaleOnly', e.target.checked)}
-									className="checkbox-input"
-									disabled={isSearching || isScraping}
-								/>
-								<span className="checkbox-text">Only show cards for sale</span>
-							</label>
-						</div>
-					</div>					<div className="action-buttons">
+					<div className="action-buttons">
 						<button
 							type="submit"
 							className="search-button"

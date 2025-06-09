@@ -7,11 +7,13 @@ import AvailableCardsList from './components/AvailableCardsList';
 import BookmarksList from './components/BookmarksList';
 import FilterControls from './components/FilterControls';
 import SortControls, { SortOption, SortDirection, sortCards } from './components/SortControls';
+import LeftMenu from './components/LeftMenu';
 import { Card } from './types';
 import { searchAPI, CardNameFaction, BookmarkEntry } from './services/searchAPI';
 import './styles/App.scss';
 import './styles/AvailableCardsList.scss';
 import './styles/BookmarksList.scss';
+import './styles/LeftMenu.scss';
 
 type ViewType = 'table' | 'grid';
 
@@ -61,6 +63,13 @@ const App: React.FC = () => {
 
 	// State for hovered/selected card
 	const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+
+	// Left menu state
+	const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+
+	const handleToggleMenu = () => {
+		setIsMenuCollapsed(!isMenuCollapsed);
+	};
 
 	// Fetch available cards on app startup
 	useEffect(() => {
@@ -237,15 +246,6 @@ const App: React.FC = () => {
 			console.error('Error toggling bookmark:', error);
 		}
 	};
-	
-	const handleSort = (column: SortOption) => {
-		if (sortBy === column) {
-			setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-		} else {
-			setSortBy(column);
-			setSortDirection('asc');
-		}
-	};
 
 	const handleSortChange = (option: SortOption) => {
 		setSortBy(option);
@@ -255,6 +255,26 @@ const App: React.FC = () => {
 	const handleDirectionToggle = () => {
 		setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
 	};
+
+	const onLeftMenuItemClick = (menuItem: string) => {
+		switch(menuItem) {
+			case 'home': {
+				// Clear search results and reset to home state
+				setSearchResults([]);
+				setFilteredResults([]);
+				setHoveredCard(null);
+				break;
+			}
+			case 'collection': {
+				setShowAvailableCards(true)
+				break;
+			}
+			case 'bookmarks': {
+				setShowBookmarks(true)
+				break;
+			}
+		}
+	}
 
 	const sortedResults = sortCards(filteredResults, sortBy, sortDirection);
 
@@ -267,174 +287,198 @@ const App: React.FC = () => {
 				</div>
 			</div>
 		);
-	} return (<div className="app-container">			{/* Top Search Bar */}
-		<div className="top-search-bar">
-			<div className="search-section">
-				<APICardSearch onSearchResults={handleSearchResults} />
-			</div>
-		</div>		{/* Available Cards List - Popup */}
-		{showAvailableCards && (
-			<AvailableCardsList
-				cards={availableCards}
-				loading={availableCardsLoading}
-				error={availableCardsError}
-				onClose={() => setShowAvailableCards(false)}
-			/>
-		)}
-
-		{/* Bookmarks List - Popup */}
-		{showBookmarks && (
-			<BookmarksList
+	} 
+	
+	return (
+		<div className="app-container">
+			{/* Left Menu */}
+			<LeftMenu 
+				isCollapsed={isMenuCollapsed}
+				currentView="search"
 				bookmarks={userBookmarks}
-				loading={bookmarksLoading}
-				error={bookmarksError}
-				currentUserId={currentUserId}
-				userIdValid={userIdValid}
-				onClose={() => setShowBookmarks(false)}
-				onUserIdChange={handleUserIdChange}
-				onToggleBookmark={toggleBookmarkById}
+				database={availableCards}
+				onToggleCollapse={handleToggleMenu}
+				onMenuItemClick={onLeftMenuItemClick}
 			/>
-		)}
-		{/* Main Content Area */}
-		<div className="main-content">
-			<div className="content-with-preview">
-				<div className="results-area">
-					{/* Statistics Section */}
-					<div className="statistics-section">
-						<div className="statistics-bar">
-							<div className="results-count">
-								{sortedResults.length} cards
-							</div>
-							<div style={{ border: '1px solid #334155', height: '1rem' }} />
-							<div className="results-count">
-								Avg. Price: {sortedResults.length > 0 ? `$${(sortedResults.reduce((sum, card) => sum + (card.pricing?.lowerPrice || 0), 0) / sortedResults.length).toFixed(2)}` : 'N/A'}
-							</div>
-							<div style={{ border: '1px solid #334155', height: '1rem' }} />
-							<div className="results-count">
-								Min. Price: {sortedResults.length > 0 ? `$${Math.min(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
-							</div>
-							<div style={{ border: '1px solid #334155', height: '1rem' }} />
-							<div className="results-count">
-								Max. Price: {sortedResults.length > 0 ? `$${Math.max(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
-							</div>
-						</div>
+
+			{/* Main Content Container */}
+			<div className={`main-container ${isMenuCollapsed ? 'menu-collapsed' : 'menu-expanded'}`}>
+				{/* Top Search Bar */}
+				<div className="top-search-bar">
+					<div className="search-section">
+						<APICardSearch onSearchResults={handleSearchResults} />
 					</div>
-
-					{/* Controls Bar */}
-					<div className="controls-bar">
-						{/* Left Section - Filter Controls */}
-						<div className="control-group">
-							<FilterControls
-								cards={searchResults}
-								onFilteredCards={handleFilteredCards}
-								userBookmarks={userBookmarks}
-								isCardBookmarked={isCardBookmarked}
-							/>
-						</div>
-						
-						{/* Right Section - View and Sort Controls */}
-						<div className="control-group">
-							{/* Available Cards Button */}
-							<button
-								onClick={() => setShowAvailableCards(!showAvailableCards)}
-								className="available-cards-button"
-								disabled={availableCardsLoading}
-							>
-								{availableCardsLoading ? (
-									<>
-										<div className="mini-spinner"></div>
-										Loading...
-									</>
-								) : (
-									<>
-										📋 Cards ({availableCards.length})
-									</>
-								)}
-							</button>
-
-							{/* Bookmarks Button */}
-							<button
-								onClick={() => setShowBookmarks(!showBookmarks)}
-								className={`bookmarks-button ${!userIdValid ? 'needs-setup' : ''}`}
-								disabled={bookmarksLoading}
-								title={!userIdValid ? "Enter a valid user ID to view bookmarks" : "View your bookmarks"}
-							>
-								{bookmarksLoading ? (
-									<>
-										<div className="mini-spinner"></div>
-										Loading...
-									</>
-								) : (
-									<>
-										🔖 Bookmarks ({userBookmarks.length})
-										{!userIdValid && <span className="setup-indicator"></span>}
-									</>
-								)}
-							</button>
-
-							{/* Sort Controls */}
-							<SortControls
-								sortBy={sortBy}
-								sortDirection={sortDirection}
-								onSortChange={handleSortChange}
-								onDirectionToggle={handleDirectionToggle}
-							/>
-
-							{/* View Type Controls */}
-							<div className="view-type-controls">
-								<button
-									onClick={() => setViewType('table')}
-									className={`view-type-button ${viewType === 'table' ? 'active' : ''}`}
-								>
-									📋
-								</button>									<button
-									onClick={() => setViewType('grid')}
-									className={`view-type-button ${viewType === 'grid' ? 'active' : ''}`}
-								>
-									⊞
-								</button>
-							</div>
-						</div>
-					</div>
-
-					{/* Cards Display */}
-					{sortedResults.length === 0 && !isLoading ? (
-						<div className="no-cards-found">
-							<div className="icon-container">
-								<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653-.71-1.46 1.302-2.364 1.748z" />
-								</svg>
-							</div>
-							<h3 className="title">No cards found</h3>
-							<p className="message">Try adjusting your search filters to find cards.</p>
-						</div>) : (
-						<>
-							{/* Card Table or Grid View */}
-							{viewType === 'table' ? (
-								<CardTable
-									cards={sortedResults}
-									hoveredCard={hoveredCard}
-									onCardHover={setHoveredCard}
-									userBookmarks={userBookmarks}
-									onToggleBookmark={userIdValid ? toggleBookmark : undefined}
-									isCardBookmarked={isCardBookmarked}
-								/>) : (
-								<CardGridView
-									cards={sortedResults}
-									onCardHover={setHoveredCard}
-									userBookmarks={userBookmarks}
-									onToggleBookmark={userIdValid ? toggleBookmark : undefined}
-									isCardBookmarked={isCardBookmarked}
-								/>
-							)}
-						</>
-					)}
 				</div>
-				{viewType === 'table' &&
-					<CardPreview hoveredCard={hoveredCard} />}
+
+				{/* Available Cards List - Popup */}
+				{showAvailableCards && (
+					<AvailableCardsList
+						cards={availableCards}
+						loading={availableCardsLoading}
+						error={availableCardsError}
+						onClose={() => setShowAvailableCards(false)}
+					/>
+				)}
+
+				{/* Bookmarks List - Popup */}
+				{showBookmarks && (
+					<BookmarksList
+						bookmarks={userBookmarks}
+						loading={bookmarksLoading}
+						error={bookmarksError}
+						currentUserId={currentUserId}
+						userIdValid={userIdValid}
+						onClose={() => setShowBookmarks(false)}
+						onUserIdChange={handleUserIdChange}
+						onToggleBookmark={toggleBookmarkById}
+					/>
+				)}
+
+				{/* Main Content Area */}
+				<div className="main-content">
+					<div className="content-with-preview">
+						<div className="results-area">
+							{/* Statistics Section */}
+							<div className="statistics-section">
+								<div className="statistics-bar">
+									<div className="results-count">
+										{sortedResults.length} cards
+									</div>
+									<div style={{ border: '1px solid #334155', height: '1rem' }} />
+									<div className="results-count">
+										Avg. Price: {sortedResults.length > 0 ? `$${(sortedResults.reduce((sum, card) => sum + (card.pricing?.lowerPrice || 0), 0) / sortedResults.length).toFixed(2)}` : 'N/A'}
+									</div>
+									<div style={{ border: '1px solid #334155', height: '1rem' }} />
+									<div className="results-count">
+										Min. Price: {sortedResults.length > 0 ? `$${Math.min(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
+									</div>
+									<div style={{ border: '1px solid #334155', height: '1rem' }} />
+									<div className="results-count">
+										Max. Price: {sortedResults.length > 0 ? `$${Math.max(...sortedResults.map(card => card.pricing?.lowerPrice || 0)).toFixed(2)}` : 'N/A'}
+									</div>
+								</div>
+							</div>
+
+							{/* Controls Bar */}
+							<div className="controls-bar">
+								{/* Left Section - Filter Controls */}
+								<div className="control-group">
+									<FilterControls
+										cards={searchResults}
+										onFilteredCards={handleFilteredCards}
+										userBookmarks={userBookmarks}
+										isCardBookmarked={isCardBookmarked}
+									/>
+								</div>
+								
+								{/* Right Section - View and Sort Controls */}
+								<div className="control-group">
+									{/* Available Cards Button */}
+									<button
+										onClick={() => setShowAvailableCards(!showAvailableCards)}
+										className="available-cards-button"
+										disabled={availableCardsLoading}
+									>
+										{availableCardsLoading ? (
+											<>
+												<div className="mini-spinner"></div>
+												Loading...
+											</>
+										) : (
+											<>
+												📋 Cards ({availableCards.length})
+											</>
+										)}
+									</button>
+
+									{/* Bookmarks Button */}
+									{/* <button
+										onClick={() => setShowBookmarks(!showBookmarks)}
+										className={`bookmarks-button ${!userIdValid ? 'needs-setup' : ''}`}
+										disabled={bookmarksLoading}
+										title={!userIdValid ? "Enter a valid user ID to view bookmarks" : "View your bookmarks"}
+									>
+										{bookmarksLoading ? (
+											<>
+												<div className="mini-spinner"></div>
+												Loading...
+											</>
+										) : (
+											<>
+												🔖 Bookmarks ({userBookmarks.length})
+												{!userIdValid && <span className="setup-indicator"></span>}
+											</>
+										)}
+									</button> */}
+
+									{/* Sort Controls */}
+									<SortControls
+										sortBy={sortBy}
+										sortDirection={sortDirection}
+										onSortChange={handleSortChange}
+										onDirectionToggle={handleDirectionToggle}
+									/>
+
+									{/* View Type Controls */}
+									<div className="view-type-controls">
+										<button
+											onClick={() => setViewType('table')}
+											className={`view-type-button ${viewType === 'table' ? 'active' : ''}`}
+										>
+											📋
+										</button>
+										<button
+											onClick={() => setViewType('grid')}
+											className={`view-type-button ${viewType === 'grid' ? 'active' : ''}`}
+										>
+											⊞
+										</button>
+									</div>
+								</div>
+							</div>
+
+							{/* Cards Display */}
+							{sortedResults.length === 0 && !isLoading ? (
+								<div className="no-cards-found">
+									<div className="icon-container">
+										<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.083-2.327.653-.71 1.46-1.302 2.364-1.748A7.966 7.966 0 0112 9c2.34 0 4.47.881 6.083 2.327-.653-.71-1.46 1.302-2.364 1.748z" />
+										</svg>
+									</div>
+									<h3 className="title">No cards found</h3>
+									<p className="message">Try adjusting your search filters to find cards.</p>
+								</div>
+							) : (
+								<>
+									{/* Card Table or Grid View */}
+									{viewType === 'table' ? (
+										<CardTable
+											cards={sortedResults}
+											hoveredCard={hoveredCard}
+											onCardHover={setHoveredCard}
+											userBookmarks={userBookmarks}
+											onToggleBookmark={userIdValid ? toggleBookmark : undefined}
+											isCardBookmarked={isCardBookmarked}
+										/>
+									) : (
+										<CardGridView
+											cards={sortedResults}
+											onCardHover={setHoveredCard}
+											userBookmarks={userBookmarks}
+											onToggleBookmark={userIdValid ? toggleBookmark : undefined}
+											isCardBookmarked={isCardBookmarked}
+										/>
+									)}
+								</>
+							)}
+						</div>
+						{viewType === 'table' && (
+							<CardPreview hoveredCard={hoveredCard} />
+						)}
+					</div>
+				</div>
 			</div>
 		</div>
-	</div>
 	);
 };
 

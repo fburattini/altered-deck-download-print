@@ -1,0 +1,219 @@
+/* Left Menu Styles */
+@import './App.scss';
+
+.left-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: $background-light;
+  border-right: 1px solid $border-light;
+  box-shadow: $shadow-lg;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease-in-out;
+  
+  &.collapsed {
+    width: 60px;
+  }
+  
+  &.expanded {
+    width: 250px;
+  }
+}
+
+/* Menu Header */
+.menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid $border-light;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 60px;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  .logo-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  
+  .logo-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+  }
+}
+
+.collapse-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: $border-radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(2px);
+  }
+}
+
+/* Menu Navigation */
+.menu-nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.menu-item {
+  padding: 0 0.75rem;
+}
+
+.menu-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: $border-radius-sm;
+  color: $text-medium;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  
+  &:hover {
+    background: rgba($primary-color, 0.1);
+    color: $text-dark;
+    transform: translateX(4px);
+  }
+  
+  &.active {
+    background: $primary-color;
+    color: white;
+    box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+    
+    &:hover {
+      background: $primary-dark;
+      transform: translateX(4px);
+    }
+  }
+}
+
+.menu-icon {
+  font-size: 1.125rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.menu-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Menu Footer */
+.menu-footer {
+  padding: 1rem;
+  border-top: 1px solid $border-light;
+}
+
+/* Collapsed state adjustments */
+.left-menu.collapsed {
+  .menu-button {
+    justify-content: center;
+    padding: 0.75rem;
+    
+    &:hover {
+      transform: none;
+    }
+    
+    &.active:hover {
+      transform: none;
+    }
+  }
+  
+  .menu-icon {
+    width: auto;
+  }
+  
+  .collapse-toggle {
+    &:hover {
+      transform: translateX(-2px);
+    }
+  }
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .left-menu {
+    &.expanded {
+      width: 200px;
+    }
+  }
+}
+
+/* Animation for smooth transitions */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.left-menu {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* Scroll styles for menu navigation */
+.menu-nav {
+  scrollbar-width: thin;
+  scrollbar-color: $border-medium transparent;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $border-medium;
+    border-radius: 3px;
+    
+    &:hover {
+      background: $border-light;
+    }
+  }
+}
