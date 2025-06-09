@@ -54,27 +54,27 @@ export class CardSearcher {
     }
 
     console.log('🔍 Loading local card data...');
-    
+
     const dataFiles = await this.getAvailableDataFiles();
-    
+
     if (dataFiles.length === 0) {
       throw new Error('No card data files found. Please run a scrape first.');
     }
 
     console.log(`📂 Found ${dataFiles.length} data files`);
-    
+
     // Load cards from all available files
     const allCards: CardDetail[] = [];
     const cardIds = new Set<string>(); // Track unique cards to avoid duplicates
-    
+
     for (const filePath of dataFiles) {
       const fileName = path.basename(filePath);
       console.log(`📖 Loading from: ${fileName}`);
-      
+
       try {
         const cards = await this.loadCardsFromFile(filePath);
         let newCards = 0;
-        
+
         for (const card of cards) {
           if (!cardIds.has(card.id)) {
             cardIds.add(card.id);
@@ -82,13 +82,13 @@ export class CardSearcher {
             newCards++;
           }
         }
-        
+
         console.log(`   → Loaded ${cards.length} cards (${newCards} unique)`);
       } catch (error) {
         console.warn(`   ⚠️  Failed to load ${fileName}: ${error}`);
       }
     }
-    
+
     this.cards = allCards;
     this.isLoaded = true;
     console.log(`📋 Total unique cards loaded: ${this.cards.length}`);
@@ -109,9 +109,9 @@ export class CardSearcher {
       inSaleOnly = false
 
     console.log('🔍 Searching cards...', filters, options);
-    
+
     const results: SearchResult[] = [];
-    
+
     for (const card of this.cards) {
       const { matches, reasons } = this.matchesFilters(card, filters);
       if (matches) {
@@ -154,7 +154,7 @@ export class CardSearcher {
 
     limitedResults.forEach((result, index) => {
       const { card, matchReasons } = result;
-      
+
       console.log(`\n${index + 1}. ${card.name}`);
       console.log(`   ID: ${card.id}`);
       console.log(`   Reference: https://www.altered.gg/cards/${card.reference}`);
@@ -162,20 +162,20 @@ export class CardSearcher {
       console.log(`   Price: €${card.pricing?.lowerPrice ?? '??'} (x${card.pricing?.numberCopyAvailable ?? 0})`);
       console.log(`   Set: ${card.cardSet.name}`);
       console.log(`   Type: ${card.cardType.name}`);
-      
+
       console.log(`   Costs: Main ${card.elements.MAIN_COST}, Recall ${card.elements.RECALL_COST}`);
       console.log(`   Powers: Forest ${card.elements.FOREST_POWER}, Mountain ${card.elements.MOUNTAIN_POWER}, Ocean ${card.elements.OCEAN_POWER}`);
-      
+
       if (card.elements.MAIN_EFFECT) {
         console.log(`   Main Effect: ${card.elements.MAIN_EFFECT}`);
       }
-      
+
       if (card.elements.ECHO_EFFECT) {
         console.log(`   Echo Effect: ${card.elements.ECHO_EFFECT}`);
       }
-      
+
       console.log(`   ✓ Matches: ${matchReasons.join(', ')}`);
-      
+
       if (index < limitedResults.length - 1) {
         console.log('-'.repeat(80));
       }
@@ -200,7 +200,7 @@ export class CardSearcher {
 
     const content = await fs.readFile(filePath, 'utf-8');
     const lines = content.trim().split('\n').filter(line => line.trim());
-    
+
     return lines.map(line => {
       try {
         return JSON.parse(line) as CardDetail;
@@ -214,9 +214,9 @@ export class CardSearcher {
    */
   private async getAvailableDataFiles(): Promise<string[]> {
     const cardDbPath = path.join(process.cwd(), 'card_db');
-    
+
     const files: string[] = [];
-    
+
     // Check card_db directory and load ALL .jsonl and .json files
     if (await fs.pathExists(cardDbPath)) {
       const cardDbFiles = await fs.readdir(cardDbPath);
@@ -225,7 +225,7 @@ export class CardSearcher {
         .map(file => path.join(cardDbPath, file))
       );
     }
-    
+
     return files;
   }
 
@@ -240,7 +240,7 @@ export class CardSearcher {
     if (filters.mainCost) {
       const cardMainCost = parseInt(card.elements.MAIN_COST);
       let costMatches = false;
-      
+
       if (filters.mainCost.includes('-')) {
         const [min, max] = filters.mainCost.split('-').map(Number);
         costMatches = cardMainCost >= min && cardMainCost <= max;
@@ -250,14 +250,14 @@ export class CardSearcher {
         costMatches = cardMainCost === targetCost;
         if (costMatches) reasons.push(`Main cost matches ${targetCost}`);
       }
-        if (!costMatches) matches = false;
+      if (!costMatches) matches = false;
     }
 
     // Recall cost filter
     if (filters.recallCost && matches) {
       const cardRecallCost = parseInt(card.elements.RECALL_COST);
       let costMatches = false;
-      
+
       if (filters.recallCost.includes('-')) {
         const [min, max] = filters.recallCost.split('-').map(Number);
         costMatches = cardRecallCost >= min && cardRecallCost <= max;
@@ -267,7 +267,7 @@ export class CardSearcher {
         costMatches = cardRecallCost === targetCost;
         if (costMatches) reasons.push(`Recall cost matches ${targetCost}`);
       }
-      
+
       if (!costMatches) matches = false;
     }
 
@@ -276,11 +276,11 @@ export class CardSearcher {
       const mainEffect = card.elements.MAIN_EFFECT || '';
       let effectMatches = false;
       let matchDetails = '';
-      
+
       if (filters.mainEffect.includes('+')) {
         // AND logic: all terms must be present
         const terms = filters.mainEffect.split('+').map(term => term.trim());
-        effectMatches = terms.every(term => 
+        effectMatches = terms.every(term =>
           mainEffect.toLowerCase().includes(term.toLowerCase())
         );
         if (effectMatches) {
@@ -289,7 +289,7 @@ export class CardSearcher {
       } else if (filters.mainEffect.includes(',')) {
         // OR logic: any term must be present
         const terms = filters.mainEffect.split(',').map(term => term.trim());
-        const matchedTerms = terms.filter(term => 
+        const matchedTerms = terms.filter(term =>
           mainEffect.toLowerCase().includes(term.toLowerCase())
         );
         effectMatches = matchedTerms.length > 0;
@@ -303,7 +303,7 @@ export class CardSearcher {
           matchDetails = `contains "${filters.mainEffect}"`;
         }
       }
-      
+
       if (effectMatches) {
         reasons.push(`Main effect ${matchDetails}`);
       } else {
@@ -316,11 +316,11 @@ export class CardSearcher {
       const echoEffect = card.elements.ECHO_EFFECT || '';
       let effectMatches = false;
       let matchDetails = '';
-      
+
       if (filters.echoEffect.includes('+')) {
         // AND logic: all terms must be present
         const terms = filters.echoEffect.split('+').map(term => term.trim());
-        effectMatches = terms.every(term => 
+        effectMatches = terms.every(term =>
           echoEffect.toLowerCase().includes(term.toLowerCase())
         );
         if (effectMatches) {
@@ -329,7 +329,7 @@ export class CardSearcher {
       } else if (filters.echoEffect.includes(',')) {
         // OR logic: any term must be present
         const terms = filters.echoEffect.split(',').map(term => term.trim());
-        const matchedTerms = terms.filter(term => 
+        const matchedTerms = terms.filter(term =>
           echoEffect.toLowerCase().includes(term.toLowerCase())
         );
         effectMatches = matchedTerms.length > 0;
@@ -343,7 +343,7 @@ export class CardSearcher {
           matchDetails = `contains "${filters.echoEffect}"`;
         }
       }
-      
+
       if (effectMatches) {
         reasons.push(`Echo effect ${matchDetails}`);
       } else {
@@ -369,7 +369,9 @@ export class CardSearcher {
       } else {
         matches = false;
       }
-    }    // Rarity filter
+    }
+
+    // Rarity filter
     if (filters.rarity && matches) {
       const rarityMatches = card.rarity.reference === filters.rarity;
       if (rarityMatches) {
@@ -377,7 +379,9 @@ export class CardSearcher {
       } else {
         matches = false;
       }
-    }    // InSale filter
+    }
+
+    // InSale filter
     if (filters.inSale !== undefined && matches) {
       const cardInSale = (card.pricing?.inSale ?? 0) > 0;
       const inSaleMatches = cardInSale === filters.inSale;
