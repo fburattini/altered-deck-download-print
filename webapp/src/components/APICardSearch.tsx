@@ -6,6 +6,7 @@ import ConfirmationPopup from './ConfirmationPopup';
 
 interface APICardSearchProps {
 	onSearchResults: (cards: Card[], isLoading: boolean, error?: string) => void;
+	bearerToken?: string;
 }
 
 interface LocalFilters {
@@ -19,7 +20,7 @@ interface LocalFilters {
 	inSaleOnly: boolean;
 }
 
-const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
+const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerToken }) => {
 	const [filters, setFilters] = useState<LocalFilters>({
 		searchQuery: '',
 		mainEffect: '',
@@ -38,7 +39,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 	const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
 	const [scrapeError, setScrapeError] = useState<string | null>(null);
 	const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
-	const [bearerTokenInput, setBearerTokenInput] = useState<string>(''); // State for the token input
+	
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
 		// Validate required fields for search
@@ -147,7 +148,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 			return;
 		}
 
-		if (!bearerTokenInput.trim()) {
+		if (!bearerToken?.trim()) {
 			setScrapeError('Bearer token is required for scraping.');
 			return;
 		}
@@ -200,8 +201,8 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 			// e.g., scrapeFilters.RARITY = 'UNIQUE';
 			// scrapeFilters.ONLY_FOR_SALE = true;
 
-			console.log('🚀 Performing API scrape with filters:', scrapeFilters, 'and token:', bearerTokenInput || '(using backend default)');
-			const response = await searchAPI.scrapeCards(scrapeFilters, bearerTokenInput || undefined);
+			console.log('🚀 Performing API scrape with filters:', scrapeFilters, 'and token:', bearerToken || '(using backend default)');
+			const response = await searchAPI.scrapeCards(scrapeFilters, bearerToken || undefined);
 			if (response.success) {
 				const baseMessage = response.message || 'Scrape completed successfully.';
 				let detailedMessage = baseMessage;
@@ -239,7 +240,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 		} finally {
 			setIsScraping(false);
 		}
-	}, [filters, isScraping, bearerTokenInput]); // Added bearerTokenInput to dependencies
+	}, [filters, isScraping, bearerToken]); // Updated dependency
 
 	const updateFilter = (key: keyof LocalFilters, value: any) => {
 		setFilters(prev => ({
@@ -317,18 +318,7 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 						<strong>Scrape Error:</strong> {scrapeError}
 					</div>
 				)}
-				{/* Bearer Token Input for Scrape */}
-				<div className="filter-group">
-					<label htmlFor="bearerTokenInput" className="filter-label">Bearer Token <span style={{ fontSize: '0.75rem' }}>(required for scraping)</span></label>					<input
-						id="bearerTokenInput"
-						type="text"
-						placeholder="Enter Bearer Token"
-						value={bearerTokenInput}
-						onChange={(e) => setBearerTokenInput(e.target.value)}
-						className="base-input"
-						disabled={isScraping || isSearching}
-					/>
-				</div>
+
 				<div className="search-inputs-row">
 					<div className="search-input-container">
 						<label htmlFor="searchQuery" className="filter-label">Card Name <span style={{ fontSize: '0.75rem' }}>(required)</span></label>
@@ -468,13 +458,13 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults }) => {
 								!filters.searchQuery.trim() ||
 								(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ||
 								filters.factions.length === 0 ||
-								!bearerTokenInput.trim()
+								!bearerToken?.trim()
 							}
 							title={
 								!filters.searchQuery.trim() ? 'Card name is required for scraping' :
 									(filters.mainCostRange.min === undefined && filters.mainCostRange.max === undefined) ? 'Main cost range is required for scraping' :
 										filters.factions.length === 0 ? 'A faction must be selected for scraping' :
-											!bearerTokenInput.trim() ? 'Bearer token is required for scraping' :
+											!bearerToken?.trim() ? 'Bearer token is required for scraping. Please set it in Settings.' :
 												''
 							}
 						>

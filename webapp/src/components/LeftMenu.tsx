@@ -8,7 +8,7 @@ interface LeftMenuProps {
     bookmarks: BookmarkEntry[]
     database: CardNameFaction[]
 	onToggleCollapse?: () => void;
-    onMenuItemClick: (menu: string) => void
+    onMenuItemClick: (menu: string) => void;
 }
 
 const LeftMenu: React.FC<LeftMenuProps> = ({
@@ -127,6 +127,7 @@ const LeftMenu: React.FC<LeftMenuProps> = ({
 			<div className="menu-footer">
 				<button
 					className="menu-button"
+					onClick={() => onMenuItemClick('settings')}
 					title={isCollapsed ? 'Settings' : undefined}
 				>
 					<span className="menu-icon">⚙️</span>

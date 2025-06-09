@@ -8,17 +8,20 @@ import BookmarksList from './components/BookmarksList';
 import FilterControls from './components/FilterControls';
 import SortControls, { SortOption, SortDirection, sortCards } from './components/SortControls';
 import LeftMenu from './components/LeftMenu';
+import SettingsModal from './components/SettingsModal';
 import { Card } from './types';
 import { searchAPI, CardNameFaction, BookmarkEntry } from './services/searchAPI';
 import './styles/App.scss';
 import './styles/AvailableCardsList.scss';
 import './styles/BookmarksList.scss';
 import './styles/LeftMenu.scss';
+import './styles/SettingsModal.scss';
 
 type ViewType = 'table' | 'grid';
 
 // Key for localStorage
 const USER_ID_STORAGE_KEY = 'altered-deck-user-id';
+const BEARER_TOKEN_STORAGE_KEY = 'altered-deck-bearer-token';
 
 const App: React.FC = () => {
 	const [searchResults, setSearchResults] = useState<Card[]>([]);
@@ -39,6 +42,19 @@ const App: React.FC = () => {
 		const storedUserId = localStorage.getItem(USER_ID_STORAGE_KEY) || '';
 		return storedUserId.length > 0 && /^[a-zA-Z0-9_-]+$/.test(storedUserId);
 	});
+
+	// Initialize bearer token from localStorage or empty string
+	const [bearerToken, setBearerToken] = useState<string>(() => {
+		try {
+			return localStorage.getItem(BEARER_TOKEN_STORAGE_KEY) || '';
+		} catch (error) {
+			console.warn('Failed to read bearer token from localStorage:', error);
+			return '';
+		}
+	});
+
+	// Settings modal state
+	const [showSettings, setShowSettings] = useState(false);
 
 	// Available cards state
 	const [availableCards, setAvailableCards] = useState<CardNameFaction[]>([]);
@@ -143,6 +159,23 @@ const App: React.FC = () => {
 			}
 		} catch (error) {
 			console.warn('Failed to save user ID to localStorage:', error);
+		}
+	};
+
+	// Handle bearer token change
+	const handleBearerTokenChange = (newToken: string) => {
+		const trimmedToken = newToken.trim();
+		setBearerToken(trimmedToken);
+
+		// Save to localStorage
+		try {
+			if (trimmedToken) {
+				localStorage.setItem(BEARER_TOKEN_STORAGE_KEY, trimmedToken);
+			} else {
+				localStorage.removeItem(BEARER_TOKEN_STORAGE_KEY);
+			}
+		} catch (error) {
+			console.warn('Failed to save bearer token to localStorage:', error);
 		}
 	};
 
@@ -270,6 +303,10 @@ const App: React.FC = () => {
 				setShowBookmarks(true)
 				break;
 			}
+			case 'settings': {
+				setShowSettings(true)
+				break;
+			}
 		}
 	}
 
@@ -303,7 +340,10 @@ const App: React.FC = () => {
 				{/* Top Search Bar */}
 				<div className="top-search-bar">
 					<div className="search-section">
-						<APICardSearch onSearchResults={handleSearchResults} />
+						<APICardSearch 
+							onSearchResults={handleSearchResults} 
+							bearerToken={bearerToken}
+						/>
 					</div>
 				</div>
 
@@ -328,6 +368,19 @@ const App: React.FC = () => {
 						onClose={() => setShowBookmarks(false)}
 						onUserIdChange={handleUserIdChange}
 						onToggleBookmark={toggleBookmarkById}
+					/>
+				)}
+
+				{/* Settings Modal */}
+				{showSettings && (
+					<SettingsModal
+						isOpen={showSettings}
+						onClose={() => setShowSettings(false)}
+						currentUserId={currentUserId}
+						bearerToken={bearerToken}
+						onUserIdChange={handleUserIdChange}
+						onBearerTokenChange={handleBearerTokenChange}
+						userIdValid={userIdValid}
 					/>
 				)}
 
