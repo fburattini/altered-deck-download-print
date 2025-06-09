@@ -41,6 +41,23 @@
         2
       ],
       "lastRefresh": "2025-06-09T14:27:25.589Z"
+    },
+    {
+      "cardName": "Dorothy Gale",
+      "faction": "YZ",
+      "mainCost": [
+        4
+      ],
+      "lastRefresh": "2025-06-09T19:14:32.046Z"
+    },
+    {
+      "cardName": "Kadigiran Alchemist",
+      "faction": "YZ",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-09T19:20:11.917Z"
     }
   ]
 }
