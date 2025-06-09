@@ -294,7 +294,8 @@ const App: React.FC = () => {
 				onUserIdChange={handleUserIdChange}
 				onToggleBookmark={toggleBookmarkById}
 			/>
-		)}		{/* Main Content Area */}
+		)}
+		{/* Main Content Area */}
 		<div className="main-content">
 			<div className="content-with-preview">
 				<div className="results-area">
