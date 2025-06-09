@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import APICardSearch from './components/APICardSearch';
 import CardTable from './components/CardTable';
 import CardGridView from './components/CardGridView';
@@ -57,9 +57,6 @@ const App: React.FC = () => {
 	// Sorting state
 	const [sortBy, setSortBy] = useState<SortOption>('name');
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-
-	// View state
-	const [viewType, setViewType] = useState<ViewType>('grid');
 
 	// State for hovered/selected card
 	const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
@@ -162,9 +159,9 @@ const App: React.FC = () => {
 	};
 
 	// Bookmark helper functions
-	const isCardBookmarked = (cardId: string): boolean => {
+	const isCardBookmarked = useCallback((cardId: string): boolean => {
 		return userBookmarks.some(bookmark => bookmark.cardId === cardId);
-	};
+	}, [userBookmarks])
 
 	const toggleBookmark = async (card: Card): Promise<void> => {
 		// Don't allow bookmark operations with invalid user ID
@@ -257,7 +254,7 @@ const App: React.FC = () => {
 	};
 
 	const onLeftMenuItemClick = (menuItem: string) => {
-		switch(menuItem) {
+		switch (menuItem) {
 			case 'home': {
 				// Clear search results and reset to home state
 				setSearchResults([]);
@@ -287,12 +284,12 @@ const App: React.FC = () => {
 				</div>
 			</div>
 		);
-	} 
-	
+	}
+
 	return (
 		<div className="app-container">
 			{/* Left Menu */}
-			<LeftMenu 
+			<LeftMenu
 				isCollapsed={isMenuCollapsed}
 				currentView="search"
 				bookmarks={userBookmarks}
@@ -370,47 +367,9 @@ const App: React.FC = () => {
 										isCardBookmarked={isCardBookmarked}
 									/>
 								</div>
-								
+
 								{/* Right Section - View and Sort Controls */}
 								<div className="control-group">
-									{/* Available Cards Button */}
-									<button
-										onClick={() => setShowAvailableCards(!showAvailableCards)}
-										className="available-cards-button"
-										disabled={availableCardsLoading}
-									>
-										{availableCardsLoading ? (
-											<>
-												<div className="mini-spinner"></div>
-												Loading...
-											</>
-										) : (
-											<>
-												📋 Cards ({availableCards.length})
-											</>
-										)}
-									</button>
-
-									{/* Bookmarks Button */}
-									{/* <button
-										onClick={() => setShowBookmarks(!showBookmarks)}
-										className={`bookmarks-button ${!userIdValid ? 'needs-setup' : ''}`}
-										disabled={bookmarksLoading}
-										title={!userIdValid ? "Enter a valid user ID to view bookmarks" : "View your bookmarks"}
-									>
-										{bookmarksLoading ? (
-											<>
-												<div className="mini-spinner"></div>
-												Loading...
-											</>
-										) : (
-											<>
-												🔖 Bookmarks ({userBookmarks.length})
-												{!userIdValid && <span className="setup-indicator"></span>}
-											</>
-										)}
-									</button> */}
-
 									{/* Sort Controls */}
 									<SortControls
 										sortBy={sortBy}
@@ -418,22 +377,6 @@ const App: React.FC = () => {
 										onSortChange={handleSortChange}
 										onDirectionToggle={handleDirectionToggle}
 									/>
-
-									{/* View Type Controls */}
-									<div className="view-type-controls">
-										<button
-											onClick={() => setViewType('table')}
-											className={`view-type-button ${viewType === 'table' ? 'active' : ''}`}
-										>
-											📋
-										</button>
-										<button
-											onClick={() => setViewType('grid')}
-											className={`view-type-button ${viewType === 'grid' ? 'active' : ''}`}
-										>
-											⊞
-										</button>
-									</div>
 								</div>
 							</div>
 
@@ -449,32 +392,13 @@ const App: React.FC = () => {
 									<p className="message">Try adjusting your search filters to find cards.</p>
 								</div>
 							) : (
-								<>
-									{/* Card Table or Grid View */}
-									{viewType === 'table' ? (
-										<CardTable
-											cards={sortedResults}
-											hoveredCard={hoveredCard}
-											onCardHover={setHoveredCard}
-											userBookmarks={userBookmarks}
-											onToggleBookmark={userIdValid ? toggleBookmark : undefined}
-											isCardBookmarked={isCardBookmarked}
-										/>
-									) : (
-										<CardGridView
-											cards={sortedResults}
-											onCardHover={setHoveredCard}
-											userBookmarks={userBookmarks}
-											onToggleBookmark={userIdValid ? toggleBookmark : undefined}
-											isCardBookmarked={isCardBookmarked}
-										/>
-									)}
-								</>
+								<CardGridView
+									cards={sortedResults}
+									onToggleBookmark={userIdValid ? toggleBookmark : undefined}
+									isCardBookmarked={isCardBookmarked}
+								/>
 							)}
 						</div>
-						{viewType === 'table' && (
-							<CardPreview hoveredCard={hoveredCard} />
-						)}
 					</div>
 				</div>
 			</div>

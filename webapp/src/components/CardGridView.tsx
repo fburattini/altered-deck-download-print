@@ -1,32 +1,25 @@
-import React, { memo, useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../types';
-import { BookmarkEntry } from '../services/searchAPI';
 import { FACTION_COLORS } from '../services/utils';
 import '../styles/CardGridView.scss';
 
 interface CardGridViewProps {
 	cards: Card[];
-	onCardHover?: (card: Card | null) => void;
-	userBookmarks?: BookmarkEntry[];
 	onToggleBookmark?: (card: Card) => Promise<void>;
 	isCardBookmarked?: (cardId: string) => boolean;
 }
 
-const CardGridView: React.FC<CardGridViewProps> = ({ 
-	cards, 
-	onCardHover, 
-	userBookmarks, 
-	onToggleBookmark, 
-	isCardBookmarked 
+const CardGridView: React.FC<CardGridViewProps> = ({
+	cards,
+	onToggleBookmark,
+	isCardBookmarked
 }) => {
 	return (
 		<div className="card-grid-view">
 			{cards.map((card) => (
-				<CardTile 
-					key={card.id} 
-					card={card} 
-					onCardHover={onCardHover}
-					userBookmarks={userBookmarks}
+				<CardTile
+					key={card.id}
+					card={card}
 					onToggleBookmark={onToggleBookmark}
 					isCardBookmarked={isCardBookmarked}
 				/>
@@ -37,18 +30,14 @@ const CardGridView: React.FC<CardGridViewProps> = ({
 
 interface CardTileProps {
 	card: Card;
-	onCardHover?: (card: Card | null) => void;
-	userBookmarks?: BookmarkEntry[];
 	onToggleBookmark?: (card: Card) => Promise<void>;
 	isCardBookmarked?: (cardId: string) => boolean;
 }
 
-const CardTile: React.FC<CardTileProps> = ({ 
-	card, 
-	onCardHover, 
-	userBookmarks, 
-	onToggleBookmark, 
-	isCardBookmarked 
+const CardTile: React.FC<CardTileProps> = ({
+	card,
+	onToggleBookmark,
+	isCardBookmarked
 }) => {
 	const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
 
@@ -145,7 +134,7 @@ const CardTile: React.FC<CardTileProps> = ({
 					}}
 				>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-						<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+						<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
 					</svg>
 				</button>
 			)}
@@ -278,15 +267,15 @@ const CardTile: React.FC<CardTileProps> = ({
 								{copyLinkSuccess ? (
 									<>
 										<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-											<polyline points="20,6 9,17 4,12"/>
+											<polyline points="20,6 9,17 4,12" />
 										</svg>
 										Copied!
 									</>
 								) : (
 									<>
 										<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-											<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-											<path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.72-1.71"/>
+											<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+											<path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.72-1.71" />
 										</svg>
 										Copy Link
 									</>
@@ -303,8 +292,8 @@ const CardTile: React.FC<CardTileProps> = ({
 					<span className="footer-name">{card.name}</span>
 					<span className="footer-rarity">{card.cardSet.reference}</span>
 					{card.scrapeMetadata?.lastUpdatedAt && (
-						<div style={{ 
-							fontSize: '10px', 
+						<div style={{
+							fontSize: '10px',
 							color: '#9ca3af',
 							marginTop: '2px'
 						}}>
