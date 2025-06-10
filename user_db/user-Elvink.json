@@ -125,6 +125,85 @@
         2
       ],
       "lastRefresh": "2025-06-10T08:26:38.970Z"
+    },
+    {
+      "cardName": "Kodama",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:27:32.037Z"
+    },
+    {
+      "cardName": "Kodama",
+      "faction": "MU",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:28:29.061Z"
+    },
+    {
+      "cardName": "Paper Herald",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:29:08.763Z"
+    },
+    {
+      "cardName": "Monolith Rune-Scribe",
+      "faction": "AX",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:31:47.914Z"
+    },
+    {
+      "cardName": "Ozma",
+      "faction": "BR",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:33:30.760Z"
+    },
+    {
+      "cardName": "Studious Disciple",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:35:40.656Z"
+    },
+    {
+      "cardName": "Flamel",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:36:09.886Z"
+    },
+    {
+      "cardName": "Sakarabru",
+      "faction": "BR",
+      "mainCost": [
+        6,
+        7,
+        8
+      ],
+      "lastRefresh": "2025-06-10T08:40:45.789Z"
     }
   ]
 }
