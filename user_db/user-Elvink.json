@@ -204,6 +204,33 @@
         8
       ],
       "lastRefresh": "2025-06-10T08:40:45.789Z"
+    },
+    {
+      "cardName": "Sap Sniffer",
+      "faction": "BR",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-10T13:22:44.577Z"
+    },
+    {
+      "cardName": "Scribbling Starfish",
+      "faction": "YZ",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-10T13:39:20.254Z"
+    },
+    {
+      "cardName": "Scribbling Starfish",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-10T13:39:26.489Z"
     }
   ]
 }
