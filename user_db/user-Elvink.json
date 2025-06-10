@@ -1,0 +1,130 @@
+{
+  "userId": "Elvink",
+  "watchlist": [
+    {
+      "cardName": "Axiom Salvager",
+      "faction": "BR",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-10T07:50:58.705Z"
+    },
+    {
+      "cardName": "Lyra Navigator",
+      "faction": "BR",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:01:07.044Z"
+    },
+    {
+      "cardName": "Enhanced Prototype",
+      "faction": "BR",
+      "mainCost": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "lastRefresh": "2025-06-10T08:03:32.413Z"
+    },
+    {
+      "cardName": "The Hunger",
+      "faction": "BR",
+      "mainCost": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "lastRefresh": "2025-06-10T08:04:33.921Z"
+    },
+    {
+      "cardName": "Coppélia",
+      "faction": "AX",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:06:19.053Z"
+    },
+    {
+      "cardName": "Coppélia",
+      "faction": "MU",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:07:46.814Z"
+    },
+    {
+      "cardName": "Foundry Armorer",
+      "faction": "BR",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-10T08:12:56.206Z"
+    },
+    {
+      "cardName": "Issun-bōshi",
+      "faction": "BR",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-10T08:16:57.893Z"
+    },
+    {
+      "cardName": "Lyra Thespian",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:18:33.069Z"
+    },
+    {
+      "cardName": "Lyra Thespian",
+      "faction": "MU",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:19:57.617Z"
+    },
+    {
+      "cardName": "Lyra Navigator",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-10T08:22:39.255Z"
+    },
+    {
+      "cardName": "Muna Caregiver",
+      "faction": "MU",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-10T08:24:16.480Z"
+    },
+    {
+      "cardName": "Spindle Harvesters",
+      "faction": "MU",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-10T08:26:38.970Z"
+    }
+  ]
+}
