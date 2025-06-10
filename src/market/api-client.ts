@@ -869,12 +869,16 @@ export class AlteredApiClient {
 		let cardWithMetadata: CardDetail;
 		if (duplicateIndex !== -1) {
 			// Card exists, add metadata with existing card reference for comparison
-			cardWithMetadata = this.addScrapeMetadata(card, existingCards[duplicateIndex]);
+			const existingCard = existingCards[duplicateIndex];
+			const pricingChanged = this.hasPricingChanged(existingCard.pricing, card.pricing);
+			const changeType = pricingChanged ? 'pricing_changed' : 'unchanged';
+			
+			cardWithMetadata = this.addScrapeMetadata(card, existingCard, changeType);
 			console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, updating with new data.`);
 			existingCards[duplicateIndex] = cardWithMetadata;
 		} else {
 			// Card does not exist, add it with metadata
-			cardWithMetadata = this.addScrapeMetadata(card);
+			cardWithMetadata = this.addScrapeMetadata(card, undefined, 'new');
 			existingCards.push(cardWithMetadata);
 		}
 
@@ -884,9 +888,12 @@ export class AlteredApiClient {
 
 		// console.log(`Saved card ${card.name} to ${filename} (${existingCards.length} total cards)`); // Original log
 		if (duplicateIndex !== -1) {
-			console.log(`Updated card ${card.name} in ${filename} (${existingCards.length} total cards)`);
+			const changeType = cardWithMetadata.scrapeMetadata?.changeType;
+			const changeEmoji = changeType === 'pricing_changed' ? '💰' : '🔄';
+			const changeText = changeType === 'pricing_changed' ? 'with pricing changes' : 'without changes';
+			console.log(`${changeEmoji} Updated card ${card.name} ${changeText} in ${filename} (${existingCards.length} total cards)`);
 		} else {
-			console.log(`Saved new card ${card.name} to ${filename} (${existingCards.length} total cards)`);
+			console.log(`🆕 Saved new card ${card.name} to ${filename} (${existingCards.length} total cards)`);
 		}
 	}
 
@@ -961,7 +968,8 @@ export class AlteredApiClient {
 					const existingCard = existingCards[duplicateIndex];
 					const pricingChanged = this.hasPricingChanged(existingCard.pricing, newCard.pricing);
 					
-					cardWithMetadata = this.addScrapeMetadata(newCard, existingCard);
+					const changeType = pricingChanged ? 'pricing_changed' : 'unchanged';
+					cardWithMetadata = this.addScrapeMetadata(newCard, existingCard, changeType);
 					existingCards[duplicateIndex] = cardWithMetadata;
 					updatedCount++;
 
@@ -970,10 +978,11 @@ export class AlteredApiClient {
 						console.log(`  💰 Pricing changed for: ${newCard.name} (${newCard.id})`);
 					} else {
 						noChangesCount++;
+						console.log(`  🔄 No changes for: ${newCard.name} (${newCard.id})`);
 					}
 				} else {
 					// Card does not exist, add it to the list with metadata
-					cardWithMetadata = this.addScrapeMetadata(newCard);
+					cardWithMetadata = this.addScrapeMetadata(newCard, undefined, 'new');
 					existingCards.push(cardWithMetadata);
 					addedCount++;
 					console.log(`  🆕 New card: ${newCard.name} (${newCard.id})`);
@@ -996,9 +1005,9 @@ export class AlteredApiClient {
 		}
 
 		console.log(`📊 Saving statistics:`);
-		console.log(`  - New cards: ${totalNewCards}`);
-		console.log(`  - Cards with pricing changes: ${totalCardsWithPricingChanges}`);
-		console.log(`  - Cards without changes: ${totalCardsWithoutChanges}`);
+		console.log(`  🆕 New cards: ${totalNewCards}`);
+		console.log(`  💰 Cards with pricing changes: ${totalCardsWithPricingChanges}`);
+		console.log(`  🔄 Cards without changes: ${totalCardsWithoutChanges}`);
 
 		return {
 			newCards: totalNewCards,
@@ -1036,13 +1045,14 @@ export class AlteredApiClient {
 	/**
 	 * Add or update scrape metadata for a card
 	 */
-	private addScrapeMetadata(card: CardDetail, existingCard?: CardDetail): CardDetail {
+	private addScrapeMetadata(card: CardDetail, existingCard?: CardDetail, changeType?: 'new' | 'pricing_changed' | 'unchanged'): CardDetail {
 		const now = new Date().toISOString();
 
 		let scrapeMetadata: {
 			firstScrapedAt: string;
 			lastUpdatedAt: string;
 			pricingLastUpdatedAt?: string;
+			changeType?: 'new' | 'pricing_changed' | 'unchanged';
 			priceHistory?: {
 				date: string;
 				lowerPrice: number;
@@ -1052,7 +1062,8 @@ export class AlteredApiClient {
 			}[];
 		} = {
 			firstScrapedAt: now,
-			lastUpdatedAt: now
+			lastUpdatedAt: now,
+			changeType: changeType || (existingCard ? 'unchanged' : 'new')
 		};
 
 		// If card already exists, preserve firstScrapedAt and existing price history

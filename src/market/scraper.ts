@@ -165,6 +165,7 @@ export class AlteredScraper {
 			throw error;
 		}
 	}
+
 	/**
 	 * Run a filtered scrape with pricing data integrated into card details
 	 */
@@ -252,9 +253,9 @@ export class AlteredScraper {
 			console.log('\n=== Filtered Scrape with Pricing Summary ===');
 			console.log(`Applied filters: ${JSON.stringify(enhancedSummary.filters, null, 2)}`);
 			console.log(`Total cards processed: ${enhancedSummary.uniqueCards}`);
-			console.log(`New cards (not tracked before): ${savingStats.newCards}`);
-			console.log(`Cards with pricing changes: ${savingStats.cardsWithPricingChanges}`);
-			console.log(`Cards without changes: ${savingStats.cardsWithoutChanges}`);
+			console.log(`🆕 New cards (not tracked before): ${savingStats.newCards}`);
+			console.log(`💰 Cards with pricing changes: ${savingStats.cardsWithPricingChanges}`);
+			console.log(`🔄 Cards without changes: ${savingStats.cardsWithoutChanges}`);
 			console.log(`Cards with pricing data: ${enhancedSummary.cardsWithPricing}`);
 			console.log(`Price range: €${pricingStats.minPrice.toFixed(2)} - €${pricingStats.maxPrice.toFixed(2)}`);
 			console.log(`Average price: €${pricingStats.avgPrice.toFixed(2)}`);
@@ -266,7 +267,8 @@ export class AlteredScraper {
 				if (enhancedSummary.errors.length > 10) {
 					console.log(`  ... and ${enhancedSummary.errors.length - 10} more errors`);
 				}
-			}			console.log(`\nEnriched cards with pricing saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
+			}			
+			console.log(`\nEnriched cards with pricing saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
 
 			return {
 				totalCards: enhancedSummary.uniqueCards,
@@ -281,6 +283,7 @@ export class AlteredScraper {
 			throw error;
 		}
 	}
+	
 	/**
 	 * Get card statistics (pricing data) for specific filters
 	 */
