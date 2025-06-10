@@ -94,7 +94,6 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
 
                     if (response.success) {
                         completedCount++;
-                        
                         // Analyze the response to determine if there are new cards or price updates
                         if (response.message) {
                             const message = response.message.toLowerCase();

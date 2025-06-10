@@ -169,6 +169,7 @@ export type CardDetailScrapeMetadata = {
   firstScrapedAt: string; // ISO 8601 date string
     lastUpdatedAt: string; // ISO 8601 date string
     pricingLastUpdatedAt?: string; // ISO 8601 date string - only when pricing changes
+    changeType?: 'new' | 'pricing_changed' | 'unchanged'; // Type of change in last scrape
     priceHistory?: ScrapeMetadataPriceHistory[];
 }
 
