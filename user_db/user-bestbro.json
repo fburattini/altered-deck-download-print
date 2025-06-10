@@ -58,6 +58,22 @@
         4
       ],
       "lastRefresh": "2025-06-09T19:20:11.917Z"
+    },
+    {
+      "cardName": "Kuwat, the Dissenter",
+      "faction": "YZ",
+      "mainCost": [
+        4
+      ],
+      "lastRefresh": "2025-06-10T10:23:54.275Z"
+    },
+    {
+      "cardName": "Baku",
+      "faction": "YZ",
+      "mainCost": [
+        4
+      ],
+      "lastRefresh": "2025-06-10T10:29:10.480Z"
     }
   ]
 }

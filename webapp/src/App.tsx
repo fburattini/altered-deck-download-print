@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import APICardSearch from './components/APICardSearch';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import APICardSearch, { APICardSearchRef } from './components/APICardSearch';
 import CardGridView from './components/CardGridView';
 import AvailableCardsList from './components/AvailableCardsList';
 import BookmarksList from './components/BookmarksList';
@@ -85,6 +85,9 @@ const App: React.FC = () => {
 
 	// Left menu state
 	const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+
+	// Ref for APICardSearch component
+	const apiCardSearchRef = useRef<APICardSearchRef>(null);
 
 	const handleToggleMenu = () => {
 		setIsMenuCollapsed(!isMenuCollapsed);
@@ -453,6 +456,13 @@ const App: React.FC = () => {
 		}
 	}
 
+	// Function to trigger search from other components (like WatchlistRefresh)
+	const handleTriggerSearch = useCallback((cardName: string, faction: string, mainCost?: number[]) => {
+		if (apiCardSearchRef.current) {
+			apiCardSearchRef.current.triggerSearch(cardName, faction, mainCost);
+		}
+	}, []);
+
 	const sortedResults = sortCards(filteredResults, sortBy, sortDirection);
 
 	if (isLoading && searchResults.length === 0) {
@@ -485,6 +495,7 @@ const App: React.FC = () => {
 				<div className="top-search-bar">
 					<div className="search-section">
 						<APICardSearch 
+							ref={apiCardSearchRef}
 							onSearchResults={handleSearchResults} 
 							bearerToken={bearerToken}
 							currentUserId={currentUserId}
@@ -531,6 +542,7 @@ const App: React.FC = () => {
 						onClose={() => setShowWatchlist(false)}
 						onUserIdChange={handleUserIdChange}
 						onToggleWatchlist={toggleWatchlistById}
+						onTriggerSearch={handleTriggerSearch}
 						onRefreshComplete={() => {
 							// Refresh watchlist data after scraping is complete
 							const fetchUserWatchlist = async () => {

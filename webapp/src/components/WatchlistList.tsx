@@ -14,6 +14,7 @@ interface WatchlistListProps {
     onUserIdChange: (userId: string) => void;
     onToggleWatchlist: (cardName: string, faction: string, mainCost: number[]) => Promise<void>;
     onRefreshComplete?: () => void;
+    onTriggerSearch?: (cardName: string, faction: string, mainCost?: number[]) => void;
 }
 
 const WatchlistList: React.FC<WatchlistListProps> = ({
@@ -26,7 +27,8 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
     onClose,
     onUserIdChange,
     onToggleWatchlist,
-    onRefreshComplete
+    onRefreshComplete,
+    onTriggerSearch
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [localUserId, setLocalUserId] = useState(currentUserId);
@@ -53,6 +55,12 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
 
     const handleRemoveWatchlist = async (item: WatchlistEntry) => {
         await onToggleWatchlist(item.cardName, item.faction, item.mainCost);
+    };
+
+    const handleCardClick = (item: WatchlistEntry) => {
+        if (onTriggerSearch) {
+            onTriggerSearch(item.cardName, item.faction, item.mainCost);
+        }
     };
 
     const isUserIdInputValid = (userId: string) => {
@@ -137,6 +145,7 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                     <WatchlistRefresh
                         watchlist={watchlist}
                         bearerToken={bearerToken}
+                        onTriggerSearch={onTriggerSearch}
                         onRefreshComplete={() => {
                             setShowRefresh(false);
                             if (onRefreshComplete) {
@@ -166,7 +175,14 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                                 .map((item, index) => (
                                     <div key={`${item.cardName}-${item.faction}-${index}`} className="watchlist-card-item">
                                         <div className="watchlist-card-info">
-                                            <span className="card-name">{item.cardName?.replaceAll('-', ' ')}</span>
+                                            <span 
+                                                className={`card-name ${onTriggerSearch ? 'clickable' : ''}`}
+                                                onClick={() => onTriggerSearch && handleCardClick(item)}
+                                                style={{ cursor: onTriggerSearch ? 'pointer' : 'default' }}
+                                                title={onTriggerSearch ? 'Click to search for this card' : undefined}
+                                            >
+                                                {item.cardName?.replaceAll('-', ' ')}
+                                            </span>
                                             <div className="watchlist-meta">
                                                 <span
                                                     className="card-faction"

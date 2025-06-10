@@ -1,9 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Card } from '../types';
 import { searchAPI, APISearchFilters, APISearchOptions, APIScrapeFilters } from '../services/searchAPI';
 import { MagnifyingGlassIcon, CloudArrowDownIcon, EyeIcon } from '@heroicons/react/24/outline';
 import ConfirmationPopup from './ConfirmationPopup';
 import { FACTIONS } from '../services/utils';
+
+export interface APICardSearchRef {
+	triggerSearch: (cardName: string, faction: string, mainCost?: number[]) => void;
+}
 
 interface APICardSearchProps {
 	onSearchResults: (cards: Card[], isLoading: boolean, error?: string) => void;
@@ -26,7 +30,7 @@ interface LocalFilters {
 	inSaleOnly: boolean;
 }
 
-const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerToken, currentUserId, userIdValid, onToggleWatchlist, isCardInWatchlist }) => {
+const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSearchResults, bearerToken, currentUserId, userIdValid, onToggleWatchlist, isCardInWatchlist }, ref) => {
 	const [filters, setFilters] = useState<LocalFilters>({
 		searchQuery: '',
 		mainEffect: '',
@@ -141,6 +145,29 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 			performSearch(filters);
 		}
 	};
+
+	// Expose triggerSearch function to parent components
+	useImperativeHandle(ref, () => ({
+		triggerSearch: (cardName: string, faction: string, mainCost?: number[]) => {
+			// Update filters with the card name, faction, and main cost
+			const updatedFilters: LocalFilters = {
+				...filters,
+				searchQuery: cardName,
+				factions: [faction],
+				// Set main cost range if provided
+				mainCostRange: mainCost && mainCost.length > 0 ? {
+					min: Math.min(...mainCost),
+					max: Math.max(...mainCost)
+				} : filters.mainCostRange
+			};
+			
+			// Trigger the search with updated filters
+			performSearch(updatedFilters);
+			
+			// Update the UI state to reflect the new search
+			setFilters(updatedFilters);
+		}
+	}), [filters, performSearch]);
 
 	// Function to handle scrape request
 	const handleScrape = useCallback(async () => {
@@ -571,6 +598,6 @@ const APICardSearch: React.FC<APICardSearchProps> = ({ onSearchResults, bearerTo
 			)}
 		</div>
 	);
-};
+});
 
 export default APICardSearch;
