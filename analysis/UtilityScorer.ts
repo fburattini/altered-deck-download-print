@@ -8,7 +8,7 @@ class UtilityScorerClass {
 
         const statsEval = this._evalStats(dims)
 
-        console.log(statsEval)
+        console.log(statsEval, this._effectParser(dims.effect))
     }
 
     _evalStats = (dims: CardDimensions) => {
@@ -22,12 +22,24 @@ class UtilityScorerClass {
         const handLoss = (actualTotalStats - baseHandTotalStats) * this.handCostLossWeigth
         const reserveLoss = actualTotalStats - baseReserveTotalStats
 
-        return { handLoss, reserveLoss }
+        return { handLoss, reserveLoss, actualTotalStats }
+    }
+
+    _effectParser = (effect: string) => {
+        const splits = [
+            '{J}',
+            '{R}',
+            '{H}',
+            'At Dusk —',
+            'At Noon —',
+            'When I leave the Expedition zone —',
+            'When I go to Reserve from the Expedition zone —'
+        ]
     }
 
     _getCardDimensions = (card: CardDetail): CardDimensions => {
         const {
-            elements: { FOREST_POWER, MAIN_COST, MOUNTAIN_POWER, OCEAN_POWER, RECALL_COST },
+            elements: { FOREST_POWER, MAIN_COST, MOUNTAIN_POWER, OCEAN_POWER, RECALL_COST, MAIN_EFFECT, ECHO_EFFECT },
             pricing,
             mainFaction: { reference }
         } = card
@@ -40,7 +52,9 @@ class UtilityScorerClass {
             handCost: parseInt(MAIN_COST),
             recallCost: parseInt(RECALL_COST),
             faction: reference,
-            lowerPrice
+            lowerPrice,
+            effect: MAIN_EFFECT,
+            echo: ECHO_EFFECT
         } as CardDimensions
     }
 }
@@ -56,4 +70,6 @@ interface CardDimensions {
     recallCost: number
     lowerPrice: number
     faction: string
+    effect: string
+    echo: string
 }
