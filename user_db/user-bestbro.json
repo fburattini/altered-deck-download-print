@@ -74,6 +74,66 @@
         4
       ],
       "lastRefresh": "2025-06-10T10:29:10.480Z"
+    },
+    {
+      "cardName": "Monolith Legate",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-11T08:20:20.362Z"
+    },
+    {
+      "cardName": "Sylas, Cryptic Warlock",
+      "faction": "YZ",
+      "mainCost": [
+        4,
+        5
+      ],
+      "lastRefresh": "2025-06-11T09:01:13.284Z"
+    },
+    {
+      "cardName": "Flamel",
+      "faction": "YZ",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-11T09:07:23.369Z"
+    },
+    {
+      "cardName": "Ordis Trooper",
+      "faction": "YZ",
+      "mainCost": [
+        1
+      ],
+      "lastRefresh": "2025-06-11T09:31:43.089Z"
+    },
+    {
+      "cardName": "Ouroboros Inkcaster",
+      "faction": "LY",
+      "mainCost": [
+        2
+      ],
+      "lastRefresh": "2025-06-11T10:15:48.880Z"
+    },
+    {
+      "cardName": "Martengale",
+      "faction": "LY",
+      "mainCost": [
+        1
+      ],
+      "lastRefresh": "2025-06-11T10:52:15.944Z"
+    },
+    {
+      "cardName": "Persephone",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-11T10:58:20.605Z"
     }
   ]
 }
