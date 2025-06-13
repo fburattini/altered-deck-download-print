@@ -22,21 +22,8 @@ export class CardReader {
 
             for (const file of jsonlFiles) {
                 const filePath = path.join(this.cardDbPath, file);
-                try {
-                    const content = await fs.readFile(filePath, 'utf8');
-                    const lines = content.trim().split('\n').filter(line => line.length > 0);
-                    
-                    for (const line of lines) {
-                        try {
-                            const card = JSON.parse(line) as CardDetail;
-                            allCards.push(card);
-                        } catch (parseError) {
-                            console.error(`Error parsing JSON from line in ${file}: ${line}`, parseError);
-                        }
-                    }
-                } catch (readError) {
-                    console.error(`Error reading file ${file}:`, readError);
-                }
+                const cardsFromFile = await this.loadCardsFromFile(filePath);
+                allCards.push(...cardsFromFile);
             }
             console.log(`Loaded ${allCards.length} cards from ${jsonlFiles.length} files.`);
         } catch (dirError) {
@@ -80,5 +67,28 @@ export class CardReader {
             console.error(`Error accessing card_db directory at ${this.cardDbPath}:`, dirError);
         }
         return cardNameFactions;
+    }
+
+    /**
+     * Loads cards from a specific JSONL file
+     */
+    async loadCardsFromFile(filePath: string): Promise<CardDetail[]> {
+        const cards: CardDetail[] = [];
+        try {
+            const content = await fs.readFile(filePath, 'utf8');
+            const lines = content.trim().split('\n').filter(line => line.length > 0);
+            
+            for (const line of lines) {
+                try {
+                    const card = JSON.parse(line) as CardDetail;
+                    cards.push(card);
+                } catch (parseError) {
+                    console.error(`Error parsing JSON from line in ${filePath}: ${line}`, parseError);
+                }
+            }
+        } catch (readError) {
+            console.error(`Error reading file ${filePath}:`, readError);
+        }
+        return cards;
     }
 }

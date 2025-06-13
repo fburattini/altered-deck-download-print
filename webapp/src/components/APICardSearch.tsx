@@ -56,22 +56,19 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
-		// Validate required fields for search
-		if (!currentFilters.searchQuery.trim()) {
-			setSearchError('Card name is required for searching.');
-			return;
-		}
-
 		setIsSearching(true);
 		setSearchError(null);
 
-		try {			// Convert local filters to API format
+		try {
+			// Convert local filters to API format
 			const apiFilters: APISearchFilters = {};
 			const apiOptions: APISearchOptions = {
 				resultLimit: 0, // Get all results
 				sortByPrice: true,
-				inSaleOnly: false // Disable the legacy inSaleOnly option
-			};			// Convert search query to name filter (required)
+				inSaleOnly: false
+				// Disable the legacy inSaleOnly option
+			};
+			// Convert search query to name filter (required)
 			apiFilters.name = currentFilters.searchQuery.trim();
 
 			// Convert main effect filter
@@ -160,10 +157,10 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 					max: Math.max(...mainCost)
 				} : filters.mainCostRange
 			};
-			
+
 			// Trigger the search with updated filters
 			performSearch(updatedFilters);
-			
+
 			// Update the UI state to reflect the new search
 			setFilters(updatedFilters);
 		}
@@ -205,7 +202,8 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 			scrapeFilters.CARD_NAME = filters.searchQuery.trim();
 			if (filters.mainEffect.trim()) {
 				scrapeFilters.MAIN_EFFECT = filters.mainEffect.trim();
-			} if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
+			} if (filters.factions.length === 1) { 
+				// Assuming only one faction for scrape for simplicity
 				scrapeFilters.FACTION = filters.factions[0];
 			}
 
@@ -252,11 +250,6 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 					detailedMessage += `\n\n📊 Results Summary:`;
 					detailedMessage += `\n• Total cards found: ${response.cardsFound}`;
 
-					// Add pricing data info
-					if (response.cardsWithPricing !== undefined) {
-						detailedMessage += `\n• Cards with pricing data: ${response.cardsWithPricing}`;
-					}
-
 					// Add detailed breakdown of changes
 					if (response.newCards !== undefined && response.newCards > 0) {
 						detailedMessage += `\n• New cards added: ${response.newCards}`;
@@ -282,7 +275,7 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 		} finally {
 			setIsScraping(false);
 		}
-	}, [filters, isScraping, bearerToken]); // Updated dependency
+	}, [filters, isScraping, bearerToken]);
 
 	const updateFilter = (key: keyof LocalFilters, value: any) => {
 		setFilters(prev => ({
@@ -526,8 +519,8 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 							className="search-button"
 							disabled={
 								isSearching ||
-								isScraping ||
-								!filters.searchQuery.trim()
+								isScraping
+								// !filters.searchQuery.trim()
 							}
 							title={
 								!filters.searchQuery.trim() ? 'Card name is required for searching' : ''

@@ -85,6 +85,12 @@
 .progress-text {
   font-weight: 500;
   color: #cbd5e1;
+
+  .filtered-note {
+    color: #94a3b8;
+    font-size: 0.625rem;
+    font-weight: normal;
+  }
 }
 
 .elapsed-time {
