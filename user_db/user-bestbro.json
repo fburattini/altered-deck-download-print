@@ -2,14 +2,6 @@
   "userId": "bestbro",
   "watchlist": [
     {
-      "cardName": "Baba Yaga",
-      "faction": "YZ",
-      "mainCost": [
-        2
-      ],
-      "lastRefresh": "2025-06-09T12:46:08.537Z"
-    },
-    {
       "cardName": "Paper Herald",
       "faction": "LY",
       "mainCost": [
@@ -134,6 +126,33 @@
         3
       ],
       "lastRefresh": "2025-06-11T10:58:20.605Z"
+    },
+    {
+      "cardName": "Baba Yaga",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-12T14:13:37.885Z"
+    },
+    {
+      "cardName": "Flamel",
+      "faction": "LY",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-12T15:51:16.953Z"
+    },
+    {
+      "cardName": "The Sandman",
+      "faction": "LY",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-12T15:55:36.079Z"
     }
   ]
 }
