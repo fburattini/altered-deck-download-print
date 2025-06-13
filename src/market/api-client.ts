@@ -584,18 +584,19 @@ export class AlteredApiClient {
 		const cardReader = new CardReader();
 		const existingCards = await cardReader.loadAllCards();
 		const existingCardsMap = new Map<string, CardDetail>();
-		
+
 		// Create lookup maps for efficient searching
 		existingCards.forEach(card => {
 			existingCardsMap.set(card.id, card);
 			if (card.reference) existingCardsMap.set(card.reference, card);
 			if (card['@id']) existingCardsMap.set(card['@id'], card);
 		});
-		
+
 		console.log(`Loaded ${existingCards.length} cards from local storage for efficient lookups`);
 
 		// Create a unique checkpoint name based on the filters
-		const filterKey = this.getFilterKey(filters); const checkpointPath = path.join(process.cwd(), 'checkpoints_db', `${checkpointPrefix}-scrape-checkpoint-${filterKey}.json`);
+		const filterKey = this.getFilterKey(filters); 
+		const checkpointPath = path.join(process.cwd(), 'checkpoints_db', `${checkpointPrefix}-scrape-checkpoint-${filterKey}.json`);
 		const cardsDataPath = path.join(process.cwd(), 'checkpoints_db', `${checkpointPrefix}-cards-latest-${filterKey}.jsonl`);
 
 		// Try to load checkpoint
@@ -616,41 +617,41 @@ export class AlteredApiClient {
 
 			const collection = await this.getCards(filters);
 			console.log(`  Found ${collection['hydra:member'].length} cards matching filters`);
-		// Fetch detailed information for each card
-		for (const card of collection['hydra:member']) {
-			if (!allCards.has(card.id)) {
-				try {
-					// Check if card exists in our pre-loaded local cards first
-					const existingCard = existingCardsMap.get(card.id) || 
-										existingCardsMap.get(card.reference) || 
-										existingCardsMap.get(card['@id']);
-					
-					if (existingCard) {
-						allCards.set(card.id, existingCard);
-						console.log(`    Loaded from local storage: ${existingCard.name} (${existingCard.id})`);
-					} else {
-						// Card not found locally, fetch from API
-						const detail = await this.getCardDetail(card['@id']);
-						allCards.set(card.id, detail);
-						console.log(`    Fetched from API: ${detail.name} (${detail.id})`);
+			// Fetch detailed information for each card
+			for (const card of collection['hydra:member']) {
+				if (!allCards.has(card.id)) {
+					try {
+						// Check if card exists in our pre-loaded local cards first
+						const existingCard = existingCardsMap.get(card.id) ||
+							existingCardsMap.get(card.reference) ||
+							existingCardsMap.get(card['@id']);
 
-						// Small delay between card detail requests
-						await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); // 100-200ms
-					}
+						if (existingCard) {
+							allCards.set(card.id, existingCard);
+							console.log(`    Loaded from local storage: ${existingCard.name} (${existingCard.id})`);
+						} else {
+							// Card not found locally, fetch from API
+							const detail = await this.getCardDetail(card['@id']);
+							allCards.set(card.id, detail);
+							console.log(`    Fetched from API: ${detail.name} (${detail.id})`);
 
-				} catch (error: any) {
-					const errorMsg = `Failed to fetch detail for card ${card.id} (@id: ${card['@id']}): ${error}`;
-					console.error(`    ${errorMsg}`);
-					summary.errors.push(errorMsg);
+							// Small delay between card detail requests
+							await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); // 100-200ms
+						}
 
-					// If it's a rate limit error that couldn't be resolved with retries, wait before continuing
-					if (error.response?.status === 429) {
-						console.warn('Rate limit error on card detail, waiting 2 seconds before continuing...');
-						await new Promise(resolve => setTimeout(resolve, 2000));
+					} catch (error: any) {
+						const errorMsg = `Failed to fetch detail for card ${card.id} (@id: ${card['@id']}): ${error}`;
+						console.error(`    ${errorMsg}`);
+						summary.errors.push(errorMsg);
+
+						// If it's a rate limit error that couldn't be resolved with retries, wait before continuing
+						if (error.response?.status === 429) {
+							console.warn('Rate limit error on card detail, waiting 2 seconds before continuing...');
+							await new Promise(resolve => setTimeout(resolve, 2000));
+						}
 					}
 				}
 			}
-		}
 
 			// Mark as processed
 			processedCombinations.add(filterKey);
@@ -678,7 +679,7 @@ export class AlteredApiClient {
 			try {
 				const cardsArray = Array.from(allCards.values());
 				if (cardsArray.length > 0) {
-					if(!dontSave) {
+					if (!dontSave) {
 						await this.saveCardsByNameAndFaction(cardsArray);
 					}
 				}
@@ -695,7 +696,7 @@ export class AlteredApiClient {
 			await this.saveCardsByNameAndFaction(cardsArray);
 			await this.saveFilteredCheckpoint(processedCombinations, allCards, summary, checkpointPath, cardsDataPath);
 		}
-		
+
 		console.log(`Filtered scraping completed. Found ${allCards.size} unique cards.`);
 
 		return {
@@ -872,7 +873,7 @@ export class AlteredApiClient {
 			const existingCard = existingCards[duplicateIndex];
 			const pricingChanged = this.hasPricingChanged(existingCard.pricing, card.pricing);
 			const changeType = pricingChanged ? 'pricing_changed' : 'unchanged';
-			
+
 			cardWithMetadata = this.addScrapeMetadata(card, existingCard, changeType);
 			console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, updating with new data.`);
 			existingCards[duplicateIndex] = cardWithMetadata;
@@ -967,7 +968,7 @@ export class AlteredApiClient {
 					// Card exists, check for pricing changes before updating
 					const existingCard = existingCards[duplicateIndex];
 					const pricingChanged = this.hasPricingChanged(existingCard.pricing, newCard.pricing);
-					
+
 					const changeType = pricingChanged ? 'pricing_changed' : 'unchanged';
 					cardWithMetadata = this.addScrapeMetadata(newCard, existingCard, changeType);
 					existingCards[duplicateIndex] = cardWithMetadata;
