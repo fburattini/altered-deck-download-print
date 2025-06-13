@@ -17,7 +17,7 @@ export interface CardStatsResult {
 }
 
 export class AlteredScraper {
-	private apiClient: AlteredApiClient;
+	apiClient: AlteredApiClient;
 
 	constructor(locale: string = 'en-us', bearerToken?: string) {
 		this.apiClient = new AlteredApiClient(locale, bearerToken);
@@ -175,6 +175,7 @@ export class AlteredScraper {
 		newCards: number,
 		cardsWithPricingChanges: number,
 		cardsWithoutChanges: number,
+		cardsSold: number,
 		cards: CardDetail[]
 	}> {
 		console.log('Starting filtered scrape with pricing data integration...');
@@ -277,6 +278,7 @@ export class AlteredScraper {
 				newCards: savingStats.newCards,
 				cardsWithPricingChanges: savingStats.cardsWithPricingChanges,
 				cardsWithoutChanges: savingStats.cardsWithoutChanges,
+				cardsSold: savingStats.cardsSold,
 				cards: enrichedCards
 			};
 

@@ -830,82 +830,14 @@ export class AlteredApiClient {
 	}
 
 	/**
-	 * Save a single card to its dedicated file based on name and faction
-	 * Checks for duplicates before adding
-	 */
-	async saveCardByNameAndFaction(card: CardDetail): Promise<void> {
-		const filename = this.getCardFileName(card);
-		const filePath = path.join(process.cwd(), filename);
-
-		// Ensure directory exists
-		await fs.ensureDir(path.dirname(filePath));
-
-		// Load existing cards if file exists
-		const existingCards: CardDetail[] = [];
-		if (await fs.pathExists(filePath)) {
-			try {
-				const content = await fs.readFile(filePath, 'utf8');
-				const lines = content.trim().split('\n').filter(line => line.length > 0);
-
-				for (const line of lines) {
-					try {
-						const existingCard: CardDetail = JSON.parse(line);
-						existingCards.push(existingCard);
-					} catch (error) {
-						console.warn(`Failed to parse existing card line in ${filename}: ${error}`);
-					}
-				}
-			} catch (error) {
-				console.warn(`Failed to read existing cards from ${filename}: ${error}`);
-			}
-		}
-
-		// Check if card already exists (by ID or reference) and find its index
-		const duplicateIndex = existingCards.findIndex(existing =>
-			existing.id === card.id ||
-			existing.reference === card.reference ||
-			existing['@id'] === card['@id']
-		);
-
-		let cardWithMetadata: CardDetail;
-		if (duplicateIndex !== -1) {
-			// Card exists, add metadata with existing card reference for comparison
-			const existingCard = existingCards[duplicateIndex];
-			const pricingChanged = this.hasPricingChanged(existingCard.pricing, card.pricing);
-			const changeType = pricingChanged ? 'pricing_changed' : 'unchanged';
-
-			cardWithMetadata = this.addScrapeMetadata(card, existingCard, changeType);
-			console.log(`Card ${card.name} (${card.id}) already exists in ${filename}, updating with new data.`);
-			existingCards[duplicateIndex] = cardWithMetadata;
-		} else {
-			// Card does not exist, add it with metadata
-			cardWithMetadata = this.addScrapeMetadata(card, undefined, 'new');
-			existingCards.push(cardWithMetadata);
-		}
-
-		// Save all cards back to file
-		const jsonlContent = existingCards.map(c => JSON.stringify(c)).join('\n');
-		await fs.writeFile(filePath, jsonlContent, 'utf8');
-
-		// console.log(`Saved card ${card.name} to ${filename} (${existingCards.length} total cards)`); // Original log
-		if (duplicateIndex !== -1) {
-			const changeType = cardWithMetadata.scrapeMetadata?.changeType;
-			const changeEmoji = changeType === 'pricing_changed' ? '💰' : '🔄';
-			const changeText = changeType === 'pricing_changed' ? 'with pricing changes' : 'without changes';
-			console.log(`${changeEmoji} Updated card ${card.name} ${changeText} in ${filename} (${existingCards.length} total cards)`);
-		} else {
-			console.log(`🆕 Saved new card ${card.name} to ${filename} (${existingCards.length} total cards)`);
-		}
-	}
-
-	/**
 	 * Save multiple cards to their respective files based on name and faction
 	 * Groups cards and checks for duplicates, returns detailed statistics
 	 */
 	async saveCardsByNameAndFaction(cards: CardDetail[]): Promise<{
 		newCards: number,
 		cardsWithPricingChanges: number,
-		cardsWithoutChanges: number
+		cardsWithoutChanges: number,
+		cardsSold: number
 	}> {
 		// Group cards by their filename
 		const cardsByFile = new Map<string, CardDetail[]>();
@@ -922,6 +854,7 @@ export class AlteredApiClient {
 		let totalNewCards = 0;
 		let totalCardsWithPricingChanges = 0;
 		let totalCardsWithoutChanges = 0;
+		let totalCardsSold = 0;
 
 		// Save each group to its respective file
 		for (const [filename, cardsForFile] of cardsByFile) {
@@ -933,27 +866,24 @@ export class AlteredApiClient {
 			// Load existing cards if file exists
 			const existingCards: CardDetail[] = [];
 			if (await fs.pathExists(filePath)) {
-				try {
-					const content = await fs.readFile(filePath, 'utf8');
-					const lines = content.trim().split('\n').filter(line => line.length > 0);
-
-					for (const line of lines) {
-						try {
-							const existingCard: CardDetail = JSON.parse(line);
-							existingCards.push(existingCard);
-						} catch (error) {
-							console.warn(`Failed to parse existing card line in ${filename}: ${error}`);
-						}
-					}
-				} catch (error) {
-					console.warn(`Failed to read existing cards from ${filename}: ${error}`);
-				}
+				const cardReader = new CardReader(process.cwd());
+				const loadedCards = await cardReader.loadCardsFromFile(filePath);
+				existingCards.push(...loadedCards);
 			}
 
 			let addedCount = 0;
 			let updatedCount = 0;
 			let pricingChangedCount = 0;
 			let noChangesCount = 0;
+			let soldCount = 0;
+
+			// Create a Set of IDs from incoming cards for quick lookup
+			const incomingCardIds = new Set<string>();
+			cardsForFile.forEach(card => {
+				incomingCardIds.add(card.id);
+				if (card.reference) incomingCardIds.add(card.reference);
+				if (card['@id']) incomingCardIds.add(card['@id']);
+			});
 
 			// Process each card from the input `cardsForFile`
 			for (const newCard of cardsForFile) {
@@ -990,18 +920,40 @@ export class AlteredApiClient {
 				}
 			}
 
+			// Check for cards that exist locally but are not in the incoming cards (sold/no longer for sale)
+			for (let i = 0; i < existingCards.length; i++) {
+				const existingCard = existingCards[i];
+				const isStillForSale = incomingCardIds.has(existingCard.id) ||
+					(existingCard.reference && incomingCardIds.has(existingCard.reference)) ||
+					(existingCard['@id'] && incomingCardIds.has(existingCard['@id']));
+
+				if (!isStillForSale) {
+					// Check if this card was previously marked as sold to avoid duplicate updates
+					const wasPreviouslySold = existingCard.scrapeMetadata?.changeType === 'sold';
+					
+					if (!wasPreviouslySold) {
+						// Mark card as sold and update metadata
+						const soldCardWithMetadata = this.addScrapeMetadata(existingCard, existingCard, 'sold');
+						existingCards[i] = soldCardWithMetadata;
+						soldCount++;
+						console.log(`  💸 Card sold/no longer for sale: ${existingCard.name} (${existingCard.id})`);
+					}
+				}
+			}
+
 			// Update totals
 			totalNewCards += addedCount;
 			totalCardsWithPricingChanges += pricingChangedCount;
 			totalCardsWithoutChanges += noChangesCount;
+			totalCardsSold += soldCount;
 
-			// Only save if there were actual changes
-			if (addedCount > 0 || updatedCount > 0) {
+			// Only save if there were actual changes (including sold cards)
+			if (addedCount > 0 || updatedCount > 0 || soldCount > 0) {
 				const jsonlContent = existingCards.map(c => JSON.stringify(c)).join('\n');
 				await fs.writeFile(filePath, jsonlContent, 'utf8');
-				console.log(`Updated ${filename}: ${addedCount} new cards added, ${updatedCount} cards updated. (${existingCards.length} total)`);
+				console.log(`Updated ${filename}: ${addedCount} new cards added, ${updatedCount} cards updated, ${soldCount} cards marked as sold. (${existingCards.length} total)`);
 			} else {
-				console.log(`No new cards to add or update in ${filename}`);
+				console.log(`No new cards to add, update, or mark as sold in ${filename}`);
 			}
 		}
 
@@ -1009,11 +961,13 @@ export class AlteredApiClient {
 		console.log(`  🆕 New cards: ${totalNewCards}`);
 		console.log(`  💰 Cards with pricing changes: ${totalCardsWithPricingChanges}`);
 		console.log(`  🔄 Cards without changes: ${totalCardsWithoutChanges}`);
+		console.log(`  💸 Cards sold/no longer for sale: ${totalCardsSold}`);
 
 		return {
 			newCards: totalNewCards,
 			cardsWithPricingChanges: totalCardsWithPricingChanges,
-			cardsWithoutChanges: totalCardsWithoutChanges
+			cardsWithoutChanges: totalCardsWithoutChanges,
+			cardsSold: totalCardsSold
 		};
 	}
 
@@ -1046,14 +1000,14 @@ export class AlteredApiClient {
 	/**
 	 * Add or update scrape metadata for a card
 	 */
-	private addScrapeMetadata(card: CardDetail, existingCard?: CardDetail, changeType?: 'new' | 'pricing_changed' | 'unchanged'): CardDetail {
+	private addScrapeMetadata(card: CardDetail, existingCard?: CardDetail, changeType?: 'new' | 'pricing_changed' | 'unchanged' | 'sold'): CardDetail {
 		const now = new Date().toISOString();
 
 		let scrapeMetadata: {
 			firstScrapedAt: string;
 			lastUpdatedAt: string;
 			pricingLastUpdatedAt?: string;
-			changeType?: 'new' | 'pricing_changed' | 'unchanged';
+			changeType?: 'new' | 'pricing_changed' | 'unchanged' | 'sold';
 			priceHistory?: {
 				date: string;
 				lowerPrice: number;
