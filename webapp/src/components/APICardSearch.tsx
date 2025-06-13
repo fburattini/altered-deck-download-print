@@ -59,13 +59,16 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 		setIsSearching(true);
 		setSearchError(null);
 
-		try {			// Convert local filters to API format
+		try {
+			// Convert local filters to API format
 			const apiFilters: APISearchFilters = {};
 			const apiOptions: APISearchOptions = {
 				resultLimit: 0, // Get all results
 				sortByPrice: true,
-				inSaleOnly: false // Disable the legacy inSaleOnly option
-			};			// Convert search query to name filter (required)
+				inSaleOnly: false
+				// Disable the legacy inSaleOnly option
+			};
+			// Convert search query to name filter (required)
 			apiFilters.name = currentFilters.searchQuery.trim();
 
 			// Convert main effect filter
@@ -154,10 +157,10 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 					max: Math.max(...mainCost)
 				} : filters.mainCostRange
 			};
-			
+
 			// Trigger the search with updated filters
 			performSearch(updatedFilters);
-			
+
 			// Update the UI state to reflect the new search
 			setFilters(updatedFilters);
 		}
@@ -199,7 +202,8 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 			scrapeFilters.CARD_NAME = filters.searchQuery.trim();
 			if (filters.mainEffect.trim()) {
 				scrapeFilters.MAIN_EFFECT = filters.mainEffect.trim();
-			} if (filters.factions.length === 1) { // Assuming only one faction for scrape for simplicity
+			} if (filters.factions.length === 1) { 
+				// Assuming only one faction for scrape for simplicity
 				scrapeFilters.FACTION = filters.factions[0];
 			}
 
@@ -271,7 +275,7 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 		} finally {
 			setIsScraping(false);
 		}
-	}, [filters, isScraping, bearerToken]); // Updated dependency
+	}, [filters, isScraping, bearerToken]);
 
 	const updateFilter = (key: keyof LocalFilters, value: any) => {
 		setFilters(prev => ({
