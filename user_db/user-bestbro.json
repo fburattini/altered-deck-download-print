@@ -287,6 +287,15 @@
         4
       ],
       "lastRefresh": "2025-06-13T10:42:11.793Z"
+    },
+    {
+      "cardName": "Lady of the Lake",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T14:50:17.090Z"
     }
   ]
 }
