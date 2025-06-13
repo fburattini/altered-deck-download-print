@@ -25,6 +25,8 @@ interface WatchlistRefreshProps {
     onRefreshComplete?: () => void;
     disabled?: boolean;
     onTriggerSearch?: (cardName: string, faction: string, mainCost?: number[]) => void;
+    isFiltered?: boolean;
+    totalWatchlistCount?: number;
 }
 
 const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
@@ -32,7 +34,9 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
     bearerToken,
     onRefreshComplete,
     disabled = false,
-    onTriggerSearch
+    onTriggerSearch,
+    isFiltered = false,
+    totalWatchlistCount = 0
 }) => {
     const [progress, setProgress] = useState<RefreshProgress>({
         currentIndex: 0,
@@ -257,7 +261,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                         !bearerToken?.trim() ? 'Bearer token required for refresh' :
                             watchlist.length === 0 ? 'No watchlist items to refresh' :
                                 progress.isRefreshing ? 'Refresh in progress...' :
-                                    'Refresh all watchlist data'
+                                    isFiltered ? `Refresh ${watchlist.length} filtered items` :
+                                        'Refresh all watchlist data'
                     }
                 >
                     <div className="refresh-icon">
@@ -272,7 +277,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                         )}
                     </div>
                     <span className="refresh-text">
-                        {progress.isRefreshing ? 'Refreshing...' : 'Refresh All'}
+                        {progress.isRefreshing ? 'Refreshing...' : 
+                         isFiltered ? `Refresh ${watchlist.length} Filtered` : 'Refresh All'}
                     </span>
                 </button>
 
@@ -280,6 +286,9 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                     <div className="refresh-stats">
                         <span className="progress-text">
                             {progress.currentIndex}/{progress.totalItems}
+                            {isFiltered && totalWatchlistCount > progress.totalItems && (
+                                <span className="filtered-note"> (filtered)</span>
+                            )}
                         </span>
                         <span className="elapsed-time">
                             {formatElapsedTime()}

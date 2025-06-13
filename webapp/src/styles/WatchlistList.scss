@@ -46,6 +46,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-wrap: wrap;
 
     h3 {
       color: #f1f5f9;
@@ -60,6 +61,35 @@
       background: #374151;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
+    }
+
+    .filter-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+
+      .faction-filter-count {
+        background: #3b82f6;
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 12px;
+        font-weight: 500;
+      }
+
+      .search-filter-indicator {
+        background: #059669;
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 12px;
+        font-weight: 500;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
   }
 
@@ -209,6 +239,7 @@
     color: #f1f5f9;
     font-size: 0.875rem;
     transition: border-color 0.2s;
+    margin-bottom: 1rem;
 
     &:focus {
       outline: none;
@@ -217,6 +248,65 @@
 
     &::placeholder {
       color: #9ca3af;
+    }
+  }
+}
+
+/* Faction Filters */
+.faction-filters {
+  .filter-label {
+    color: #f1f5f9;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .faction-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .faction-button {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    min-width: 50px;
+    text-align: center;
+
+    &:hover {
+      transform: scale(1.05);
+      opacity: 0.8;
+    }
+
+    &.active {
+      transform: scale(1.02);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .clear-filters-button {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #b91c1c;
+      transform: translateY(-1px);
     }
   }
 }
@@ -234,8 +324,22 @@
   padding: 2rem;
 
   p {
-    margin: 0;
+    margin: 0 0 1rem 0;
     font-size: 0.875rem;
+  }
+
+  .clear-filters-link {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin: 0;
+
+    &:hover {
+      color: #2563eb;
+    }
   }
 }
 
@@ -415,12 +519,38 @@
 
   .popup-header {
     padding: 0.75rem 1rem;
+
+    .header-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+
+      .filter-indicator {
+        gap: 0.25rem;
+
+        .search-filter-indicator {
+          max-width: 120px;
+        }
+      }
+    }
   }
 
   .popup-user-section,
   .popup-filters,
   .popup-cards-content {
     padding: 0.75rem 1rem;
+  }
+
+  .faction-filters {
+    .faction-buttons {
+      gap: 0.25rem;
+    }
+
+    .faction-button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.625rem;
+      min-width: 40px;
+    }
   }
 
   .user-id-input-group {

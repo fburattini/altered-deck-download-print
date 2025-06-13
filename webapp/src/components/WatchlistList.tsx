@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WatchlistEntry } from '../services/searchAPI';
-import { FACTION_COLORS } from '../services/utils';
+import { FACTION_COLORS, FACTIONS } from '../services/utils';
 import WatchlistRefresh from './WatchlistRefresh';
 
 interface WatchlistListProps {
@@ -31,27 +31,16 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
     onTriggerSearch
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [localUserId, setLocalUserId] = useState(currentUserId);
     const [showRefresh, setShowRefresh] = useState(false);
+    const [selectedFactions, setSelectedFactions] = useState<string[]>([]);
 
-    // Filter watchlist based on search term
+    // Filter watchlist based on search term and selected factions
     const filteredWatchlist = watchlist.filter(item => {
         const matchesSearch = item.cardName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.faction?.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
+        const matchesFaction = selectedFactions.length === 0 || selectedFactions.includes(item.faction);
+        return matchesSearch && matchesFaction;
     });
-
-    const handleUserIdSubmit = () => {
-        if (localUserId.trim() && localUserId !== currentUserId) {
-            onUserIdChange(localUserId.trim());
-        }
-    };
-
-    const handleUserIdKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            handleUserIdSubmit();
-        }
-    };
 
     const handleRemoveWatchlist = async (item: WatchlistEntry) => {
         await onToggleWatchlist(item.cardName, item.faction, item.mainCost);
@@ -63,9 +52,36 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
         }
     };
 
-    const isUserIdInputValid = (userId: string) => {
-        return /^[a-zA-Z0-9_-]+$/.test(userId) && userId.length > 0;
+    const toggleFactionFilter = (factionRef: string) => {
+        setSelectedFactions(prev => {
+            const newFactions = prev.includes(factionRef)
+                ? prev.filter(f => f !== factionRef)
+                : [...prev, factionRef];
+            return newFactions;
+        });
     };
+
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setSelectedFactions([]);
+    };
+
+    // Handle ESC key to close the popup
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            console.log('event', event)
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        // Cleanup function to remove event listener
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose]);
 
     if (loading) {
         return (
@@ -92,7 +108,25 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                 <div className="popup-header">
                     <div className="header-info">
                         <h3>My Watchlist</h3>
-                        <span className="card-count">{watchlist.length} cards</span>
+                        <span className="card-count">
+                            {filteredWatchlist.length !== watchlist.length ? 
+                                `${filteredWatchlist.length} of ${watchlist.length} cards` : 
+                                `${watchlist.length} cards`}
+                        </span>
+                        {(searchTerm || selectedFactions.length > 0) && (
+                            <span className="filter-indicator">
+                                {selectedFactions.length > 0 && (
+                                    <span className="faction-filter-count">
+                                        {selectedFactions.length} faction{selectedFactions.length !== 1 ? 's' : ''}
+                                    </span>
+                                )}
+                                {searchTerm && (
+                                    <span className="search-filter-indicator">
+                                        search: "{searchTerm}"
+                                    </span>
+                                )}
+                            </span>
+                        )}
                     </div>
                     <div className="header-actions">
                         <button className="close-button" onClick={onClose} aria-label="Close">
@@ -110,14 +144,51 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
                     />
+                    
+                    {/* Faction Filters */}
+                    <div className="faction-filters">
+                        <div className="filter-label">Filter by Faction:</div>
+                        <div className="faction-buttons">
+                            {FACTIONS.map(faction => {
+                                const isSelected = selectedFactions.includes(faction.ref);
+                                return (
+                                    <button
+                                        key={faction.ref}
+                                        type="button"
+                                        onClick={() => toggleFactionFilter(faction.ref)}
+                                        className={`faction-button ${isSelected ? 'active' : ''}`}
+                                        style={{
+                                            backgroundColor: isSelected ? faction.color : '',
+                                            border: `2px solid ${faction.color}`,
+                                            color: isSelected ? 'white' : faction.color,
+                                        }}
+                                    >
+                                        {faction.ref}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        
+                        {/* Clear filters button */}
+                        {(searchTerm || selectedFactions.length > 0) && (
+                            <button
+                                onClick={clearAllFilters}
+                                className="clear-filters-button"
+                            >
+                                Clear All Filters
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="popup-filters">
                     {/* Watchlist Refresh Component */}
                     <WatchlistRefresh
-                        watchlist={watchlist}
+                        watchlist={filteredWatchlist}
                         bearerToken={bearerToken}
                         onTriggerSearch={onTriggerSearch}
+                        isFiltered={filteredWatchlist.length !== watchlist.length}
+                        totalWatchlistCount={watchlist.length}
                         onRefreshComplete={() => {
                             setShowRefresh(false);
                             if (onRefreshComplete) {
@@ -136,6 +207,13 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                         <div className="no-cards-message">
                             {watchlist.length === 0 ? (
                                 <p>No cards in watchlist. Start adding cards to watch for price changes!</p>
+                            ) : (searchTerm || selectedFactions.length > 0) ? (
+                                <div>
+                                    <p>No watchlist items match your search criteria.</p>
+                                    <button onClick={clearAllFilters} className="clear-filters-link">
+                                        Clear all filters to show all {watchlist.length} items
+                                    </button>
+                                </div>
                             ) : (
                                 <p>No watchlist items match your search criteria.</p>
                             )}
@@ -187,6 +265,9 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                 {userIdValid && filteredWatchlist.length > 0 && filteredWatchlist.length !== watchlist.length && (
                     <div className="popup-footer">
                         Showing {filteredWatchlist.length} of {watchlist.length} watchlist items
+                        {(searchTerm || selectedFactions.length > 0) && (
+                            <span> (filtered)</span>
+                        )}
                     </div>
                 )}
 
