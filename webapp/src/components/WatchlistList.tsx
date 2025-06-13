@@ -101,39 +101,11 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                     </div>
                 </div>
 
-                <div className="popup-user-section">
-                    <div className="user-id-input-group">
-                        <label htmlFor="watchlist-user-id">User ID:</label>
-                        <div className="user-id-controls">
-                            <input
-                                id="watchlist-user-id"
-                                type="text"
-                                placeholder="Enter your user ID"
-                                value={localUserId}
-                                onChange={(e) => setLocalUserId(e.target.value)}
-                                onKeyPress={handleUserIdKeyPress}
-                                className={`user-id-input ${isUserIdInputValid(localUserId) ? 'valid' : 'invalid'}`}
-                            />
-                            {localUserId !== currentUserId && (
-                                <button
-                                    onClick={handleUserIdSubmit}
-                                    disabled={!isUserIdInputValid(localUserId)}
-                                    className="apply-user-id-button"
-                                >
-                                    Apply
-                                </button>
-                            )}
-                        </div>
-                        {!userIdValid && (
-                            <span className="user-id-error">User ID must contain only letters, numbers, underscores, or hyphens</span>
-                        )}
-                    </div>
-                </div>
-
                 <div className="popup-filters">
                     <input
                         type="text"
                         placeholder="Search watchlist..."
+                        autoFocus
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"

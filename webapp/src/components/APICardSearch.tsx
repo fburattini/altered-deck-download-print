@@ -57,10 +57,10 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
 		// Validate required fields for search
-		if (!currentFilters.searchQuery.trim()) {
-			setSearchError('Card name is required for searching.');
-			return;
-		}
+		// if (!currentFilters.searchQuery.trim()) {
+		// 	setSearchError('Card name is required for searching.');
+		// 	return;
+		// }
 
 		setIsSearching(true);
 		setSearchError(null);
@@ -251,11 +251,6 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 				if (response.cardsFound !== undefined) {
 					detailedMessage += `\n\n📊 Results Summary:`;
 					detailedMessage += `\n• Total cards found: ${response.cardsFound}`;
-
-					// Add pricing data info
-					if (response.cardsWithPricing !== undefined) {
-						detailedMessage += `\n• Cards with pricing data: ${response.cardsWithPricing}`;
-					}
 
 					// Add detailed breakdown of changes
 					if (response.newCards !== undefined && response.newCards > 0) {
@@ -526,8 +521,8 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 							className="search-button"
 							disabled={
 								isSearching ||
-								isScraping ||
-								!filters.searchQuery.trim()
+								isScraping
+								// !filters.searchQuery.trim()
 							}
 							title={
 								!filters.searchQuery.trim() ? 'Card name is required for searching' : ''
