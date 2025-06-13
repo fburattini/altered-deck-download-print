@@ -56,12 +56,6 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 
 	// Manual search function triggered by button
 	const performSearch = useCallback(async (currentFilters: LocalFilters) => {
-		// Validate required fields for search
-		// if (!currentFilters.searchQuery.trim()) {
-		// 	setSearchError('Card name is required for searching.');
-		// 	return;
-		// }
-
 		setIsSearching(true);
 		setSearchError(null);
 

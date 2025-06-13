@@ -43,15 +43,6 @@
       "lastRefresh": "2025-06-09T19:14:32.046Z"
     },
     {
-      "cardName": "Kadigiran Alchemist",
-      "faction": "YZ",
-      "mainCost": [
-        3,
-        4
-      ],
-      "lastRefresh": "2025-06-09T19:20:11.917Z"
-    },
-    {
       "cardName": "Kuwat, the Dissenter",
       "faction": "YZ",
       "mainCost": [
@@ -153,6 +144,149 @@
         4
       ],
       "lastRefresh": "2025-06-12T15:55:36.079Z"
+    },
+    {
+      "cardName": "Studious Disciple",
+      "faction": "LY",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-13T09:28:19.049Z"
+    },
+    {
+      "cardName": "Anansi",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T09:31:54.801Z"
+    },
+    {
+      "cardName": "The Hatter",
+      "faction": "LY",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-13T09:35:17.985Z"
+    },
+    {
+      "cardName": "Lyra Skald",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T09:37:14.797Z"
+    },
+    {
+      "cardName": "Alice",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T09:41:00.166Z"
+    },
+    {
+      "cardName": "BLISS Keytarist",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T09:45:29.589Z"
+    },
+    {
+      "cardName": "Bravos Pathfinder",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T09:45:38.238Z"
+    },
+    {
+      "cardName": "Lyra Thespian",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T09:47:56.291Z"
+    },
+    {
+      "cardName": "Heimdall",
+      "faction": "LY",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-13T10:01:48.987Z"
+    },
+    {
+      "cardName": "Kadigiran Mage-Dancer",
+      "faction": "LY",
+      "mainCost": [
+        2
+      ],
+      "lastRefresh": "2025-06-13T10:02:07.589Z"
+    },
+    {
+      "cardName": "Kappa",
+      "faction": "LY",
+      "mainCost": [
+        3
+      ],
+      "lastRefresh": "2025-06-13T10:06:31.361Z"
+    },
+    {
+      "cardName": "Lyra Chronicler",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T10:06:46.376Z"
+    },
+    {
+      "cardName": "Lyra Cloth Dancer",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T10:08:12.190Z"
+    },
+    {
+      "cardName": "Lyra Navigator",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T10:12:06.051Z"
+    },
+    {
+      "cardName": "Ada Lovelace",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-13T10:33:41.983Z"
+    },
+    {
+      "cardName": "Kadigiran Alchemist",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-13T10:42:11.793Z"
     }
   ]
 }
