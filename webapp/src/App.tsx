@@ -302,7 +302,7 @@ const App: React.FC = () => {
 		try {
 			// Convert string MAIN_COST to number array
 			const mainCostArray = card.elements.MAIN_COST ? [parseInt(card.elements.MAIN_COST, 10)] : [];
-			
+
 			const response = await searchAPI.toggleWatchlist({
 				userId: currentUserId,
 				cardName: card.name,
@@ -323,7 +323,7 @@ const App: React.FC = () => {
 					setUserWatchlist(prev => [...prev, newWatchlistItem]);
 				} else {
 					// Remove from watchlist
-					setUserWatchlist(prev => prev.filter(item => 
+					setUserWatchlist(prev => prev.filter(item =>
 						!(item.cardName === card.name && item.faction === card.mainFaction.reference)
 					));
 				}
@@ -406,7 +406,7 @@ const App: React.FC = () => {
 					setUserWatchlist(prev => [...prev, newWatchlistItem]);
 				} else {
 					// Remove from watchlist
-					setUserWatchlist(prev => prev.filter(item => 
+					setUserWatchlist(prev => prev.filter(item =>
 						!(item.cardName === cardName && item.faction === faction)
 					));
 				}
@@ -455,12 +455,20 @@ const App: React.FC = () => {
 			}
 		}
 	}
-
 	// Function to trigger search from other components (like WatchlistRefresh)
 	const handleTriggerSearch = useCallback((cardName: string, faction: string, mainCost?: number[]) => {
 		if (apiCardSearchRef.current) {
 			apiCardSearchRef.current.triggerSearch(cardName, faction, mainCost);
 		}
+	}, []);
+
+	// Function to handle cards update from WatchlistRefresh
+	const handleCardsUpdate = useCallback((cards: Card[]) => {
+		console.log(`🎯 Received ${cards.length} cards from watchlist refresh, setting as search results`);
+		setSearchResults(cards);
+		setFilteredResults(cards);
+		setIsLoading(false);
+		setSearchError(null);
 	}, []);
 
 	const sortedResults = sortCards(filteredResults, sortBy, sortDirection);
@@ -488,15 +496,14 @@ const App: React.FC = () => {
 				onToggleCollapse={handleToggleMenu}
 				onMenuItemClick={onLeftMenuItemClick}
 			/>
-
 			{/* Main Content Container */}
 			<div className={`main-container ${isMenuCollapsed ? 'menu-collapsed' : 'menu-expanded'}`}>
 				{/* Top Search Bar */}
 				<div className="top-search-bar">
 					<div className="search-section">
-						<APICardSearch 
+						<APICardSearch
 							ref={apiCardSearchRef}
-							onSearchResults={handleSearchResults} 
+							onSearchResults={handleSearchResults}
 							bearerToken={bearerToken}
 							currentUserId={currentUserId}
 							userIdValid={userIdValid}
@@ -505,7 +512,6 @@ const App: React.FC = () => {
 						/>
 					</div>
 				</div>
-
 				{/* Available Cards List - Popup */}
 				{showAvailableCards && (
 					<AvailableCardsList
@@ -515,7 +521,6 @@ const App: React.FC = () => {
 						onClose={() => setShowAvailableCards(false)}
 					/>
 				)}
-
 				{/* Bookmarks List - Popup */}
 				{showBookmarks && (
 					<BookmarksList
@@ -528,8 +533,7 @@ const App: React.FC = () => {
 						onUserIdChange={handleUserIdChange}
 						onToggleBookmark={toggleBookmarkById}
 					/>
-				)}
-
+				)}				
 				{/* Watchlist List - Popup */}
 				{showWatchlist && (
 					<WatchlistList
@@ -543,11 +547,12 @@ const App: React.FC = () => {
 						onUserIdChange={handleUserIdChange}
 						onToggleWatchlist={toggleWatchlistById}
 						onTriggerSearch={handleTriggerSearch}
+						onCardsUpdate={handleCardsUpdate}
 						onRefreshComplete={() => {
 							// Refresh watchlist data after scraping is complete
 							const fetchUserWatchlist = async () => {
 								if (!userIdValid || !currentUserId.trim()) return;
-								
+
 								try {
 									const response = await searchAPI.getUserWatchlist(currentUserId);
 									if (response.success) {
@@ -558,7 +563,7 @@ const App: React.FC = () => {
 									console.error('Error refreshing watchlist after scrape:', error);
 								}
 							};
-							
+
 							fetchUserWatchlist();
 						}}
 					/>

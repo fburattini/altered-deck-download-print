@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WatchlistEntry } from '../services/searchAPI';
 import { FACTION_COLORS, FACTIONS } from '../services/utils';
 import WatchlistRefresh from './WatchlistRefresh';
+import { Card } from '../types';
 
 interface WatchlistListProps {
     watchlist: WatchlistEntry[];
@@ -15,6 +16,7 @@ interface WatchlistListProps {
     onToggleWatchlist: (cardName: string, faction: string, mainCost: number[]) => Promise<void>;
     onRefreshComplete?: () => void;
     onTriggerSearch?: (cardName: string, faction: string, mainCost?: number[]) => void;
+    onCardsUpdate?: (cards: Card[]) => void; // New callback to pass cards back to App
 }
 
 const WatchlistList: React.FC<WatchlistListProps> = ({
@@ -28,7 +30,8 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
     onUserIdChange,
     onToggleWatchlist,
     onRefreshComplete,
-    onTriggerSearch
+    onTriggerSearch,
+    onCardsUpdate
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showRefresh, setShowRefresh] = useState(false);
@@ -179,14 +182,14 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
                             </button>
                         )}
                     </div>
-                </div>
-
+                </div>                
                 <div className="popup-filters">
                     {/* Watchlist Refresh Component */}
                     <WatchlistRefresh
                         watchlist={filteredWatchlist}
                         bearerToken={bearerToken}
                         onTriggerSearch={onTriggerSearch}
+                        onCardsUpdate={onCardsUpdate}
                         isFiltered={filteredWatchlist.length !== watchlist.length}
                         totalWatchlistCount={watchlist.length}
                         onRefreshComplete={() => {

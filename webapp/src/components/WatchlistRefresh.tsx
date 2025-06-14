@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { WatchlistEntry } from '../services/searchAPI';
 import { searchAPI } from '../services/searchAPI';
+import { Card } from '../types';
 
 interface RefreshProgress {
     currentIndex: number;
@@ -13,16 +14,19 @@ interface RefreshProgress {
     newCardsCount?: number;
     priceUpdatesCount?: number;
     noChangesCount?: number;
+    soldCardsCount?: number;
     isComplete?: boolean;
     newCards?: string[];
     priceUpdatedCards?: string[];
     noChangeCards?: string[];
+    soldCards?: string[];
 }
 
 interface WatchlistRefreshProps {
     watchlist: WatchlistEntry[];
     bearerToken?: string;
     onRefreshComplete?: () => void;
+    onCardsUpdate?: (cards: Card[]) => void; // New callback to pass cards back to App
     disabled?: boolean;
     onTriggerSearch?: (cardName: string, faction: string, mainCost?: number[]) => void;
     isFiltered?: boolean;
@@ -33,6 +37,7 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
     watchlist,
     bearerToken,
     onRefreshComplete,
+    onCardsUpdate,
     disabled = false,
     onTriggerSearch,
     isFiltered = false,
@@ -47,20 +52,22 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
         newCardsCount: 0,
         priceUpdatesCount: 0,
         noChangesCount: 0,
+        soldCardsCount: 0,
         isComplete: false,
         newCards: [],
         priceUpdatedCards: [],
-        noChangeCards: []
-    });
-
-    const [expandedSections, setExpandedSections] = useState<{
+        noChangeCards: [],
+        soldCards: []
+    }); const [expandedSections, setExpandedSections] = useState<{
         newCards: boolean;
         priceUpdates: boolean;
         noChanges: boolean;
+        soldCards: boolean;
     }>({
         newCards: false,
         priceUpdates: false,
-        noChanges: false
+        noChanges: false,
+        soldCards: false
     });
 
     const refreshWatchlistData = useCallback(async () => {
@@ -69,8 +76,7 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
             return;
         }
 
-        const startTime = new Date();
-        setProgress({
+        const startTime = new Date(); setProgress({
             currentIndex: 0,
             totalItems: watchlist.length,
             isRefreshing: true,
@@ -80,27 +86,29 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
             newCardsCount: 0,
             priceUpdatesCount: 0,
             noChangesCount: 0,
+            soldCardsCount: 0,
             isComplete: false,
             newCards: [],
             priceUpdatedCards: [],
-            noChangeCards: []
-        });
-
-        // Reset expanded sections when starting a new refresh
+            noChangeCards: [],
+            soldCards: []
+        });// Reset expanded sections when starting a new refresh
         setExpandedSections({
             newCards: false,
             priceUpdates: false,
-            noChanges: false
-        });
-
-        let completedCount = 0;
+            noChanges: false,
+            soldCards: false
+        }); let completedCount = 0;
         let newCardsCount = 0;
         let priceUpdatesCount = 0;
         let noChangesCount = 0;
+        let soldCardsCount = 0;
         const errors: string[] = [];
         const newCards: string[] = [];
         const priceUpdatedCards: string[] = [];
         const noChangeCards: string[] = [];
+        const soldCards: string[] = [];
+        const allCards: Card[] = []; // Collect all cards from scrape responses
 
         try {
             for (let i = 0; i < watchlist.length; i++) {
@@ -122,46 +130,80 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                         ONLY_FOR_SALE: true
                     };
 
-                    console.log(`🔄 Refreshing watchlist item ${i + 1}/${watchlist.length}: ${item.cardName} (${item.faction})`);
-
                     // Use the scraper API to get fresh data
-                    const response = await searchAPI.scrapeCards(scrapeFilters, bearerToken);
-
-                    if (response.success) {
+                    const response = await searchAPI.scrapeCards(scrapeFilters, bearerToken); if (response.success) {
                         completedCount++;
-                        // Analyze the response to determine if there are new cards or price updates
-                        if (response.message) {
-                            const message = response.message.toLowerCase();
-                            if (message.includes('new cards added') || message.includes('cards added')) {
-                                // Extract number of new cards if mentioned in message
-                                const newCardsMatch = response.message.match(/(\d+)\s+(?:new\s+)?cards?\s+added/i);
-                                if (newCardsMatch) {
-                                    const count = parseInt(newCardsMatch[1], 10);
-                                    newCardsCount += count;
-                                } else {
-                                    newCardsCount++; // Default to 1 if can't parse
-                                }
-                                newCards.push(item.cardName);
-                                console.log(`🆕 New cards found for: ${item.cardName}`);
-                            } else if (message.includes('price') || message.includes('updated')) {
-                                priceUpdatesCount++;
-                                priceUpdatedCards.push(item.cardName);
-                                console.log(`💰 Price updates found for: ${item.cardName}`);
-                            } else if (message.includes('no changes') || message.includes('already up to date')) {
-                                noChangesCount++;
-                                noChangeCards.push(item.cardName);
-                                console.log(`✅ No changes for: ${item.cardName}`);
-                            } else {
-                                // Default to successful update if we can't categorize
-                                priceUpdatesCount++;
-                                priceUpdatedCards.push(item.cardName);
-                                console.log(`✅ Successfully refreshed: ${item.cardName}`);
-                            }
-                        } else {
-                            // No message, assume successful update
-                            priceUpdatesCount++;
+
+                        // Collect cards from the response if available
+                        if (response.cards && response.cards.length > 0) {                            // Filter for cards with new data or price updates only
+                            const relevantCards = response.cards.filter(card => {
+                                // Include cards that have pricing (indicating they're for sale)
+                                return card.pricing && card.pricing.lowerPrice > 0;
+                            });
+                            allCards.push(...relevantCards);
+                            console.log(`📦 Collected ${relevantCards.length} cards from: ${item.cardName}`);
+                        }
+
+                        // Use the actual API response data to track changes
+                        const apiNewCards = response.newCards || 0;
+                        const apiCardsWithPricingChanges = response.cardsWithPricingChanges || 0;
+                        const apiCardsWithoutChanges = response.cardsWithoutChanges || 0;
+                        const apiCardsSold = response.cardsSold || 0;
+
+                        // Track the totals
+                        newCardsCount += apiNewCards;
+                        priceUpdatesCount += apiCardsWithPricingChanges;
+                        noChangesCount += apiCardsWithoutChanges;
+                        soldCardsCount += apiCardsSold;
+
+                        // Add to appropriate arrays based on what changed
+                        if (apiNewCards > 0) {
+                            newCards.push(item.cardName);
+                            console.log(`🆕 ${apiNewCards} new cards found for: ${item.cardName}`);
+                        }
+                        if (apiCardsWithPricingChanges > 0) {
                             priceUpdatedCards.push(item.cardName);
-                            console.log(`✅ Successfully refreshed: ${item.cardName}`);
+                            console.log(`💰 ${apiCardsWithPricingChanges} price updates found for: ${item.cardName}`);
+                        }
+                        if (apiCardsWithoutChanges > 0) {
+                            noChangeCards.push(item.cardName);
+                            console.log(`✅ ${apiCardsWithoutChanges} cards with no changes for: ${item.cardName}`);
+                        }
+                        if (apiCardsSold > 0) {
+                            soldCards.push(item.cardName);
+                            console.log(`🛍️ ${apiCardsSold} cards sold for: ${item.cardName}`);
+                        }
+
+                        // If no specific changes were found but the request was successful,
+                        // check the message for additional context
+                        if (apiNewCards === 0 && apiCardsWithPricingChanges === 0 &&
+                            apiCardsWithoutChanges === 0 && apiCardsSold === 0) {
+                            if (response.message) {
+                                const message = response.message.toLowerCase();
+                                if (message.includes('new cards added') || message.includes('cards added')) {
+                                    newCardsCount++;
+                                    newCards.push(item.cardName);
+                                    console.log(`🆕 New cards found for: ${item.cardName} (from message)`);
+                                } else if (message.includes('price') || message.includes('updated')) {
+                                    priceUpdatesCount++;
+                                    priceUpdatedCards.push(item.cardName);
+                                    console.log(`💰 Price updates found for: ${item.cardName} (from message)`);
+                                } else if (message.includes('no changes') || message.includes('already up to date')) {
+                                    noChangesCount++;
+                                    noChangeCards.push(item.cardName);
+                                    console.log(`✅ No changes for: ${item.cardName} (from message)`);
+                                } else {
+                                    // Default to successful update if we can't categorize
+                                    priceUpdatesCount++;
+                                    priceUpdatedCards.push(item.cardName);
+                                    console.log(`✅ Successfully refreshed: ${item.cardName} (default)`);
+                                }
+                            } else {
+                                // No message and no specific counts, assume successful update
+                                priceUpdatesCount++;
+                                priceUpdatedCards.push(item.cardName);
+                                console.log(`✅ Successfully refreshed: ${item.cardName} (no message)`);
+                            }
                         }
                     } else {
                         const errorMsg = `Failed to refresh ${item.cardName}: ${response.error || 'Unknown error'}`;
@@ -172,31 +214,48 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                     const errorMsg = `Error refreshing ${item.cardName}: ${error instanceof Error ? error.message : 'Unknown error'}`;
                     errors.push(errorMsg);
                     console.error(errorMsg);
-                }
-
-                setProgress(prev => ({
+                } setProgress(prev => ({
                     ...prev,
                     completedItems: completedCount,
                     errors: [...errors],
                     newCardsCount,
                     priceUpdatesCount,
                     noChangesCount,
+                    soldCardsCount,
                     newCards: [...newCards],
                     priceUpdatedCards: [...priceUpdatedCards],
-                    noChangeCards: [...noChangeCards]
+                    noChangeCards: [...noChangeCards],
+                    soldCards: [...soldCards]
                 }));
-            }
-
-            console.log(`🎉 Watchlist refresh complete! Successfully refreshed ${completedCount}/${watchlist.length} items`);
-            console.log(`📊 Summary: ${newCardsCount} new cards, ${priceUpdatesCount} price updates, ${noChangesCount} no changes`);
+            } console.log(`🎉 Watchlist refresh complete! Successfully refreshed ${completedCount}/${watchlist.length} items`);
+            console.log(`📊 Summary: ${newCardsCount} new cards, ${priceUpdatesCount} price updates, ${noChangesCount} no changes, ${soldCardsCount} sold cards`);
 
             if (errors.length > 0) {
                 console.warn(`⚠️ Encountered ${errors.length} errors during refresh`);
-            }
-
-            // Call completion callback if provided
+            }            // Call completion callback if provided
             if (onRefreshComplete) {
                 onRefreshComplete();
+            }
+
+            // Pass collected cards back to App component if we have cards with updates or new cards
+            if (onCardsUpdate && allCards.length > 0) {
+                // Remove duplicates based on card ID
+                const uniqueCards = allCards.filter((card, index, self) =>
+                    index === self.findIndex(c => c.id === card.id)
+                );
+
+                // Filter for cards that had price updates or are new
+                const relevantCards = uniqueCards.filter(card => {
+                    const cardName = card.name;
+                    return newCards.includes(cardName) || priceUpdatedCards.includes(cardName);
+                });
+
+                if (relevantCards.length > 0) {
+                    console.log(`🎯 Showing ${relevantCards.length} cards with updates/new listings to user`);
+                    onCardsUpdate(relevantCards);
+                } else {
+                    console.log(`📋 No relevant cards to display (${uniqueCards.length} total cards collected)`);
+                }
             }
 
         } catch (error) {
@@ -211,12 +270,14 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                 newCardsCount,
                 priceUpdatesCount,
                 noChangesCount,
+                soldCardsCount,
                 newCards: [...newCards],
                 priceUpdatedCards: [...priceUpdatedCards],
-                noChangeCards: [...noChangeCards]
+                noChangeCards: [...noChangeCards],
+                soldCards: [...soldCards]
             }));
         }
-    }, [watchlist, bearerToken, onRefreshComplete]);
+    }, [watchlist, bearerToken, onRefreshComplete, onCardsUpdate]);
 
     const formatElapsedTime = () => {
         if (!progress.startTime) return '';
@@ -229,9 +290,7 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
     const getProgressPercentage = () => {
         if (progress.totalItems === 0) return 0;
         return Math.round((progress.completedItems / progress.totalItems) * 100);
-    };
-
-    const toggleSection = (section: 'newCards' | 'priceUpdates' | 'noChanges') => {
+    }; const toggleSection = (section: 'newCards' | 'priceUpdates' | 'noChanges' | 'soldCards') => {
         setExpandedSections(prev => ({
             ...prev,
             [section]: !prev[section]
@@ -277,8 +336,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                         )}
                     </div>
                     <span className="refresh-text">
-                        {progress.isRefreshing ? 'Refreshing...' : 
-                         isFiltered ? `Refresh ${watchlist.length} Filtered` : 'Refresh All'}
+                        {progress.isRefreshing ? 'Refreshing...' :
+                            isFiltered ? `Refresh ${watchlist.length} Filtered` : 'Refresh All'}
                     </span>
                 </button>
 
@@ -356,14 +415,14 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                     <div className="summary-header">
                         <span className="success-icon">✅</span>
                         <span className="summary-title">Refresh Complete!</span>
-                        <button 
+                        <button
                             className="dismiss-summary"
                             onClick={() => {
-                                setProgress(prev => ({ ...prev, isComplete: false }));
-                                setExpandedSections({
+                                setProgress(prev => ({ ...prev, isComplete: false })); setExpandedSections({
                                     newCards: false,
                                     priceUpdates: false,
-                                    noChanges: false
+                                    noChanges: false,
+                                    soldCards: false
                                 });
                             }}
                             title="Dismiss summary"
@@ -371,10 +430,10 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                             ✕
                         </button>
                     </div>
-                    
+
                     <div className="summary-stats">
                         <div className="summary-grid">
-                            <div 
+                            <div
                                 className={`stat-item new-cards ${(progress.newCards?.length || 0) > 0 ? 'clickable' : ''}`}
                                 onClick={() => (progress.newCards?.length || 0) > 0 && toggleSection('newCards')}
                                 title={(progress.newCards?.length || 0) > 0 ? 'Click to see which cards' : ''}
@@ -390,8 +449,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
-                            <div 
+
+                            <div
                                 className={`stat-item price-updates ${(progress.priceUpdatedCards?.length || 0) > 0 ? 'clickable' : ''}`}
                                 onClick={() => (progress.priceUpdatedCards?.length || 0) > 0 && toggleSection('priceUpdates')}
                                 title={(progress.priceUpdatedCards?.length || 0) > 0 ? 'Click to see which cards' : ''}
@@ -407,8 +466,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
-                            <div 
+
+                            <div
                                 className={`stat-item no-changes ${(progress.noChangeCards?.length || 0) > 0 ? 'clickable' : ''}`}
                                 onClick={() => (progress.noChangeCards?.length || 0) > 0 && toggleSection('noChanges')}
                                 title={(progress.noChangeCards?.length || 0) > 0 ? 'Click to see which cards' : ''}
@@ -422,9 +481,25 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                     <div className="expand-icon">
                                         {expandedSections.noChanges ? '▼' : '▶'}
                                     </div>
+                                )}                            </div>
+
+                            <div
+                                className={`stat-item sold-cards ${(progress.soldCards?.length || 0) > 0 ? 'clickable' : ''}`}
+                                onClick={() => (progress.soldCards?.length || 0) > 0 && toggleSection('soldCards')}
+                                title={(progress.soldCards?.length || 0) > 0 ? 'Click to see which cards' : ''}
+                            >
+                                <div className="stat-icon">🛍️</div>
+                                <div className="stat-content">
+                                    <div className="stat-number">{progress.soldCardsCount || 0}</div>
+                                    <div className="stat-label">Cards Sold</div>
+                                </div>
+                                {(progress.soldCards?.length || 0) > 0 && (
+                                    <div className="expand-icon">
+                                        {expandedSections.soldCards ? '▼' : '▶'}
+                                    </div>
                                 )}
                             </div>
-                            
+
                             {progress.errors.length > 0 && (
                                 <div className="stat-item errors">
                                     <div className="stat-icon">⚠️</div>
@@ -435,7 +510,7 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* Expandable card details */}
                         {expandedSections.newCards && (progress.newCards?.length || 0) > 0 && (
                             <div className="card-details-section">
@@ -445,8 +520,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 </div>
                                 <div className="card-list">
                                     {progress.newCards?.map((cardName, index) => (
-                                        <div 
-                                            key={index} 
+                                        <div
+                                            key={index}
                                             className={`card-name ${onTriggerSearch ? 'clickable' : ''}`}
                                             onClick={() => handleCardClick(cardName)}
                                             title={onTriggerSearch ? 'Click to search for this card' : ''}
@@ -457,7 +532,7 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 </div>
                             </div>
                         )}
-                        
+
                         {expandedSections.priceUpdates && (progress.priceUpdatedCards?.length || 0) > 0 && (
                             <div className="card-details-section">
                                 <div className="details-header">
@@ -466,8 +541,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 </div>
                                 <div className="card-list">
                                     {progress.priceUpdatedCards?.map((cardName, index) => (
-                                        <div 
-                                            key={index} 
+                                        <div
+                                            key={index}
                                             className={`card-name ${onTriggerSearch ? 'clickable' : ''}`}
                                             onClick={() => handleCardClick(cardName)}
                                             title={onTriggerSearch ? 'Click to search for this card' : ''}
@@ -478,7 +553,7 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 </div>
                             </div>
                         )}
-                        
+
                         {expandedSections.noChanges && (progress.noChangeCards?.length || 0) > 0 && (
                             <div className="card-details-section">
                                 <div className="details-header">
@@ -487,8 +562,28 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 </div>
                                 <div className="card-list">
                                     {progress.noChangeCards?.map((cardName, index) => (
-                                        <div 
-                                            key={index} 
+                                        <div
+                                            key={index}
+                                            className={`card-name ${onTriggerSearch ? 'clickable' : ''}`}
+                                            onClick={() => handleCardClick(cardName)}
+                                            title={onTriggerSearch ? 'Click to search for this card' : ''}
+                                        >
+                                            {cardName}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>)}
+
+                        {expandedSections.soldCards && (progress.soldCards?.length || 0) > 0 && (
+                            <div className="card-details-section">
+                                <div className="details-header">
+                                    <span className="details-icon">🛍️</span>
+                                    <span className="details-title">Cards Recently Sold:</span>
+                                </div>
+                                <div className="card-list">
+                                    {progress.soldCards?.map((cardName, index) => (
+                                        <div
+                                            key={index}
                                             className={`card-name ${onTriggerSearch ? 'clickable' : ''}`}
                                             onClick={() => handleCardClick(cardName)}
                                             title={onTriggerSearch ? 'Click to search for this card' : ''}
@@ -499,7 +594,7 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                                 </div>
                             </div>
                         )}
-                        
+
                         <div className="summary-footer">
                             <div className="completion-time">
                                 Completed in {formatElapsedTime()}
