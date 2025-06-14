@@ -243,14 +243,6 @@ const App: React.FC = () => {
 		return userWatchlist.some(item => item.cardName === cardName && item.faction === faction);
 	}, [userWatchlist])
 
-	// Wrapper function for CardGridView compatibility
-	const isCardInWatchlistById = useCallback((cardId: string): boolean => {
-		// Find the card by ID to get name and faction
-		const card = searchResults.find(c => c.id === cardId);
-		if (!card) return false;
-		return isCardInWatchlist(card.name, card.mainFaction.reference);
-	}, [searchResults, isCardInWatchlist])
-
 	const toggleBookmark = async (card: Card): Promise<void> => {
 		// Don't allow bookmark operations with invalid user ID
 		if (!userIdValid || !currentUserId.trim()) {
@@ -484,6 +476,7 @@ const App: React.FC = () => {
 		);
 	}
 
+	console.log('soriutedre rednder', sortedResults.length)
 	return (
 		<div className="app-container">
 			{/* Left Menu */}

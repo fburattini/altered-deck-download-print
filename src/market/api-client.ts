@@ -837,10 +837,12 @@ export class AlteredApiClient {
 		newCards: number,
 		cardsWithPricingChanges: number,
 		cardsWithoutChanges: number,
-		cardsSold: number
+		cardsSold: number,
+		updatedCards: CardDetail[]
 	}> {
 		// Group cards by their filename
 		const cardsByFile = new Map<string, CardDetail[]>();
+		const updatedCards: CardDetail[] = []
 
 		for (const card of cards) {
 			const filename = this.getCardFileName(card);
@@ -949,6 +951,8 @@ export class AlteredApiClient {
 
 			// Only save if there were actual changes (including sold cards)
 			if (addedCount > 0 || updatedCount > 0 || soldCount > 0) {
+				updatedCards.push(...existingCards);
+
 				const jsonlContent = existingCards.map(c => JSON.stringify(c)).join('\n');
 				await fs.writeFile(filePath, jsonlContent, 'utf8');
 				console.log(`Updated ${filename}: ${addedCount} new cards added, ${updatedCount} cards updated, ${soldCount} cards marked as sold. (${existingCards.length} total)`);
@@ -967,7 +971,8 @@ export class AlteredApiClient {
 			newCards: totalNewCards,
 			cardsWithPricingChanges: totalCardsWithPricingChanges,
 			cardsWithoutChanges: totalCardsWithoutChanges,
-			cardsSold: totalCardsSold
+			cardsSold: totalCardsSold,
+			updatedCards: updatedCards
 		};
 	}
 

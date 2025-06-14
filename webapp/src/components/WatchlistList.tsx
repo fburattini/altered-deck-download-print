@@ -72,7 +72,6 @@ const WatchlistList: React.FC<WatchlistListProps> = ({
     // Handle ESC key to close the popup
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            console.log('event', event)
             if (event.key === 'Escape') {
                 onClose();
             }

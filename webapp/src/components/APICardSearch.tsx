@@ -44,7 +44,6 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
-	const [hasSearched, setHasSearched] = useState(false);
 	const [isScraping, setIsScraping] = useState(false);
 	const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
 	const [scrapeError, setScrapeError] = useState<string | null>(null);
@@ -122,7 +121,6 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 				const cards = response.data.map(result => result.card);
 				setSearchResults(cards); // Store results locally
 				onSearchResults(cards, false);
-				setHasSearched(true);
 			} else {
 				throw new Error(response.error || 'Search failed');
 			}
@@ -202,7 +200,7 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 			scrapeFilters.CARD_NAME = filters.searchQuery.trim();
 			if (filters.mainEffect.trim()) {
 				scrapeFilters.MAIN_EFFECT = filters.mainEffect.trim();
-			} if (filters.factions.length === 1) { 
+			} if (filters.factions.length === 1) {
 				// Assuming only one faction for scrape for simplicity
 				scrapeFilters.FACTION = filters.factions[0];
 			}
@@ -264,7 +262,12 @@ const APICardSearch = forwardRef<APICardSearchRef, APICardSearchProps>(({ onSear
 
 				setScrapeMessage(detailedMessage);
 				setShowConfirmationPopup(true);
-				handleSearch();
+
+				if (response.cards && response.cards.length > 0) {
+					const cards = response.cards
+					setSearchResults(cards);
+					onSearchResults(cards, false);
+				}
 			} else {
 				throw new Error(response.error || 'Scrape failed');
 			}

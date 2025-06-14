@@ -92,13 +92,17 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
             priceUpdatedCards: [],
             noChangeCards: [],
             soldCards: []
-        });// Reset expanded sections when starting a new refresh
+        });
+        
+        // Reset expanded sections when starting a new refresh
         setExpandedSections({
             newCards: false,
             priceUpdates: false,
             noChanges: false,
             soldCards: false
-        }); let completedCount = 0;
+        }); 
+        
+        let completedCount = 0;
         let newCardsCount = 0;
         let priceUpdatesCount = 0;
         let noChangesCount = 0;
@@ -131,7 +135,8 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                     };
 
                     // Use the scraper API to get fresh data
-                    const response = await searchAPI.scrapeCards(scrapeFilters, bearerToken); if (response.success) {
+                    const response = await searchAPI.scrapeCards(scrapeFilters, bearerToken); 
+                    if (response.success) {
                         completedCount++;
 
                         // Collect cards from the response if available
@@ -173,38 +178,6 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                             soldCards.push(item.cardName);
                             console.log(`🛍️ ${apiCardsSold} cards sold for: ${item.cardName}`);
                         }
-
-                        // If no specific changes were found but the request was successful,
-                        // check the message for additional context
-                        if (apiNewCards === 0 && apiCardsWithPricingChanges === 0 &&
-                            apiCardsWithoutChanges === 0 && apiCardsSold === 0) {
-                            if (response.message) {
-                                const message = response.message.toLowerCase();
-                                if (message.includes('new cards added') || message.includes('cards added')) {
-                                    newCardsCount++;
-                                    newCards.push(item.cardName);
-                                    console.log(`🆕 New cards found for: ${item.cardName} (from message)`);
-                                } else if (message.includes('price') || message.includes('updated')) {
-                                    priceUpdatesCount++;
-                                    priceUpdatedCards.push(item.cardName);
-                                    console.log(`💰 Price updates found for: ${item.cardName} (from message)`);
-                                } else if (message.includes('no changes') || message.includes('already up to date')) {
-                                    noChangesCount++;
-                                    noChangeCards.push(item.cardName);
-                                    console.log(`✅ No changes for: ${item.cardName} (from message)`);
-                                } else {
-                                    // Default to successful update if we can't categorize
-                                    priceUpdatesCount++;
-                                    priceUpdatedCards.push(item.cardName);
-                                    console.log(`✅ Successfully refreshed: ${item.cardName} (default)`);
-                                }
-                            } else {
-                                // No message and no specific counts, assume successful update
-                                priceUpdatesCount++;
-                                priceUpdatedCards.push(item.cardName);
-                                console.log(`✅ Successfully refreshed: ${item.cardName} (no message)`);
-                            }
-                        }
                     } else {
                         const errorMsg = `Failed to refresh ${item.cardName}: ${response.error || 'Unknown error'}`;
                         errors.push(errorMsg);
@@ -214,7 +187,9 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                     const errorMsg = `Error refreshing ${item.cardName}: ${error instanceof Error ? error.message : 'Unknown error'}`;
                     errors.push(errorMsg);
                     console.error(errorMsg);
-                } setProgress(prev => ({
+                }
+
+                setProgress(prev => ({
                     ...prev,
                     completedItems: completedCount,
                     errors: [...errors],
@@ -227,34 +202,31 @@ const WatchlistRefresh: React.FC<WatchlistRefreshProps> = ({
                     noChangeCards: [...noChangeCards],
                     soldCards: [...soldCards]
                 }));
-            } console.log(`🎉 Watchlist refresh complete! Successfully refreshed ${completedCount}/${watchlist.length} items`);
+            } 
+            console.log(`🎉 Watchlist refresh complete! Successfully refreshed ${completedCount}/${watchlist.length} items`);
             console.log(`📊 Summary: ${newCardsCount} new cards, ${priceUpdatesCount} price updates, ${noChangesCount} no changes, ${soldCardsCount} sold cards`);
 
             if (errors.length > 0) {
                 console.warn(`⚠️ Encountered ${errors.length} errors during refresh`);
-            }            // Call completion callback if provided
+            }            
+            
+            // Call completion callback if provided
             if (onRefreshComplete) {
                 onRefreshComplete();
             }
 
             // Pass collected cards back to App component if we have cards with updates or new cards
             if (onCardsUpdate && allCards.length > 0) {
-                // Remove duplicates based on card ID
-                const uniqueCards = allCards.filter((card, index, self) =>
-                    index === self.findIndex(c => c.id === card.id)
-                );
+                const cardsWithChanges = allCards.filter(x => x.scrapeMetadata?.changeType === 'new'
+                    || x.scrapeMetadata?.changeType === 'pricing_changed'
+                    || x.scrapeMetadata?.changeType === 'sold'
+                )
 
-                // Filter for cards that had price updates or are new
-                const relevantCards = uniqueCards.filter(card => {
-                    const cardName = card.name;
-                    return newCards.includes(cardName) || priceUpdatedCards.includes(cardName);
-                });
-
-                if (relevantCards.length > 0) {
-                    console.log(`🎯 Showing ${relevantCards.length} cards with updates/new listings to user`);
-                    onCardsUpdate(relevantCards);
+                if (cardsWithChanges.length > 0) {
+                    console.log(`🎯 Showing ${cardsWithChanges.length} cards with updates/new listings to user`);
+                    onCardsUpdate(cardsWithChanges);
                 } else {
-                    console.log(`📋 No relevant cards to display (${uniqueCards.length} total cards collected)`);
+                    console.log(`📋 No relevant cards to display (${cardsWithChanges.length} total cards collected)`);
                 }
             }
 

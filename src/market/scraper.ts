@@ -269,7 +269,7 @@ export class AlteredScraper {
 				if (enhancedSummary.errors.length > 10) {
 					console.log(`  ... and ${enhancedSummary.errors.length - 10} more errors`);
 				}
-			}			
+			}
 			console.log(`\nEnriched cards with pricing saved by name and faction to: card_db/cards-{name}-{faction}.jsonl files`);
 
 			return {
@@ -279,7 +279,7 @@ export class AlteredScraper {
 				cardsWithPricingChanges: savingStats.cardsWithPricingChanges,
 				cardsWithoutChanges: savingStats.cardsWithoutChanges,
 				cardsSold: savingStats.cardsSold,
-				cards: enrichedCards
+				cards: savingStats.updatedCards
 			};
 
 		} catch (error) {

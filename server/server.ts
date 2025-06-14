@@ -145,6 +145,10 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 		if (FACTION) filters.factions = [FACTION];
 		if (CARD_NAME) filters.cardName = CARD_NAME;
 
+		if(filters.cardName && filters.cardName.includes(' ')) {
+			filters.cardName = filters.cardName.split(' ').at(-1)
+		}
+
 		// Handle cost ranges
 		if (MAIN_COST) {
 			if (MAIN_COST.includes('-')) {
@@ -182,7 +186,8 @@ app.post('/api/scrape', async (req: Request, res: Response) => {
 			cardsWithPricing: scrapeResult.cardsWithPricing,
 			cardsWithPricingChanges: scrapeResult.cardsWithPricingChanges,
 			cardsWithoutChanges: scrapeResult.cardsWithoutChanges,
-			newCards: scrapeResult.newCards
+			newCards: scrapeResult.newCards,
+			cards: scrapeResult.cards
 		});
 
 	} catch (error) {
