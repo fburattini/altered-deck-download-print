@@ -4,6 +4,8 @@
  * Service for making search requests to the backend API
  */
 
+import { Card } from "../types";
+
 export interface APISearchFilters {
   mainCost?: string;
   recallCost?: string;
@@ -22,7 +24,7 @@ export interface APISearchOptions {
 }
 
 export interface APISearchResult {
-  card: any; // Will match Card interface from types.ts
+  card: Card; // Will match Card interface from types.ts
   matchReasons: string[];
 }
 
@@ -55,6 +57,8 @@ export interface APIScrapeResponse {
   cardsWithPricingChanges?: number;
   cardsWithoutChanges?: number;
   newCards?: number;
+  cardsSold?: number,
+  cards?: Card[]
 }
 
 export interface CardNameFaction {
@@ -226,6 +230,7 @@ class SearchAPIService {
       };
     }
   }
+
   /**
    * Get list of all cards available in the database
    */
