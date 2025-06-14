@@ -296,6 +296,15 @@
         3
       ],
       "lastRefresh": "2025-06-13T14:50:17.090Z"
+    },
+    {
+      "cardName": "Hathor",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-14T17:51:59.228Z"
     }
   ]
 }
