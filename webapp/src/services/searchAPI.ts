@@ -139,8 +139,8 @@ class SearchAPIService {
 
   constructor() {
     // Use different URLs for development and production
-    this.baseUrl = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3001' 
+    this.baseUrl = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3001'
       : '';
   }
 
@@ -148,7 +148,7 @@ class SearchAPIService {
    * Search for cards using the backend API
    */
   async searchCards(
-    filters: APISearchFilters = {}, 
+    filters: APISearchFilters = {},
     options: APISearchOptions = {}
   ): Promise<APISearchResponse> {
     try {
@@ -177,11 +177,11 @@ class SearchAPIService {
 
       const data = await response.json();
       console.log(`✅ API search completed: ${data.count} results`);
-      
+
       return data;
     } catch (error) {
       console.error('❌ Search API error:', error);
-      
+
       return {
         success: false,
         count: 0,
@@ -252,11 +252,11 @@ class SearchAPIService {
 
       const data = await response.json();
       console.log(`✅ Available cards fetched: ${data.count} cards`);
-      
+
       return data;
     } catch (error) {
       console.error('❌ Cards-in-DB API error:', error);
-      
+
       return {
         success: false,
         count: 0,
@@ -272,9 +272,9 @@ class SearchAPIService {
   async getUserBookmarks(userId: string): Promise<APIBookmarksResponse> {
     try {
       console.log(`🔖 Fetching bookmarks for user: ${userId}`);
-      
+
       const response = await fetch(`${this.baseUrl}/api/bookmarks/${encodeURIComponent(userId)}`);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Bookmarks API error: ${response.status} ${response.statusText} - ${errorText}`);
@@ -282,11 +282,11 @@ class SearchAPIService {
 
       const data = await response.json();
       console.log(`✅ User bookmarks fetched: ${data.count} bookmarks`);
-      
+
       return data;
     } catch (error) {
       console.error('❌ Bookmarks API error:', error);
-      
+
       return {
         success: false,
         userId,
@@ -319,11 +319,11 @@ class SearchAPIService {
 
       const data = await response.json();
       console.log(`✅ Bookmark toggled: ${data.message}`);
-      
+
       return data;
     } catch (error) {
       console.error('❌ Toggle bookmark API error:', error);
-      
+
       return {
         success: false,
         isBookmarked: false,
@@ -339,9 +339,9 @@ class SearchAPIService {
   async getUserWatchlist(userId: string): Promise<APIWatchlistResponse> {
     try {
       console.log(`📋 Fetching watchlist for user: ${userId}`);
-      
+
       const response = await fetch(`${this.baseUrl}/api/watchlist/${encodeURIComponent(userId)}`);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Watchlist API error: ${response.status} ${response.statusText} - ${errorText}`);
@@ -349,11 +349,11 @@ class SearchAPIService {
 
       const data = await response.json();
       console.log(`✅ User watchlist fetched: ${data.count} items`);
-      
+
       return data;
     } catch (error) {
       console.error('❌ Watchlist API error:', error);
-      
+
       return {
         success: false,
         userId,
@@ -386,11 +386,11 @@ class SearchAPIService {
 
       const data = await response.json();
       console.log(`✅ Watchlist toggled: ${data.message}`);
-      
+
       return data;
     } catch (error) {
       console.error('❌ Toggle watchlist API error:', error);
-      
+
       return {
         success: false,
         isInWatchlist: false,
