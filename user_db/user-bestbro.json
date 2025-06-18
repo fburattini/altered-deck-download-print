@@ -305,6 +305,68 @@
         3
       ],
       "lastRefresh": "2025-06-14T17:51:59.228Z"
+    },
+    {
+      "cardName": "Lyra Skald",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-17T08:43:27.825Z"
+    },
+    {
+      "cardName": "Muna Caregiver",
+      "faction": "YZ",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-17T08:43:58.768Z"
+    },
+    {
+      "cardName": "Studious Disciple",
+      "faction": "YZ",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-17T08:49:26.896Z"
+    },
+    {
+      "cardName": "Sneezer Shroom",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-17T08:54:33.346Z"
+    },
+    {
+      "cardName": "Spindle Harvesters",
+      "faction": "YZ",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-17T08:55:11.645Z"
+    },
+    {
+      "cardName": "Tooth Fairy",
+      "faction": "YZ",
+      "mainCost": [
+        2
+      ],
+      "lastRefresh": "2025-06-17T08:59:29.731Z"
+    },
+    {
+      "cardName": "Kadigiran Mage-Dancer",
+      "faction": "YZ",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-06-17T08:59:57.740Z"
     }
   ]
 }
