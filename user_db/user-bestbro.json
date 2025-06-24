@@ -367,6 +367,15 @@
         4
       ],
       "lastRefresh": "2025-06-19T13:44:57.106Z"
+    },
+    {
+      "cardName": "Ordis Attorney",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-23T17:41:55.249Z"
     }
   ]
 }
