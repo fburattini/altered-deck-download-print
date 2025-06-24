@@ -376,6 +376,32 @@
         3
       ],
       "lastRefresh": "2025-06-23T17:41:55.249Z"
+    },
+    {
+      "cardName": "Lakshmi",
+      "faction": "YZ",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-06-24T13:16:08.286Z"
+    },
+    {
+      "cardName": "Belasenka",
+      "faction": "YZ",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-06-24T16:22:45.601Z"
+    },
+    {
+      "cardName": "Ordis Cadets",
+      "faction": "YZ",
+      "mainCost": [
+        2
+      ],
+      "lastRefresh": "2025-06-24T16:27:23.076Z"
     }
   ]
 }
