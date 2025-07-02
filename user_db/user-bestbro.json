@@ -402,6 +402,104 @@
         2
       ],
       "lastRefresh": "2025-06-24T16:27:23.076Z"
+    },
+    {
+      "cardName": "Ordis Spy",
+      "faction": "OR",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-01T09:37:57.565Z"
+    },
+    {
+      "cardName": "The Sandman",
+      "faction": "OR",
+      "mainCost": [
+        3
+      ],
+      "lastRefresh": "2025-07-01T13:21:17.671Z"
+    },
+    {
+      "cardName": "Baba Yaga",
+      "faction": "OR",
+      "mainCost": [
+        3
+      ],
+      "lastRefresh": "2025-07-01T13:21:29.396Z"
+    },
+    {
+      "cardName": "Monolith Rune-Scribe",
+      "faction": "OR",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-01T13:29:15.841Z"
+    },
+    {
+      "cardName": "Foundry Mechanic",
+      "faction": "OR",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-07-01T13:34:39.586Z"
+    },
+    {
+      "cardName": "Ozma",
+      "faction": "OR",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-02T09:12:36.182Z"
+    },
+    {
+      "cardName": "Amelia Earhart",
+      "faction": "OR",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-02T09:15:51.963Z"
+    },
+    {
+      "cardName": "Ordis Trooper",
+      "faction": "OR",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-07-02T09:20:20.667Z"
+    },
+    {
+      "cardName": "Paper Herald",
+      "faction": "OR",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-07-02T09:25:29.823Z"
+    },
+    {
+      "cardName": "Ordis Cadets",
+      "faction": "OR",
+      "mainCost": [
+        1,
+        2
+      ],
+      "lastRefresh": "2025-07-02T09:25:50.660Z"
+    },
+    {
+      "cardName": "Kadigiran Alchemist",
+      "faction": "OR",
+      "mainCost": [
+        2,
+        3,
+        4
+      ],
+      "lastRefresh": "2025-07-02T09:28:32.556Z"
     }
   ]
 }
