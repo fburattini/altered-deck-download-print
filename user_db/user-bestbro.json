@@ -500,6 +500,78 @@
         4
       ],
       "lastRefresh": "2025-07-02T09:28:32.556Z"
+    },
+    {
+      "cardName": "Magpeng Hoarder",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-03T17:47:48.581Z"
+    },
+    {
+      "cardName": "Snowball Commando",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-03T17:53:37.204Z"
+    },
+    {
+      "cardName": "The Snowman",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-03T17:56:33.927Z"
+    },
+    {
+      "cardName": "Nyala, Gifted Conjurer",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-03T17:57:24.543Z"
+    },
+    {
+      "cardName": "Ordis Nightwarden",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-03T18:01:29.920Z"
+    },
+    {
+      "cardName": "Pamola",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-03T18:03:25.783Z"
+    },
+    {
+      "cardName": "Dr. Frankenstein",
+      "faction": "LY",
+      "mainCost": [
+        3,
+        4
+      ],
+      "lastRefresh": "2025-07-03T18:13:46.358Z"
+    },
+    {
+      "cardName": "Tomoe Gozen",
+      "faction": "LY",
+      "mainCost": [
+        2,
+        3
+      ],
+      "lastRefresh": "2025-07-03T18:17:47.270Z"
     }
   ]
 }
