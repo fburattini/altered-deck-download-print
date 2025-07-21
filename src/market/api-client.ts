@@ -85,7 +85,7 @@ export class AlteredApiClient {
 
 		// Card name filter
 		if (options.cardName && options.cardName.trim()) {
-			params.append('translations.name', options.cardName.trim());
+			params.append('query', options.cardName.trim());
 		}
 
 		return params;
